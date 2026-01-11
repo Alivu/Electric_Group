@@ -2203,17 +2203,21 @@ document.addEventListener('DOMContentLoaded', loadSavedTheme);
                     <div class="theme-name">${theme.name}</div>
                 `;
                 
-                themeItem.addEventListener('click', () => {
-                    document.querySelectorAll('.theme-item').forEach(item => {
-                        item.classList.remove('active');
-                    });
-                    themeItem.classList.add('active');
-                    currentTheme = key;
-                });
-                
-                themesGrid.appendChild(themeItem);
-            });
-        }
+themeItem.addEventListener('click', () => {
+    document.querySelectorAll('.theme-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    themeItem.classList.add('active');
+    currentTheme = key;
+    
+    // ВАЖНО: Добавьте этот вызов!
+    applyTheme(key); // Применяем тему
+    
+    // Закрываем модальное окно (опционально)
+    setTimeout(() => {
+        themeModal.classList.remove('active');
+    }, 500);
+});
 
         // ==================== ПРОФЕССИОНАЛЬНЫЙ КАЛЬКУЛЯТОР С КОМПЕНСАЦИЕЙ ВЫСОТЫ ====================
         function validateField(field, min, max, errorElement) {
