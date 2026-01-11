@@ -722,7 +722,17 @@
             gap: 15px;
             position: relative;
         }
-
+		
+.check-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: white;
+    background: rgba(0,0,0,0.5);
+    border-radius: 50%;
+    padding: 5px;
+    font-size: 12px;
+}
         .chat-header i {
             font-size: 20px;
         }
@@ -1888,11 +1898,15 @@ function loadSavedTheme() {
 }
 
 // Инициализация при загрузке
+// В начале скрипта или в initializeApp()
 document.addEventListener('DOMContentLoaded', function() {
-    addThemeToggleButton();
-    loadSavedTheme();
+    // Загружаем сохраненную тему
+    const savedTheme = localStorage.getItem('chatTheme');
+    if (savedTheme && themes[savedTheme]) {
+        currentTheme = savedTheme;
+        applyTheme(savedTheme);
+    }
 });
-    
     // Применяем дополнительные градиенты для элементов
     const styleId = 'dynamic-theme-styles';
     let themeStyles = document.getElementById(styleId);
@@ -2185,39 +2199,55 @@ document.addEventListener('DOMContentLoaded', loadSavedTheme);
             }
         });
 
-        function openThemeModal() {
-            loadThemesToModal();
-            themeModal.classList.add('active');
-        }
-
-        function loadThemesToModal() {
-            themesGrid.innerHTML = '';
+function openThemeModal() {
+    // Загружаем сохраненную тему перед показом
+    const savedTheme = localStorage.getItem('chatTheme') || 'default';
+    currentTheme = savedTheme;
+    
+    loadThemesToModal();
+    themeModal.classList.add('active');
+}
+function loadThemesToModal() {
+    themesGrid.innerHTML = '';
+    
+    Object.entries(themes).forEach(([key, theme]) => {
+        const themeItem = document.createElement('div');
+        const isActive = key === currentTheme;
+        themeItem.className = `theme-item ${isActive ? 'active' : ''}`;
+        themeItem.dataset.theme = key;
+        
+        // Используем background из темы
+        const background = theme.backgrounds?.main || theme.background;
+        
+        themeItem.innerHTML = `
+            <div class="theme-preview" style="background: ${background};"></div>
+            <div class="theme-name">${theme.name}</div>
+            ${isActive ? '<i class="fas fa-check check-icon"></i>' : ''}
+        `;
+        
+        themeItem.addEventListener('click', () => {
+            // Убираем активный класс у всех
+            document.querySelectorAll('.theme-item').forEach(item => {
+                item.classList.remove('active');
+                item.querySelector('.check-icon')?.remove();
+            });
             
-            Object.entries(themes).forEach(([key, theme]) => {
-                const themeItem = document.createElement('div');
-                themeItem.className = `theme-item ${key === currentTheme ? 'active' : ''}`;
-                themeItem.dataset.theme = key;
-                
-                themeItem.innerHTML = `
-                    <div class="theme-preview" style="background: linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.secondary} 100%);"></div>
-                    <div class="theme-name">${theme.name}</div>
-                `;
-                
-themeItem.addEventListener('click', () => {
-    document.querySelectorAll('.theme-item').forEach(item => {
-        item.classList.remove('active');
+            // Добавляем активному
+            themeItem.classList.add('active');
+            themeItem.innerHTML += '<i class="fas fa-check check-icon"></i>';
+            
+            currentTheme = key;
+            applyTheme(key);
+            
+            // Можно сразу закрыть модалку или через время
+            setTimeout(() => {
+                themeModal.classList.remove('active');
+            }, 800);
+        });
+        
+        themesGrid.appendChild(themeItem);
     });
-    themeItem.classList.add('active');
-    currentTheme = key;
-    
-    // ВАЖНО: Добавьте этот вызов!
-    applyTheme(key); // Применяем тему
-    
-    // Закрываем модальное окно (опционально)
-    setTimeout(() => {
-        themeModal.classList.remove('active');
-    }, 500);
-});
+}
 
         // ==================== ПРОФЕССИОНАЛЬНЫЙ КАЛЬКУЛЯТОР С КОМПЕНСАЦИЕЙ ВЫСОТЫ ====================
         function validateField(field, min, max, errorElement) {
