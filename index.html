@@ -1617,267 +1617,281 @@
             ]
         };
 
-  // ==================== РАСШИРЕННАЯ СИСТЕМА ТЕМ С КРАСИВЫМИ ГРАДИЕНТАМИ ====================
-const themes = {
-    // Сохраняем существующие темы и добавляем новые
-    
-    aurora: {
-        name: 'Северное сияние 🌌',
-        colors: {
-            primary: '#0f0c29',
-            secondary: '#302b63',
-            accent: '#24243e',
-            telegram: '#00dbde'
-        },
-        background: 'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)',
-        secondaryBackground: 'radial-gradient(circle at top right, #00dbde, #fc00ff)'
-    },
-    
-    sunset: {
-        name: 'Закат 🌅',
-        colors: {
-            primary: '#ff7e5f',
-            secondary: '#feb47b',
-            accent: '#ff6b6b',
-            telegram: '#ff5252'
-        },
-        background: 'linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%)',
-        secondaryBackground: 'linear-gradient(45deg, #ff6b6b, #ffa726)'
-    },
-    
-    ocean: {
-        name: 'Океан 🌊',
-        colors: {
-            primary: '#2193b0',
-            secondary: '#6dd5ed',
-            accent: '#2980b9',
-            telegram: '#3498db'
-        },
-        background: 'linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%)',
-        secondaryBackground: 'linear-gradient(45deg, #2980b9, #2ecc71)'
-    },
-    
-    forest: {
-        name: 'Лес 🌲',
-        colors: {
-            primary: '#1d976c',
-            secondary: '#93f9b9',
-            accent: '#2e7d32',
-            telegram: '#388e3c'
-        },
-        background: 'linear-gradient(135deg, #1d976c 0%, #93f9b9 100%)',
-        secondaryBackground: 'radial-gradient(circle, #2e7d32, #1b5e20)'
-    },
-    
-    fire: {
-        name: 'Огонь 🔥',
-        colors: {
-            primary: '#ff416c',
-            secondary: '#ff4b2b',
-            accent: '#ff0000',
-            telegram: '#ff5252'
-        },
-        background: 'linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%)',
-        secondaryBackground: 'linear-gradient(45deg, #ff0000, #ff9800)'
-    },
-    
-    galaxy: {
-        name: 'Галактика 🌠',
-        colors: {
-            primary: '#0f2027',
-            secondary: '#203a43',
-            accent: '#2c5364',
-            telegram: '#00c6ff'
-        },
-        background: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)',
-        secondaryBackground: 'radial-gradient(circle at 20% 80%, #00c6ff, #0072ff)'
-    },
-    
-    lavender: {
-        name: 'Лаванда 💜',
-        colors: {
-            primary: '#8a2be2',
-            secondary: '#9370db',
-            accent: '#ba55d3',
-            telegram: '#9b59b6'
-        },
-        background: 'linear-gradient(135deg, #8a2be2 0%, #9370db 100%)',
-        secondaryBackground: 'linear-gradient(45deg, #ba55d3, #8e44ad)'
-    },
-    
-    gold: {
-        name: 'Золото ✨',
-        colors: {
-            primary: '#daa520',
-            secondary: '#ffd700',
-            accent: '#ffbf00',
-            telegram: '#f1c40f'
-        },
-        background: 'linear-gradient(135deg, #daa520 0%, #ffd700 100%)',
-        secondaryBackground: 'radial-gradient(ellipse at center, #ffbf00, #ff9800)'
-    },
-    
-    neon: {
-        name: 'Неон 🔆',
-        colors: {
-            primary: '#00ff00',
-            secondary: '#00ffff',
-            accent: '#ff00ff',
-            telegram: '#00ff88'
-        },
-        background: 'linear-gradient(135deg, #00ff00 0%, #00ffff 50%, #ff00ff 100%)',
-        secondaryBackground: 'linear-gradient(90deg, #00ff88, #00ffff)'
-    },
-    
-    desert: {
-        name: 'Пустыня 🏜️',
-        colors: {
-            primary: '#d2691e',
-            secondary: '#cd853f',
-            accent: '#a0522d',
-            telegram: '#d2691e'
-        },
-        background: 'linear-gradient(135deg, #d2691e 0%, #cd853f 100%)',
-        secondaryBackground: 'linear-gradient(45deg, #a0522d, #8b4513)'
-    },
-    
-    midnight: {
-        name: 'Полночь 🌚',
-        colors: {
-            primary: '#000428',
-            secondary: '#004e92',
-            accent: '#1a2980',
-            telegram: '#004e92'
-        },
-        background: 'linear-gradient(135deg, #000428 0%, #004e92 100%)',
-        secondaryBackground: 'linear-gradient(45deg, #1a2980, #26d0ce)'
-    },
-    
-    spring: {
-        name: 'Весна 🌸',
-        colors: {
-            primary: '#ff9a9e',
-            secondary: '#fad0c4',
-            accent: '#fbc2eb',
-            telegram: '#ff9a9e'
-        },
-        background: 'linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%)',
-        secondaryBackground: 'linear-gradient(45deg, #fbc2eb, #a6c1ee)'
-    },
-    
-    // Ваши существующие темы
-    default: {
-        name: 'По умолчанию',
-        colors: {
-            primary: '#2c3e50',
-            secondary: '#3498db',
-            accent: '#e74c3c',
-            telegram: '#0088cc'
-        },
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-        secondaryBackground: 'linear-gradient(45deg, #3498db, #2c3e50)'
-    },
-    
-    dark: {
-        name: 'Темная',
-        colors: {
-            primary: '#1a1a2e',
-            secondary: '#16213e',
-            accent: '#0f3460',
-            telegram: '#0088cc'
-        },
-        background: 'linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%)',
-        secondaryBackground: 'linear-gradient(45deg, #16213e, #0f3460)'
-    },
-    
-    electric: {
-        name: 'Электрик',
-        colors: {
-            primary: '#0d1b2a',
-            secondary: '#1b263b',
-            accent: '#415a77',
-            telegram: '#778da9'
-        },
-        background: 'linear-gradient(135deg, #1a1a2e 0%, #2c3e50 100%)',
-        secondaryBackground: 'linear-gradient(45deg, #415a77, #1b263b)'
-    },
-
- // Пример новых тем с несколькими градиентами:
-    gradientRainbow: {
-        name: 'Радужный градиент 🌈',
-        colors: {
-            primary: '#FF416C',
-            secondary: '#FF4B2B',
-            accent: '#00DBDE',
-            telegram: '#0088CC',
-            success: '#00B09B',
-            warning: '#FFD700'
-        },
-        backgrounds: {
-            main: 'linear-gradient(135deg, #FF416C 0%, #FF4B2B 50%, #00DBDE 100%)',
-            container: 'linear-gradient(45deg, rgba(255,65,108,0.1), rgba(0,219,222,0.1))',
-            header: 'linear-gradient(90deg, #FF416C, #FF4B2B)',
-            button: 'linear-gradient(45deg, #FF416C, #00DBDE)',
-            card: 'radial-gradient(circle at top right, rgba(255,65,108,0.2), rgba(0,219,222,0.2))'
-        }
-    },
-    
-    galaxyDream: {
-        name: 'Галактическая мечта 🌌',
-        colors: {
-            primary: '#0F0C29',
-            secondary: '#302B63',
-            accent: '#24243E',
-            telegram: '#00DBDE',
-            success: '#00C9FF',
-            warning: '#FC00FF'
-        },
-        backgrounds: {
-            main: 'linear-gradient(135deg, #0F0C29 0%, #302B63 50%, #24243E 100%)',
-            container: 'radial-gradient(circle at 20% 50%, rgba(48,43,99,0.3), rgba(15,12,41,0.8))',
-            header: 'linear-gradient(90deg, #0F0C29, #302B63)',
-            button: 'linear-gradient(45deg, #00DBDE, #FC00FF)',
-            card: 'linear-gradient(135deg, rgba(48,43,99,0.3), rgba(36,36,62,0.5))'
-        }
-    },
-    
-    sunsetBeach: {
-        name: 'Пляжный закат 🌅',
-        colors: {
-            primary: '#FF7E5F',
-            secondary: '#FEB47B',
-            accent: '#86A8E7',
-            telegram: '#4A90E2',
-            success: '#7FDBDA',
-            warning: '#FF9966'
-        },
-        backgrounds: {
-            main: 'linear-gradient(135deg, #FF7E5F 0%, #FEB47B 50%, #86A8E7 100%)',
-            container: 'linear-gradient(45deg, rgba(255,126,95,0.1), rgba(134,168,231,0.1))',
-            header: 'linear-gradient(90deg, #FF7E5F, #FEB47B)',
-            button: 'linear-gradient(45deg, #FF7E5F, #86A8E7)',
-            card: 'linear-gradient(135deg, rgba(254,180,123,0.2), rgba(134,168,231,0.2))'
-        }
-    }
-};
-
-// Обновленная функция applyTheme
 function applyTheme(themeKey) {
     const theme = themes[themeKey];
     if (!theme) return;
+    
+    console.log('Применяем тему:', themeKey, theme.name);
     
     currentTheme = themeKey;
     localStorage.setItem('chatTheme', themeKey);
     
     const root = document.documentElement;
     
-    // Устанавливаем CSS переменные для цветов
+    // 1. Устанавливаем CSS переменные для цветов
     Object.entries(theme.colors).forEach(([key, value]) => {
         root.style.setProperty(`--${key}`, value);
     });
     
-    // Применяем основной фон
-    document.body.style.background = theme.backgrounds?.main || theme.background || '';
+    // 2. Применяем основной фон
+    const background = theme.backgrounds?.main || theme.background;
+    document.body.style.background = background;
+    document.body.style.backgroundAttachment = 'fixed';
+    
+    // 3. Создаем динамические стили для элементов
+    const styleId = 'theme-dynamic-styles';
+    let themeStyles = document.getElementById(styleId);
+    
+    if (!themeStyles) {
+        themeStyles = document.createElement('style');
+        themeStyles.id = styleId;
+        document.head.appendChild(themeStyles);
+    }
+    
+    // Определяем, темная ли тема
+    const isDarkTheme = themeKey === 'dark' || 
+                        themeKey === 'midnight' || 
+                        themeKey === 'galaxy' ||
+                        themeKey === 'galaxyDream';
+    
+    // Генерируем CSS
+    themeStyles.textContent = `
+        /* Основные контейнеры */
+        .tab-content {
+            background: ${theme.backgrounds?.container || 'rgba(255,255,255,0.95)'} !important;
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Заголовки секций */
+        .section-header {
+            background: ${theme.colors.primary} !important;
+            background: linear-gradient(90deg, 
+                ${theme.colors.primary} 0%, 
+                ${theme.colors.secondary} 100%) !important;
+            color: white !important;
+        }
+        
+        /* Кнопки */
+        .btn {
+            background: ${theme.colors.secondary} !important;
+            background: linear-gradient(45deg, 
+                ${theme.colors.secondary} 0%, 
+                ${theme.colors.accent} 100%) !important;
+            color: white !important;
+            border: none !important;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        /* Таблицы */
+        .estimate-table thead {
+            background: ${theme.colors.primary} !important;
+            background: linear-gradient(90deg, 
+                ${theme.colors.primary} 0%, 
+                ${theme.colors.secondary} 100%) !important;
+            color: white !important;
+        }
+        
+        /* Карточки */
+        .price-section {
+            background: ${theme.backgrounds?.card || 'rgba(255,255,255,0.9)'} !important;
+            border: 1px solid rgba(${hexToRgb(theme.colors.primary)}, 0.2) !important;
+        }
+        
+        /* Модальные окна */
+        .modal-content {
+            background: ${theme.backgrounds?.container || 'white'} !important;
+            color: ${isDarkTheme ? '#f0f0f0' : '#333'} !important;
+        }
+        
+        /* Текстовые поля */
+        input, select, textarea {
+            background: ${isDarkTheme ? 'rgba(255,255,255,0.1)' : 'white'} !important;
+            color: ${isDarkTheme ? '#f0f0f0' : '#333'} !important;
+            border: 1px solid rgba(${hexToRgb(theme.colors.secondary)}, 0.3) !important;
+        }
+        
+        /* Для темных тем */
+        ${isDarkTheme ? `
+            body {
+                color: #f0f0f0 !important;
+            }
+            
+            .price-item {
+                color: #f0f0f0 !important;
+            }
+            
+            .price-item:hover {
+                background: rgba(255,255,255,0.1) !important;
+            }
+            
+            .estimate-table tbody tr {
+                color: #f0f0f0 !important;
+            }
+            
+            .estimate-table tbody tr:hover {
+                background: rgba(255,255,255,0.05) !important;
+            }
+            
+            .logo-text {
+                color: #f0f0f0 !important;
+            }
+        ` : ''}
+    `;
+    
+    // 4. Обновляем кнопку темы, если она есть
+    updateThemeButton(theme);
+    
+    // 5. Показываем уведомление
+    showNotification(`Тема изменена: ${theme.name}`);
+}
+
+// Вспомогательная функция для конвертации цвета
+function hexToRgb(hex) {
+    if (!hex) return '0, 0, 0';
+    hex = hex.replace('#', '');
+    
+    if (hex.length === 3) {
+        hex = hex.split('').map(char => char + char).join('');
+    }
+    
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    
+    return `${r}, ${g}, ${b}`;
+}
+
+// Функция для обновления кнопки темы
+function updateThemeButton(theme) {
+    const themeBtn = document.getElementById('themeToggleBtn');
+    if (themeBtn && theme) {
+        themeBtn.innerHTML = `
+            <i class="fas fa-palette"></i>
+            <span>${theme.name}</span>
+        `;
+    }
+}
+
+// Функция для отображения меню выбора тем
+function showThemeMenu() {
+    const menu = document.createElement('div');
+    menu.className = 'dropdown-menu';
+    menu.id = 'themeMenu';
+    menu.style.cssText = `
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        min-width: 200px;
+        z-index: 1000;
+        margin-top: 5px;
+        max-height: 400px;
+        overflow-y: auto;
+    `;
+    
+    // Сортируем темы по имени
+    const sortedThemes = Object.entries(themes)
+        .sort((a, b) => a[1].name.localeCompare(b[1].name));
+    
+    sortedThemes.forEach(([id, theme]) => {
+        const item = document.createElement('button');
+        item.className = 'dropdown-item';
+        item.style.cssText = `
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+        `;
+        
+        item.innerHTML = `
+            <div style="
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                background: ${theme.colors.primary};
+                border: 2px solid ${theme.colors.secondary};
+            "></div>
+            <span style="flex-grow: 1;">${theme.name}</span>
+            ${id === currentTheme ? 
+                '<i class="fas fa-check" style="color: var(--success);"></i>' : 
+                ''
+            }
+        `;
+        
+        item.addEventListener('mouseenter', function() {
+            this.style.background = '#f5f5f5';
+        });
+        
+        item.addEventListener('mouseleave', function() {
+            this.style.background = '';
+        });
+        
+        item.addEventListener('click', function() {
+            applyTheme(id);
+            document.body.removeChild(menu);
+        });
+        
+        menu.appendChild(item);
+    });
+    
+    document.body.appendChild(menu);
+    
+    // Закрытие при клике вне меню
+    setTimeout(() => {
+        document.addEventListener('click', function closeMenu(e) {
+            if (!e.target.closest('#themeToggleBtn') && !e.target.closest('#themeMenu')) {
+                if (menu.parentNode) {
+                    document.body.removeChild(menu);
+                }
+                document.removeEventListener('click', closeMenu);
+            }
+        });
+    }, 10);
+}
+
+// Добавьте кнопку для переключения тем в ваш HTML
+function addThemeToggleButton() {
+    const controls = document.querySelector('.estimate-controls');
+    if (!controls) return;
+    
+    const themeBtn = document.createElement('button');
+    themeBtn.id = 'themeToggleBtn';
+    themeBtn.className = 'btn btn-info';
+    themeBtn.innerHTML = '<i class="fas fa-palette"></i> Тема';
+    themeBtn.addEventListener('click', showThemeMenu);
+    
+    controls.appendChild(themeBtn);
+}
+
+// Загрузка сохраненной темы при запуске
+function loadSavedTheme() {
+    const savedTheme = localStorage.getItem('chatTheme');
+    if (savedTheme && themes[savedTheme]) {
+        applyTheme(savedTheme);
+    } else {
+        applyTheme('default');
+    }
+}
+
+// Инициализация при загрузке
+document.addEventListener('DOMContentLoaded', function() {
+    addThemeToggleButton();
+    loadSavedTheme();
+});
     
     // Применяем дополнительные градиенты для элементов
     const styleId = 'dynamic-theme-styles';
