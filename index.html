@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Чат с Electric Group | Профессиональный калькулятор освещения + AI</title>
+    <title>Чат с Electric Group | Профессиональная консультация электрика</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -23,8 +23,8 @@
             --success: #27ae60;
             --warning: #f39c12;
             --telegram: #0088cc;
-            --ai-color: #6e48aa;
-            --ai-secondary: #9d50bb;
+            --whatsapp: #25D366;
+            --instagram: #E1306C;
             --menu-bg: rgba(255, 255, 255, 0.98);
         }
 
@@ -50,719 +50,6 @@
             gap: 20px;
         }
 
-        /* Переключатель режимов */
-        .mode-switcher {
-            display: flex;
-            background: white;
-            border-radius: 12px;
-            padding: 5px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-            margin-bottom: 10px;
-        }
-
-        .mode-btn {
-            flex: 1;
-            padding: 12px 15px;
-            border: none;
-            background: none;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-        }
-
-        .mode-btn.active {
-            background: var(--secondary);
-            color: white;
-            box-shadow: 0 3px 8px rgba(52, 152, 219, 0.3);
-        }
-
-        .mode-btn:not(.active):hover {
-            background: #f8f9fa;
-        }
-
-        .mode-btn i {
-            font-size: 16px;
-        }
-
-        /* Окно калькулятора */
-        .calc-container {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            width: 100%;
-            transition: all 0.3s ease;
-            position: relative;
-            z-index: 1;
-        }
-
-        .calc-window {
-            height: 240px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .calc-title {
-            color: var(--primary);
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .calc-title i {
-            color: var(--accent);
-            font-size: 14px;
-        }
-
-        .input-section {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin-bottom: 15px;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .input-group label {
-            font-weight: 500;
-            margin-bottom: 6px;
-            color: var(--primary);
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .input-group label i {
-            color: var(--secondary);
-            font-size: 11px;
-        }
-
-        .input-field {
-            position: relative;
-        }
-
-        .input-field input, .input-field select {
-            width: 100%;
-            padding: 9px;
-            border: 1px solid #e0e6ed;
-            border-radius: 6px;
-            font-size: 13px;
-            transition: all 0.3s;
-            background: #f8fafc;
-        }
-
-        .input-field input:focus, .input-field select:focus {
-            border-color: var(--secondary);
-            outline: none;
-            background: white;
-            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
-        }
-
-        .custom-lux-input {
-            margin-top: 6px;
-            display: none;
-        }
-
-        .custom-lux-input.active {
-            display: block;
-        }
-
-        .unit {
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--gray);
-            font-size: 11px;
-        }
-
-        .error-message {
-            color: var(--accent);
-            font-size: 10px;
-            margin-top: 4px;
-            display: none;
-        }
-
-        .calculate-btn {
-            background: var(--secondary);
-            color: white;
-            border: none;
-            padding: 12px;
-            font-size: 15px;
-            font-weight: 600;
-            border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 8px;
-        }
-
-        .calculate-btn:hover:not(:disabled) {
-            background: var(--primary);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-        /* Кнопка AI-анализа */
-        .ai-analyze-btn {
-            background: linear-gradient(135deg, var(--ai-color) 0%, var(--ai-secondary) 100%);
-            color: white;
-            border: none;
-            padding: 12px;
-            font-size: 15px;
-            font-weight: 600;
-            border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 8px;
-            box-shadow: 0 4px 12px rgba(110, 72, 170, 0.3);
-        }
-
-        .ai-analyze-btn:hover {
-            background: linear-gradient(135deg, #5d3a9b 0%, #8a2be2 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(110, 72, 170, 0.4);
-        }
-
-        .ai-analyze-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .results-window {
-            height: auto;
-            min-height: 250px;
-            overflow: hidden;
-            margin-top: 15px;
-        }
-
-        .results-title {
-            color: var(--primary);
-            margin-bottom: 15px;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .basic-results {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin-bottom: 15px;
-        }
-
-        .result-card {
-            background: #f8fafc;
-            border-radius: 8px;
-            padding: 12px;
-            text-align: center;
-            border: 1px solid #e0e6ed;
-            height: 75px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        .result-card.highlight {
-            background: linear-gradient(135deg, #e8f4fc 0%, #d4eaf7 100%);
-            border-color: var(--secondary);
-            box-shadow: 0 3px 8px rgba(52, 152, 219, 0.1);
-        }
-
-        .result-card i {
-            font-size: 15px;
-            color: var(--secondary);
-            margin-bottom: 6px;
-        }
-
-        .result-label {
-            font-size: 11px;
-            color: var(--gray);
-            margin-bottom: 4px;
-        }
-
-        .result-value {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--primary);
-            line-height: 1.2;
-        }
-
-        .result-unit {
-            font-size: 10px;
-            color: var(--gray);
-            margin-top: 2px;
-        }
-
-        /* Кнопка выбора других ламп */
-        .lamps-toggle-btn {
-            background: var(--warning);
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            width: 100%;
-            margin-top: 10px;
-            margin-bottom: 15px;
-        }
-
-        .lamps-toggle-btn:hover {
-            background: #e67e22;
-            transform: translateY(-2px);
-        }
-
-        /* Секция выбора ламп */
-        .lamps-section {
-            display: none;
-            margin-top: 15px;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .lamps-section.active {
-            display: block;
-        }
-
-        .lamps-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 12px;
-            margin-bottom: 15px;
-        }
-
-        .lamp-option {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            text-align: center;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .lamp-option:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        .lamp-option.selected {
-            border-color: var(--success);
-            background: #e8f5e9;
-        }
-
-        .lamp-power {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 5px;
-        }
-
-        .lamp-lumens {
-            font-size: 12px;
-            color: var(--gray);
-            margin-bottom: 8px;
-        }
-
-        .lamp-count {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--accent);
-            margin-top: 5px;
-        }
-
-        .lamp-socket {
-            font-size: 10px;
-            color: var(--gray);
-            margin-top: 3px;
-        }
-
-        .coefficient-info {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 10px 12px;
-            margin-top: 10px;
-            font-size: 12px;
-            color: var(--dark);
-            border-left: 4px solid var(--secondary);
-        }
-
-        .coefficient-info .highlight {
-            color: var(--accent);
-            font-weight: 700;
-        }
-
-        .main-info {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: linear-gradient(135deg, var(--secondary) 0%, #2980b9 100%);
-            color: white;
-            border-radius: 8px;
-            padding: 12px 18px;
-            margin-top: 12px;
-            min-height: 55px;
-        }
-
-        .lux-value {
-            font-size: 19px;
-            font-weight: 800;
-        }
-
-        .lux-label {
-            font-size: 12px;
-            opacity: 0.9;
-        }
-
-        .phone-info {
-            font-size: 12px;
-            text-align: right;
-        }
-
-        .phone-info strong {
-            font-size: 13px;
-        }
-
-        /* Предупреждение о высоте */
-        .height-warning {
-            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-            color: white;
-            border-radius: 8px;
-            padding: 10px 12px;
-            margin-top: 10px;
-            font-size: 12px;
-            display: none;
-            align-items: center;
-            gap: 10px;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .height-warning.active {
-            display: flex;
-        }
-
-        .height-warning i {
-            font-size: 15px;
-        }
-
-        /* Кнопка назад */
-        .back-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        .back-btn:hover {
-            background: var(--accent);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-        /* ВЫДВИЖНОЕ ОКНО AI-АНАЛИЗА */
-        .ai-analysis-panel {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            border-radius: 20px 20px 0 0;
-            box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            transform: translateY(100%);
-            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-            max-height: 85vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .ai-analysis-panel.active {
-            transform: translateY(0);
-        }
-
-        .ai-panel-header {
-            background: linear-gradient(135deg, var(--ai-color) 0%, var(--ai-secondary) 100%);
-            color: white;
-            padding: 18px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: relative;
-        }
-
-        .ai-panel-header h3 {
-            margin: 0;
-            font-size: 18px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .ai-panel-header h3 i {
-            font-size: 20px;
-        }
-
-        .close-ai-panel {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-            font-size: 16px;
-        }
-
-        .close-ai-panel:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: rotate(90deg);
-        }
-
-        .ai-panel-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            background: #f8f9fa;
-        }
-
-        .ai-section {
-            background: white;
-            border-radius: 12px;
-            padding: 18px;
-            margin-bottom: 15px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-            border-left: 4px solid var(--ai-color);
-        }
-
-        .ai-section-title {
-            color: var(--ai-color);
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .ai-section-title i {
-            font-size: 14px;
-        }
-
-        .ai-option {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 10px;
-            border: 1px solid #e0e6ed;
-            transition: all 0.3s;
-        }
-
-        .ai-option:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(110, 72, 170, 0.1);
-            border-color: var(--ai-color);
-        }
-
-        .ai-option-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .ai-option-title {
-            font-weight: 700;
-            color: var(--primary);
-            font-size: 15px;
-        }
-
-        .ai-option-badge {
-            background: linear-gradient(135deg, var(--ai-color) 0%, var(--ai-secondary) 100%);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .ai-option-details {
-            font-size: 13px;
-            color: var(--dark);
-            line-height: 1.5;
-        }
-
-        .ai-option-details ul {
-            margin-left: 20px;
-            margin-top: 8px;
-        }
-
-        .ai-option-details li {
-            margin-bottom: 5px;
-        }
-
-        .ai-option-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid #e0e6ed;
-        }
-
-        .ai-stat {
-            text-align: center;
-        }
-
-        .ai-stat-value {
-            font-weight: 700;
-            color: var(--ai-color);
-            font-size: 14px;
-        }
-
-        .ai-stat-label {
-            font-size: 11px;
-            color: var(--gray);
-            margin-top: 3px;
-        }
-
-        .ai-recommendation {
-            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-            border-left-color: var(--success);
-            border-left-width: 4px;
-        }
-
-        .ai-recommendation .ai-section-title {
-            color: var(--success);
-        }
-
-        .ai-warning {
-            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-            border-left-color: var(--warning);
-        }
-
-        .ai-warning .ai-section-title {
-            color: var(--warning);
-        }
-
-        .ai-tips {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .ai-tip {
-            background: white;
-            border-radius: 8px;
-            padding: 10px;
-            font-size: 12px;
-            text-align: center;
-            border: 1px solid #e0e6ed;
-        }
-
-        .ai-tip i {
-            color: var(--ai-color);
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
-
-        .ai-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 999;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s;
-        }
-
-        .ai-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        /* Анимация загрузки */
-        .ai-loading {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 20px;
-            text-align: center;
-        }
-
-        .ai-loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid var(--ai-color);
-            border-radius: 50%;
-            animation: ai-spin 1s linear infinite;
-            margin-bottom: 15px;
-        }
-
-        @keyframes ai-spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .ai-loading-text {
-            color: var(--ai-color);
-            font-weight: 600;
-            font-size: 14px;
-        }
-
         /* Первое окно - контакты и меню */
         .contact-window {
             background: white;
@@ -770,7 +57,6 @@
             padding: 20px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
             width: 100%;
-            height: 300px;
             display: flex;
             align-items: flex-start;
             justify-content: space-between;
@@ -968,7 +254,7 @@
             transform: translateY(-2px);
         }
 
-        /* Второе окно - чат и соц. кнопки */
+        /* Второе окно: чат */
         .chat-window {
             background: white;
             border-radius: 15px;
@@ -1174,196 +460,29 @@
             background-color: #333333;
         }
 
-        /* Скрытие элементов */
-        .hidden {
-            display: none !important;
-        }
-
         /* Кастомный скроллбар */
-        .chat-messages::-webkit-scrollbar,
-        .ai-panel-content::-webkit-scrollbar {
+        .chat-messages::-webkit-scrollbar {
             width: 4px;
         }
 
-        .chat-messages::-webkit-scrollbar-track,
-        .ai-panel-content::-webkit-scrollbar-track {
+        .chat-messages::-webkit-scrollbar-track {
             background: #f1f1f1;
             border-radius: 10px;
         }
 
-        .chat-messages::-webkit-scrollbar-thumb,
-        .ai-panel-content::-webkit-scrollbar-thumb {
+        .chat-messages::-webkit-scrollbar-thumb {
             background: #c1c1c1;
             border-radius: 10px;
         }
 
-        .chat-messages::-webkit-scrollbar-thumb:hover,
-        .ai-panel-content::-webkit-scrollbar-thumb:hover {
+        .chat-messages::-webkit-scrollbar-thumb:hover {
             background: #a8a8a8;
         }
 
-        /* ==================== МОБИЛЬНАЯ АДАПТАЦИЯ AI-ПАНЕЛИ ==================== */
-        @media (max-width: 768px) {
-            .ai-analysis-panel {
-                border-radius: 15px 15px 0 0;
-                max-height: 90vh;
-            }
-            
-            .ai-panel-header {
-                padding: 15px;
-            }
-            
-            .ai-panel-header h3 {
-                font-size: 16px;
-            }
-            
-            .ai-panel-content {
-                padding: 15px;
-                -webkit-overflow-scrolling: touch;
-            }
-            
-            .ai-section {
-                padding: 15px;
-                margin-bottom: 12px;
-            }
-            
-            .ai-section-title {
-                font-size: 15px;
-                margin-bottom: 10px;
-            }
-            
-            .ai-option {
-                padding: 12px;
-            }
-            
-            .ai-option-details {
-                font-size: 12px;
-            }
-            
-            .ai-option-stats {
-                grid-template-columns: repeat(3, 1fr);
-                gap: 8px;
-            }
-            
-            .ai-tips {
-                grid-template-columns: 1fr;
-                gap: 8px;
-            }
-            
-            .ai-tip {
-                font-size: 11px;
-                padding: 8px;
-            }
-            
-            .close-ai-panel {
-                width: 40px;
-                height: 40px;
-                font-size: 18px;
-            }
-            
-            .ai-loading {
-                padding: 30px 15px;
-            }
-            
-            .ai-loading-spinner {
-                width: 40px;
-                height: 40px;
-            }
-            
-            .ai-loading-text {
-                font-size: 13px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .ai-analysis-panel {
-                max-height: 92vh;
-                border-radius: 12px 12px 0 0;
-            }
-            
-            .ai-panel-header {
-                padding: 12px 15px;
-            }
-            
-            .ai-panel-header h3 {
-                font-size: 15px;
-                gap: 8px;
-            }
-            
-            .ai-panel-header h3 i {
-                font-size: 16px;
-            }
-            
-            .ai-panel-content {
-                padding: 12px;
-            }
-            
-            .ai-section {
-                padding: 12px;
-                margin-bottom: 10px;
-            }
-            
-            .ai-option {
-                padding: 10px;
-            }
-            
-            .ai-option-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 5px;
-            }
-            
-            .ai-option-stats {
-                grid-template-columns: repeat(3, 1fr);
-                gap: 6px;
-            }
-            
-            .ai-stat-value {
-                font-size: 13px;
-            }
-            
-            .ai-stat-label {
-                font-size: 10px;
-            }
-            
-            .ai-tip {
-                font-size: 10px;
-                padding: 6px;
-            }
-            
-            .close-ai-panel {
-                width: 36px;
-                height: 36px;
-                font-size: 16px;
-            }
-        }
-
-        /* Адаптивность калькулятора (без показа чата в мобильной версии) */
+        /* АДАПТИВНОСТЬ */
         @media (max-width: 850px) {
             .container {
                 max-width: 100%;
-            }
-            
-            /* ФИКС КАЛЬКУЛЯТОРА НА МОБИЛЬНЫХ */
-            .calc-window {
-                height: 340px;
-            }
-    
-            .input-section {
-                gap: 15px;
-                margin-bottom: 20px;
-            }
-    
-            .input-field input, 
-            .input-field select {
-                padding: 11px 12px;
-                font-size: 14px;
-            }
-    
-            .calculate-btn,
-            .ai-analyze-btn {
-                margin-top: 20px;
-                padding: 14px;
             }
             
             .contact-window {
@@ -1386,22 +505,6 @@
             
             .chat-content {
                 height: calc(350px - 60px);
-            }
-            
-            .calc-window {
-                height: 280px;
-            }
-            
-            .results-window {
-                min-height: 300px;
-            }
-            
-            .basic-results {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .lamps-grid {
-                grid-template-columns: repeat(2, 1fr);
             }
         }
 
@@ -1430,55 +533,8 @@
                 max-width: 250px;
             }
             
-            .calc-window {
-                height: 320px;
-                padding: 8px;
-            }
-            
-            .input-section {
-                grid-template-columns: 1fr;
-                gap: 8px;
-            }
-            
-            .results-title {
-                margin-top: 120px;
-                margin-bottom: 20px;
-            }
-            
-            .basic-results {
-                grid-template-columns: 1fr;
-                gap: 8px;
-            }
-            
-            .lamps-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .main-info {
-                flex-direction: column;
-                height: auto;
-                gap: 8px;
-                text-align: center;
-                padding: 15px;
-            }
-            
-            .phone-info {
-                text-align: center;
-            }
-            
-            .mode-switcher {
-                flex-direction: column;
-                gap: 5px;
-            }
-            
-            .mode-btn {
-                padding: 10px;
-            }
-            
-            /* Кнопка AI на мобильных */
-            .ai-analyze-btn {
-                padding: 14px;
-                font-size: 14px;
+            .chat-window {
+                height: 280px;
             }
         }
 
@@ -1508,344 +564,157 @@
 </head>
 <body>
     <div class="container">
-        <!-- Калькулятор освещенности (скрыт по умолчанию) -->
-        <div class="calc-container hidden" id="calcContainer">
-            <!-- Переключатель режимов -->
-            <div class="mode-switcher">
-                <button class="mode-btn active" id="modeSnipBtn">
-                    <i class="fas fa-file-contract"></i> СНиП (нормы)
-                </button>
-                <button class="mode-btn" id="modeComfortBtn">
-                    <i class="fas fa-couch"></i> Комфорт
-                </button>
-            </div>
-            
-            <!-- Окно 1: Калькулятор -->
-            <div class="calc-window">
-                <h2 class="calc-title">
-                    <i class="fas fa-calculator"></i> Профессиональный расчет освещения + AI
-                </h2>
+        <!-- Первое окно: контакты и меню -->
+        <div class="contact-window">
+            <!-- Левый блок: логотип и контакты -->
+            <div class="logo-contact-section">
+                <img src="https://www.stom-firms.ru/i/customUsersImages/2026-01/img695e4c9ac1ca3.webp" 
+                     class="logo-img" 
+                     alt="ELECTRIC GROUP">
                 
-                <div class="input-section">
-                    <div class="input-group">
-                        <label for="length"><i class="fas fa-ruler-horizontal"></i> Длина</label>
-                        <div class="input-field">
-                            <input type="number" id="length" min="0.1" max="100" step="0.1" value="5.0" required>
-                            <span class="unit">м</span>
-                        </div>
-                        <div class="error-message" id="lengthError">0.1-100 м</div>
+                <div class="contact-details">
+                    <div class="contact-item">
+                        <i class="fas fa-phone-alt"></i>
+                        <a href="tel:+79635984846" class="phone-link">+7 (963) 598-48-46 (Али)</a>
                     </div>
-                    
-                    <div class="input-group">
-                        <label for="width"><i class="fas fa-ruler-vertical"></i> Ширина</label>
-                        <div class="input-field">
-                            <input type="number" id="width" min="0.1" max="100" step="0.1" value="4.0" required>
-                            <span class="unit">м</span>
-                        </div>
-                        <div class="error-message" id="widthError">0.1-100 м</div>
+
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <span>gunoevrz@gmail.com</span>
                     </div>
-                    
-                    <div class="input-group">
-                        <label for="height"><i class="fas fa-arrows-alt-v"></i> Высота</label>
-                        <div class="input-field">
-                            <input type="number" id="height" min="1.5" max="15" step="0.1" value="2.7" required>
-                            <span class="unit">м</span>
-                        </div>
-                        <div class="error-message" id="heightError">1.5-15 м</div>
-                    </div>
-                    
-                    <div class="input-group">
-                        <label for="roomType"><i class="fas fa-building"></i> Тип помещения</label>
-                        <div class="input-field">
-                            <select id="roomType">
-                                <option value="50">Коридоры, санузлы (50 лк)</option>
-                                <option value="150" selected>Жилые комнаты, кухни (150 лк)</option>
-                                <option value="200">Детские комнаты (200 лк)</option>
-                                <option value="300">Кабинеты, Офисы (300 лк)</option>
-                                <option value="400">Торговые залы (400 лк)</option>
-                                <option value="custom">Пользовательский...</option>
-                            </select>
-                        </div>
-                        <div class="custom-lux-input" id="customLuxInput">
-                            <input type="number" id="customLux" min="1" max="10000" step="1" placeholder="Введите люксы" value="150">
-                        </div>
+
+                    <div class="contact-item">
+                        <i class="fas fa-clock"></i>
+                        <span>Пн-Вс. 8:00-18:00, Пт. Вых.</span>
                     </div>
                 </div>
-                
-                <button class="calculate-btn" id="calculateBtn">
-                    <i class="fas fa-bolt"></i> Рассчитать освещение
-                </button>
-                
-                <!-- КНОПКА AI-АНАЛИЗА -->
-                <button class="ai-analyze-btn" id="aiAnalyzeBtn" disabled>
-                    <i class="fas fa-robot"></i> AI Анализ и рекомендации
-                </button>
             </div>
 
-            <!-- Окно 2: Результаты -->
-            <div class="results-window">
-                <div id="emptyResults" style="text-align: center; padding: 180px 0 60px 0; color: var(--gray); height: 100%; display: flex; flex-direction: column; justify-content: center;">
-                    <i class="fas fa-calculator" style="font-size: 36px; margin-bottom: 10px; opacity: 0.3;"></i>
-                    <p style="font-size: 14px;">Нажмите "Рассчитать" для получения результатов</p>
-                </div>
-                
-                <div id="results" class="hidden">
-                    <h3 class="results-title"><i class="fas fa-chart-line"></i> Результаты расчета</h3>
-                    
-                    <div class="basic-results">
-                        <div class="result-card">
-                            <i class="fas fa-expand-arrows-alt"></i>
-                            <div class="result-label">Площадь</div>
-                            <div class="result-value" id="areaResult">20.0</div>
-                            <div class="result-unit">м²</div>
-                        </div>
-                        
-                        <div class="result-card" id="luxCard">
-                            <i class="fas fa-lightbulb"></i>
-                            <div class="result-label">Освещенность</div>
-                            <div class="result-value" id="luxResult">150</div>
-                            <div class="result-unit">лк (СНиП)</div>
-                        </div>
-                        
-                        <div class="result-card highlight">
-                            <i class="fas fa-sun"></i>
-                            <div class="result-label">Световой поток</div>
-                            <div class="result-value" id="lumenResult">7200</div>
-                            <div class="result-unit">лм</div>
-                        </div>
-                        
-                        <div class="result-card">
-                            <i class="fas fa-plug"></i>
-                            <div class="result-label">Стандартные LED</div>
-                            <div class="result-value" id="lampsResult">9</div>
-                            <div class="result-unit">шт × 800лм</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Предупреждение о высоте -->
-                    <div class="height-warning" id="heightWarning">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <div>
-                            <strong>Высокое помещение!</strong> Учитывается коэффициент высоты: <span id="heightMultiplier">×1.0</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Кнопка выбора других ламп -->
-                    <button class="lamps-toggle-btn" id="lampsToggleBtn">
-                        <i class="fas fa-lightbulb"></i> Выбрать другие типы ламп
+            <!-- Правый блок: меню и форма -->
+            <div class="menu-form-section">
+                <!-- Меню с тремя точками -->
+                <div class="menu-container">
+                    <button class="menu-toggle" id="menuToggle">
+                        <i class="fas fa-ellipsis-v"></i>
                     </button>
                     
-                    <!-- Секция выбора ламп -->
-                    <div class="lamps-section" id="lampsSection">
-                        <h4 style="color: var(--primary); margin-bottom: 10px; font-size: 14px;">
-                            <i class="fas fa-list"></i> Варианты освещения:
-                        </h4>
-                        <div class="lamps-grid" id="lampsGrid">
-                            <!-- Варианты ламп будут добавлены через JavaScript -->
-                        </div>
-                    </div>
-                    
-                    <!-- Информация о коэффициентах -->
-                    <div class="coefficient-info">
-                        <i class="fas fa-info-circle"></i> 
-                        Коэффициенты: Использования <span class="highlight" id="coefficientValue">0.5</span> | 
-                        Запас <span class="highlight" id="reserveValue">1.2</span> | 
-                        Высота <span class="highlight" id="heightCoefficient">×1.0</span> |
-                        Итог <span class="highlight" id="totalMultiplier">2.4</span>
-                    </div>
-                    
-                    <div class="main-info">
-                        <div>
-                            <div class="lux-value" id="totalLuxResult">150 лк (СНиП)</div>
-                            <div class="lux-label" id="modeLabel">Нормативная освещенность по СНиП</div>
-                        </div>
-                        <div class="phone-info">
-                            <div>Консультация электрика:</div>
-                            <strong>+7 (963) 598-48-46</strong>
-                        </div>
+                    <div class="dropdown-menu" id="dropdownMenu">
+                        <!-- Пункт 1 -->
+                        <a href="#" class="menu-item">
+                            <i class="fas fa-home"></i>
+                            Главная
+                        </a>
+                        
+                        <!-- Пункт 2 -->
+                        <a href="#" class="menu-item">
+                            <i class="fas fa-bolt"></i>
+                            Услуги
+                        </a>
+                        
+                        <!-- ЭлектроСметы 3 -->
+                        <a href="https://alivu.github.io/electro-smeta/" 
+                            target="_blank" 
+                            class="menu-item">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                            ЭлектроСмета
+                        </a>
+                        
+                        <!-- Пункт 4: КАЛЬКУЛЯТОР ОСВЕЩЕНИЯ -->
+                        <a href="https://alivu.github.io/AI_calc/" 
+                            target="_blank" 
+                            class="menu-item">
+                            <i class="fas fa-calculator"></i>
+                            Калькулятор освещения + AI
+                        </a>
                     </div>
                 </div>
-            </div>
 
-            <!-- Кнопка возврата -->
-            <button class="back-btn" id="backToChatBtn">
-                <i class="fas fa-arrow-left"></i> Вернуться в чат
-            </button>
+                <!-- Форма контактов -->
+                <form class="contact-form" id="contactForm" autocomplete="on">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <input type="tel" 
+                                    id="userPhone"
+                                    name="phone"
+                                    placeholder="Ваш телефон"
+                                    autocomplete="tel"
+                                    required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <input type="email" 
+                                    id="userEmail" 
+                                    name="email"
+                                    placeholder="Ваш email"
+                                    autocomplete="email">
+                        </div>
+                    </div>
+                    
+                    <button class="save-contacts-btn" id="saveContactsBtn">
+                        <i class="fas fa-save"></i> Сохранить контакты
+                    </button>
+                </form>
+            </div>
         </div>
 
-        <!-- Чат (показан по умолчанию) -->
-        <div id="chatContainer">
-            <!-- Первое окно: контакты и меню -->
-            <div class="contact-window">
-                <!-- Левый блок: логотип и контакты -->
-                <div class="logo-contact-section">
-                    <img src="https://www.stom-firms.ru/i/customUsersImages/2026-01/img695e4c9ac1ca3.webp" 
-                         class="logo-img" 
-                         alt="ELECTRIC GROUP">
-                    
-                    <div class="contact-details">
-                        <div class="contact-item">
-                            <i class="fas fa-phone-alt"></i>
-                            <a href="tel:+79635984846" class="phone-link">+7 (963) 598-48-46 (Али)</a>
-                        </div>
-        
-                        <div class="contact-item">
-                            <i class="fas fa-envelope"></i>
-                            <span>gunoevrz@gmail.com</span>
-                        </div>
-        
-                        <div class="contact-item">
-                            <i class="fas fa-clock"></i>
-                            <span>Пн-Вс. 8:00-18:00, Пт. Вых.</span>
-                        </div>
-                    </div>
+        <!-- Второе окно: чат -->
+        <div class="chat-window">
+            <div class="chat-header">
+                <i class="fab fa-telegram"></i>
+                <div class="chat-header-content">
+                    <h3>Чат с Electric Group</h3>
+                    <p>Бот обратной связи... Нужен VPN</p>
                 </div>
-
-                <!-- Правый блок: меню и форма -->
-                <div class="menu-form-section">
-                    <!-- Меню с тремя точками -->
-                    <div class="menu-container">
-                        <button class="menu-toggle" id="menuToggle">
-                            <i class="fas fa-ellipsis-v"></i>
-                        </button>
-                        
-                        <div class="dropdown-menu" id="dropdownMenu">
-                            <!-- Пункт 1 -->
-                            <a href="#" class="menu-item">
-                                <i class="fas fa-home"></i>
-                                Главная
-                            </a>
-                            
-                            <!-- Пункт 2 -->
-                            <a href="#" class="menu-item">
-                                <i class="fas fa-bolt"></i>
-                                Услуги
-                            </a>
-                            
-<!-- ЭлектроСметы 3 -->
-<a href="https://alivu.github.io/electro-smeta/" 
-    target="_blank" 
-    class="menu-item">
-    <i class="fas fa-file-invoice-dollar"></i>
-    ЭлектроСмета
-</a>
-
-<!-- Пункт 4: КАЛЬКУЛЯТОР ОСВЕЩЕНИЯ -->
-<a href="https://alivu.github.io/AI_calc/" 
-    target="_blank" 
-    class="menu-item">
-    <i class="fas fa-calculator"></i>
-    Калькулятор освещения + AI
-</a>
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Форма контактов -->
-                    <form class="contact-form" id="contactForm" autocomplete="on">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <input type="tel" 
-                                        id="userPhone"
-                                        name="phone"
-                                        placeholder="Ваш телефон"
-                                        autocomplete="tel"
-                                        required>
-                            </div>
-                            
-                            <div class="form-group">
-                                <input type="email" 
-                                        id="userEmail" 
-                                        name="email"
-                                        placeholder="Ваш email"
-                                        autocomplete="email">
-                            </div>
-                        </div>
-                        
-                        <button class="save-contacts-btn" id="saveContactsBtn">
-                            <i class="fas fa-save"></i> Сохранить контакты
-                        </button>
-                    </form>
+                <div class="chat-status" id="chatStatus">
+                    <i class="fas fa-circle"></i> Проверка соединения...
                 </div>
             </div>
-
-            <!-- Второе окно: чат -->
-            <div class="chat-window">
-                <div class="chat-header">
-                    <i class="fab fa-telegram"></i>
-                    <div class="chat-header-content">
-                        <h3>Чат с Electric Group</h3>
-                        <p>Бот обратной связи... Нужен VPN</p>
+            
+            <div class="chat-content">
+                <div class="chat-messages" id="chatMessages">
+                    <!-- Сообщения будут добавляться сюда -->
+                    <div class="message bot">
+                        Ассаламу 1алейкум! Задавайте вопрос и ждите обратной связи на номер или майл.
+                        <div class="message-time" id="currentTime"></div>
                     </div>
-                    <div class="chat-status" id="chatStatus">
-                        <i class="fas fa-circle"></i> Проверка соединения...
+                    
+                    <div class="message bot">
+                        Также доступен AI-анализ расчета освещения в калькуляторе!
+                        <div class="message-time">Сейчас</div>
                     </div>
                 </div>
                 
-                <div class="chat-content">
-                    <div class="chat-messages" id="chatMessages">
-                        <!-- Сообщения будут добавляться сюда -->
-                        <div class="message bot">
-                            Ассаламу 1алейкум! Задавайте вопрос и ждите обратной связи на номер или майл.
-                            <div class="message-time" id="currentTime"></div>
-                        </div>
-                        
-                        <div class="message bot">
-                            Также доступен AI-анализ расчета освещения в калькуляторе!
-                            <div class="message-time">Сейчас</div>
-                        </div>
-                    </div>
-                    
-                    <div class="chat-input-container">
-                        <input type="text" 
-                               class="message-input" 
-                               id="messageInput" 
-                               placeholder="Введите ваше сообщение..."
-                               maxlength="500">
-                        <button class="send-btn" id="sendBtn">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                    </div>
+                <div class="chat-input-container">
+                    <input type="text" 
+                           class="message-input" 
+                           id="messageInput" 
+                           placeholder="Введите ваше сообщение..."
+                           maxlength="500">
+                    <button class="send-btn" id="sendBtn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
                 </div>
             </div>
-
-            <!-- Социальные кнопки -->
-            <div class="social-buttons">
-                <a href="tel:+79635984846" class="social-btn phone-btn">
-                    <i class="fas fa-phone"></i> Позвонить
-                </a>
-                <a href="https://wa.me/79635984846" target="_blank" class="social-btn whatsapp-btn">
-                    <i class="fab fa-whatsapp"></i> WhatsApp
-                </a>
-                <a href="https://www.instagram.com/electric_group" target="_blank" class="social-btn instagram-btn">
-                    <i class="fab fa-instagram"></i> Instagram
-                </a>
-                <a href="https://www.tiktok.com/@electric_group" target="_blank" class="social-btn tiktok-btn">
-                    <i class="fab fa-tiktok"></i> TikTok
-                </a>
-            </div>
         </div>
-    </div>
 
-    <!-- ВЫДВИЖНОЕ ОКНО AI-АНАЛИЗА -->
-    <div class="ai-overlay" id="aiOverlay"></div>
-    
-    <div class="ai-analysis-panel" id="aiAnalysisPanel">
-        <div class="ai-panel-header">
-            <h3><i class="fas fa-robot"></i> AI Анализ освещения</h3>
-            <button class="close-ai-panel" id="closeAiPanel">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="ai-panel-content" id="aiPanelContent">
-            <!-- Содержимое AI анализа будет здесь -->
+        <!-- Социальные кнопки -->
+        <div class="social-buttons">
+            <a href="tel:+79635984846" class="social-btn phone-btn">
+                <i class="fas fa-phone"></i> Позвонить
+            </a>
+            <a href="https://wa.me/79635984846" target="_blank" class="social-btn whatsapp-btn">
+                <i class="fab fa-whatsapp"></i> WhatsApp
+            </a>
+            <a href="https://www.instagram.com/electric_group" target="_blank" class="social-btn instagram-btn">
+                <i class="fab fa-instagram"></i> Instagram
+            </a>
+            <a href="https://www.tiktok.com/@electric_group" target="_blank" class="social-btn tiktok-btn">
+                <i class="fab fa-tiktok"></i> TikTok
+            </a>
         </div>
     </div>
 
     <script>
-        // JavaScript код остается таким же, как в предыдущем ответе
-        // ... (полный JavaScript код из предыдущего ответа) ...
-
         // ==================== КОНФИГУРАЦИЯ ====================
         const TELEGRAM_BOT_TOKEN = '7697793092:AAEFz0BS4iOWQWth1okBkrcht_xNFc8s9QE';
         const TELEGRAM_CHAT_ID = '-1002439512860';
@@ -1863,82 +732,7 @@
             email: ''
         };
 
-        // ==================== БАЗА ДАННЫХ СВЕТИЛЬНИКОВ ====================
-        const LIGHTING_SOLUTIONS = {
-            // Люстры
-            chandeliers: [
-                { type: 'Малые люстры', horns: 3, lampType: 'E14', powerPerLamp: 6, coverage: 10, priceRange: '3-8 тыс.', style: 'классика' },
-                { type: 'Средние люстры', horns: 5, lampType: 'E14', powerPerLamp: 9, coverage: 15, priceRange: '8-15 тыс.', style: 'модерн' },
-                { type: 'Крупные люстры', horns: 8, lampType: 'E27', powerPerLamp: 20, coverage: 25, priceRange: '15-25 тыс.', style: 'классика' },
-                { type: 'Многорожковые люстры', horns: 12, lampType: 'E27', powerPerLamp: 20, coverage: 35, priceRange: '25-40 тыс.', style: 'роскошь' },
-                { type: 'Большие люстры', horns: 18, lampType: 'E27', powerPerLamp: 30, coverage: 50, priceRange: '40-60 тыс.', style: 'дворец' },
-                { type: 'Очень большие люстры', horns: 24, lampType: 'E27', powerPerLamp: 40, coverage: 70, priceRange: '60-100 тыс.', style: 'премиум' }
-            ],
-            
-            // Точечные светильники
-            spotlights: [
-                { type: 'Мини-споты', power: 6, coverage: 3, spacing: 1.2, mounting: 'встраиваемые' },
-                { type: 'Стандартные споты', power: 9, coverage: 4, spacing: 1.5, mounting: 'встраиваемые' },
-                { type: 'Мощные споты', power: 14, coverage: 5, spacing: 1.8, mounting: 'накладные' }
-            ],
-            
-            // Светодиодные панели
-            ledPanels: [
-                { type: 'Панель 30x30', power: 18, lumens: 1800, coverage: 4, mounting: 'подвесной потолок' },
-                { type: 'Панель 60x60', power: 36, lumens: 3600, coverage: 9, mounting: 'подвесной потолок' },
-                { type: 'Панель 120x30', power: 40, lumens: 4000, coverage: 12, mounting: 'накладная' }
-            ],
-            
-            // Прожекторы
-            projectors: [
-                { type: 'Потолочный прожектор', power: 50, lumens: 5000, coverage: 20, angle: 120 },
-                { type: 'Мощный прожектор', power: 100, lumens: 10000, coverage: 40, angle: 90 },
-                { type: 'Промышленный прожектор', power: 150, lumens: 15000, coverage: 60, angle: 60 }
-            ]
-        };
-
-        // ==================== КОЭФФИЦИЕНТЫ ДЛЯ РАСЧЕТА ====================
-        const COEFFICIENTS = {
-            // Коэффициенты использования (η) для разных помещений
-            utilization: {
-                'Коридоры, санузлы (50 лк)': 0.6,
-                'Жилые комнаты, кухни (150 лк)': 0.75,
-                'Детские комнаты (200 лк)': 0.75,
-                'Кабинеты, Офисы (300 лк)': 0.65,
-                'Торговые залы (400 лк)': 0.75,
-                'Пользовательский...': 0.65
-            },
-            
-            // Коэффициенты запаса (k) для LED освещения
-            reserve: 1.1,
-            
-            // Мультипликаторы для режима "Комфорт"
-            comfortMultipliers: {
-                'Коридоры, санузлы (50 лк)': 2.0,
-                'Жилые комнаты, кухни (150 лк)': 1.5,
-                'Детские комнаты (200 лк)': 1.5,
-                'Кабинеты, Офисы (300 лк)': 1.5,
-                'Торговые залы (400 лк)': 1.5,
-                'Пользовательский...': 1.5
-            },
-            
-            // КОЭФФИЦИЕНТЫ ВЫСОТЫ (Kh)
-            heightMultipliers: [
-                { max: 2.5, multiplier: 1.0, label: 'Низкое помещение' },
-                { max: 3.0, multiplier: 1.1, label: 'Стандартная высота' },
-                { max: 3.5, multiplier: 1.1, label: 'Немного выше' },
-                { max: 4.0, multiplier: 1.2, label: 'Повышенная высота' },
-                { max: 4.5, multiplier: 1.3, label: 'Высокое помещение' },
-                { max: 5.5, multiplier: 1.5, label: 'Очень высокое' },
-                { max: 6.5, multiplier: 2.0, label: 'Производственное' },
-                { max: 8.0, multiplier: 3.0, label: 'Складское' },
-                { max: 10.0, multiplier: 3.5, label: 'Ангарное' },
-                { max: 15.0, multiplier: 5.0, label: 'Высотное' }
-            ]
-        };
-
         // ==================== ЭЛЕМЕНТЫ DOM ====================
-        // Чат элементы
         const chatMessages = document.getElementById('chatMessages');
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
@@ -1946,849 +740,8 @@
         const userPhoneInput = document.getElementById('userPhone');
         const userEmailInput = document.getElementById('userEmail');
         const saveContactsBtn = document.getElementById('saveContactsBtn');
-        const chatContainer = document.getElementById('chatContainer');
-        
-        // Калькулятор элементы
-        const calcContainer = document.getElementById('calcContainer');
-        const modeSnipBtn = document.getElementById('modeSnipBtn');
-        const modeComfortBtn = document.getElementById('modeComfortBtn');
-        const lengthInput = document.getElementById('length');
-        const widthInput = document.getElementById('width');
-        const heightInput = document.getElementById('height');
-        const roomTypeSelect = document.getElementById('roomType');
-        const customLuxInput = document.getElementById('customLuxInput');
-        const customLux = document.getElementById('customLux');
-        const calculateBtn = document.getElementById('calculateBtn');
-        const aiAnalyzeBtn = document.getElementById('aiAnalyzeBtn');
-        const resultsDiv = document.getElementById('results');
-        const emptyResultsDiv = document.getElementById('emptyResults');
-        const backToChatBtn = document.getElementById('backToChatBtn');
-        const areaResult = document.getElementById('areaResult');
-        const luxResult = document.getElementById('luxResult');
-        const luxCard = document.getElementById('luxCard');
-        const lumenResult = document.getElementById('lumenResult');
-        const lampsResult = document.getElementById('lampsResult');
-        const totalLuxResult = document.getElementById('totalLuxResult');
-        const modeLabel = document.getElementById('modeLabel');
-        const coefficientValue = document.getElementById('coefficientValue');
-        const reserveValue = document.getElementById('reserveValue');
-        const heightCoefficient = document.getElementById('heightCoefficient');
-        const totalMultiplier = document.getElementById('totalMultiplier');
-        const heightWarning = document.getElementById('heightWarning');
-        const heightMultiplier = document.getElementById('heightMultiplier');
-        const lampsToggleBtn = document.getElementById('lampsToggleBtn');
-        const lampsSection = document.getElementById('lampsSection');
-        const lampsGrid = document.getElementById('lampsGrid');
-        
-        // AI панель элементы
-        const aiOverlay = document.getElementById('aiOverlay');
-        const aiAnalysisPanel = document.getElementById('aiAnalysisPanel');
-        const closeAiPanel = document.getElementById('closeAiPanel');
-        const aiPanelContent = document.getElementById('aiPanelContent');
-        
-        // Меню элементы
         const menuToggle = document.getElementById('menuToggle');
         const dropdownMenu = document.getElementById('dropdownMenu');
-        const calcMenuBtn = document.getElementById('calcMenuBtn');
-
-        // ==================== ПЕРЕМЕННЫЕ СОСТОЯНИЯ ====================
-        let currentMode = 'snip';
-        let requiredLumens = 0;
-        let heightMultiplierValue = 1.0;
-        let calculationData = null; // Хранит данные для AI анализа
-
-        // ==================== НАВИГАЦИЯ МЕЖДУ ЧАТОМ И КАЛЬКУЛЯТОРОМ ====================
-        calcMenuBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            dropdownMenu.classList.remove('active');
-            showCalculator();
-        });
-
-        backToChatBtn.addEventListener('click', () => {
-            showChat();
-        });
-
-        function showCalculator() {
-            chatContainer.classList.add('hidden');
-            calcContainer.classList.remove('hidden');
-            calculateIllumination();
-        }
-
-        function showChat() {
-            calcContainer.classList.add('hidden');
-            chatContainer.classList.remove('hidden');
-        }
-
-        // ==================== УПРАВЛЕНИЕ AI ПАНЕЛЬЮ ====================
-        aiAnalyzeBtn.addEventListener('click', () => {
-            if (calculationData) {
-                openAIPanel();
-            }
-        });
-
-        closeAiPanel.addEventListener('click', closeAIPanel);
-        
-        aiOverlay.addEventListener('click', closeAIPanel);
-
-        function openAIPanel() {
-            aiOverlay.classList.add('active');
-            aiAnalysisPanel.classList.add('active');
-            document.body.style.overflow = 'hidden';
-            
-            // Показываем загрузку
-            aiPanelContent.innerHTML = `
-                <div class="ai-loading">
-                    <div class="ai-loading-spinner"></div>
-                    <div class="ai-loading-text">AI анализирует помещение и подбирает решения...</div>
-                </div>
-            `;
-            
-            // Имитируем загрузку
-            setTimeout(() => {
-                generateAIAnalysis();
-            }, 800);
-        }
-
-        function closeAIPanel() {
-            aiOverlay.classList.remove('active');
-            aiAnalysisPanel.classList.remove('active');
-            document.body.style.overflow = 'auto';
-        }
-
-        // ==================== ПРОФЕССИОНАЛЬНЫЙ AI АНАЛИЗ ====================
-        function generateAIAnalysis() {
-            const data = calculationData;
-            const area = data.area;
-            
-            // Определяем категорию помещения
-            const roomCategory = getRoomCategory(area, data.height);
-            const roomType = data.roomTypeText.toLowerCase();
-            
-            // Генерируем варианты решений
-            const solutions = generateLightingSolutions(data);
-            
-            // Собираем HTML контент
-            let html = `
-                <!-- Заголовок анализа -->
-                <div class="ai-section">
-                    <div class="ai-section-title">
-                        <i class="fas fa-info-circle"></i>
-                        Анализ помещения
-                    </div>
-                    <div class="ai-option">
-                        <div class="ai-option-details">
-                            <p><strong>📐 Параметры:</strong> ${data.length} × ${data.width} × ${data.height}м = ${area.toFixed(1)} м²</p>
-                            <p><strong>🎯 Целевая освещенность:</strong> ${data.targetLux} лк (${data.modeText})</p>
-                            <p><strong>💡 Требуемый световой поток:</strong> ${data.requiredLumens.toLocaleString()} лм</p>
-                            <p><strong>📊 Категория помещения:</strong> ${roomCategory}</p>
-                        </div>
-                        <div class="ai-option-stats">
-                            <div class="ai-stat">
-                                <div class="ai-stat-value">${getAreaStatus(area)}</div>
-                                <div class="ai-stat-label">Площадь</div>
-                            </div>
-                            <div class="ai-stat">
-                                <div class="ai-stat-value">${getHeightStatus(data.height)}</div>
-                                <div class="ai-stat-label">Высота</div>
-                            </div>
-                            <div class="ai-stat">
-                                <div class="ai-stat-value">${getRoomTypeComplexity(roomType)}</div>
-                                <div class="ai-stat-label">Сложность</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Рекомендация AI -->
-                <div class="ai-section ai-recommendation">
-                    <div class="ai-section-title">
-                        <i class="fas fa-star"></i>
-                        Рекомендация AI
-                    </div>
-                    <div class="ai-option">
-                        <div class="ai-option-header">
-                            <div class="ai-option-title">${solutions.recommended.name}</div>
-                            <div class="ai-option-badge">Лучший выбор</div>
-                        </div>
-                        <div class="ai-option-details">
-                            ${solutions.recommended.description}
-                            <ul>
-                                ${solutions.recommended.benefits.map(benefit => `<li>${benefit}</li>`).join('')}
-                            </ul>
-                        </div>
-                        <div class="ai-option-stats">
-                            <div class="ai-stat">
-                                <div class="ai-stat-value">${solutions.recommended.count}</div>
-                                <div class="ai-stat-label">Шт.</div>
-                            </div>
-                            <div class="ai-stat">
-                                <div class="ai-stat-value">${solutions.recommended.totalPower} Вт</div>
-                                <div class="ai-stat-label">Мощность</div>
-                            </div>
-                            <div class="ai-stat">
-                                <div class="ai-stat-value">${solutions.recommended.coverage}</div>
-                                <div class="ai-stat-label">Покрытие</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Альтернативные варианты -->
-                <div class="ai-section">
-                    <div class="ai-section-title">
-                        <i class="fas fa-lightbulb"></i>
-                        Альтернативные варианты
-                    </div>
-                
-                    ${solutions.alternatives.map(alt => `
-                    <div class="ai-option">
-                        <div class="ai-option-header">
-                            <div class="ai-option-title">${alt.name}</div>
-                            <div class="ai-option-badge">${alt.type}</div>
-                        </div>
-                        <div class="ai-option-details">
-                            ${alt.description}
-                            <div class="ai-option-stats">
-                                <div class="ai-stat">
-                                    <div class="ai-stat-value">${alt.count}</div>
-                                    <div class="ai-stat-label">Шт.</div>
-                                </div>
-                                <div class="ai-stat">
-                                    <div class="ai-stat-value">${alt.totalPower} Вт</div>
-                                    <div class="ai-stat-label">Мощность</div>
-                                </div>
-                                <div class="ai-stat">
-                                    <div class="ai-stat-value">${alt.installation}</div>
-                                    <div class="ai-stat-label">Монтаж</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    `).join('')}
-                </div>
-                
-                <!-- Практические советы -->
-                <div class="ai-section">
-                    <div class="ai-section-title">
-                        <i class="fas fa-tools"></i>
-                        Практические советы
-                    </div>
-                    <div class="ai-tips">
-                        <div class="ai-tip">
-                            <i class="fas fa-ruler-combined"></i>
-                            Шаг размещения: ${solutions.placement.spacing.toFixed(1)}м
-                        </div>
-                        <div class="ai-tip">
-                            <i class="fas fa-sun"></i>
-                            Цветовая температура: ${getRecommendedColorTemperature(roomType)}
-                        </div>
-                        <div class="ai-tip">
-                            <i class="fas fa-bolt"></i>
-                            Потребление: ~${solutions.energyConsumption.toFixed(1)} кВт·ч/мес
-                        </div>
-                        <div class="ai-tip">
-                            <i class="fas fa-money-bill-wave"></i>
-                            Окупаемость: ${solutions.payback} лет
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Предупреждения и особенности -->
-                <div class="ai-section ai-warning">
-                    <div class="ai-section-title">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        Особенности для высоты ${data.height}м
-                    </div>
-                    <div class="ai-option">
-                        <div class="ai-option-details">
-                            ${getHeightSpecificTips(data.height, area)}
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            aiPanelContent.innerHTML = html;
-            
-            // Прокручиваем вверх
-            aiPanelContent.scrollTop = 0;
-        }
-
-        function generateLightingSolutions(data) {
-            const area = data.area;
-            const height = data.height;
-            const requiredLumens = data.requiredLumens;
-            const roomType = data.roomTypeText.toLowerCase();
-            
-            // Определяем тип решения
-            let solutions = {
-                recommended: null,
-                alternatives: [],
-                placement: { spacing: 1.5, pattern: 'равномерная сетка' },
-                energyConsumption: 0,
-                payback: '3-5'
-            };
-            
-            // Для больших помещений (>50 м²)
-            if (area > 50) {
-                // Вариант 1: Несколько больших люстр (рекомендовано)
-                const largeChandeliersCount = Math.max(2, Math.ceil(area / 40));
-                const hornsPerChandelier = area > 80 ? 24 : 18;
-                const lampsPerChandelier = hornsPerChandelier;
-                const lampPower = area > 80 ? 40 : 30;
-                const totalLamps = largeChandeliersCount * lampsPerChandelier;
-                const totalPower = totalLamps * lampPower;
-                const totalLumens = totalLamps * (lampPower * 85); // 85 лм/Вт для LED
-                
-                solutions.recommended = {
-                    name: `Система из ${largeChandeliersCount} больших люстр`,
-                    type: 'Люстры',
-                    count: largeChandeliersCount,
-                    totalPower: totalPower,
-                    coverage: 'Полное',
-                    description: `Оптимальное решение для больших помещений. ${largeChandeliersCount} люстры по ${lampsPerChandelier} рожков каждая обеспечивают равномерное освещение без теневых зон.`,
-                    benefits: [
-                        'Равномерное распределение света',
-                        'Величественный внешний вид',
-                        'Легкость в обслуживании',
-                        'Возможность зонирования света'
-                    ]
-                };
-                
-                // Вариант 2: Прожекторы + люстры
-                const projectorsCount = Math.ceil(area / 30);
-                solutions.alternatives.push({
-                    name: `Комбинированная система`,
-                    type: 'Прожекторы + Люстры',
-                    count: projectorsCount + 1,
-                    totalPower: (projectorsCount * 100) + 600,
-                    installation: 'Профессиональный',
-                    description: `${projectorsCount} мощных прожекторов по периметру + центральная люстра. Идеально для помещений сложной формы.`
-                });
-                
-                // Вариант 3: LED панели
-                const panelsCount = Math.ceil(area / 9);
-                solutions.alternatives.push({
-                    name: `Современное решение`,
-                    type: 'LED Панели',
-                    count: panelsCount,
-                    totalPower: panelsCount * 36,
-                    installation: 'Подвесной потолок',
-                    description: `${panelsCount} LED панелей 60×60см. Современный минималистичный вид, максимальная энергоэффективность.`
-                });
-                
-                solutions.placement.spacing = Math.sqrt(area / largeChandeliersCount);
-                solutions.energyConsumption = (totalPower * 5 * 30) / 1000; // 5 часов в день
-                
-            } 
-            // Для средних помещений (20-50 м²)
-            else if (area >= 20) {
-                // Вариант 1: Центральная люстра + точечные светильники
-                const chandelierHorns = area > 30 ? 12 : 8;
-                const spotlightsCount = Math.max(4, Math.ceil((area - 15) / 4));
-                
-                solutions.recommended = {
-                    name: `Центральная люстра + периферийные светильники`,
-                    type: 'Комбинированная система',
-                    count: 1 + spotlightsCount,
-                    totalPower: (chandelierHorns * 20) + (spotlightsCount * 9),
-                    coverage: 'Равномерное',
-                    description: `Люстра на ${chandelierHorns} рожков в центре + ${spotlightsCount} точечных светильников по периметру. Баланс декоративности и функциональности.`,
-                    benefits: [
-                        'Гибкое зонирование освещения',
-                        'Возможность регулировки яркости',
-                        'Подходит для любого интерьера',
-                        'Легкость модернизации'
-                    ]
-                };
-                
-                // Вариант 2: Несколько люстр
-                const chandeliersCount = 2;
-                solutions.alternatives.push({
-                    name: `${chandeliersCount} одинаковые люстры`,
-                    type: 'Люстры',
-                    count: chandeliersCount,
-                    totalPower: chandeliersCount * 8 * 20,
-                    installation: 'Стандартный',
-                    description: `${chandeliersCount} люстры по 8 рожков, расположенные симметрично. Классическое решение.`
-                });
-                
-                solutions.placement.spacing = 1.8;
-                solutions.energyConsumption = (solutions.recommended.totalPower * 5 * 30) / 1000;
-                
-            } 
-            // Для маленьких помещений (<20 м²)
-            else {
-                // Вариант 1: Одна качественная люстра
-                const chandelierHorns = area > 10 ? 5 : 3;
-                
-                solutions.recommended = {
-                    name: `Качественная люстра на ${chandelierHorns} рожков`,
-                    type: 'Люстра',
-                    count: 1,
-                    totalPower: chandelierHorns * 9,
-                    coverage: 'Полное',
-                    description: `Стильная люстра с ${chandelierHorns} рожками обеспечит достаточное освещение и станет украшением интерьера.`,
-                    benefits: [
-                        'Экономия места',
-                        'Простота установки',
-                        'Широкий выбор дизайнов',
-                        'Низкое энергопотребление'
-                    ]
-                };
-                
-                // Вариант 2: Точечные светильники
-                const spotlightsCount = Math.ceil(area / 2.5);
-                solutions.alternatives.push({
-                    name: `${spotlightsCount} точечных светильников`,
-                    type: 'Споты',
-                    count: spotlightsCount,
-                    totalPower: spotlightsCount * 9,
-                    installation: 'Встраиваемые',
-                    description: `Современное минималистичное решение. ${spotlightsCount} светильников равномерно распределяют свет.`
-                });
-                
-                solutions.placement.spacing = 1.2;
-                solutions.energyConsumption = (solutions.recommended.totalPower * 5 * 30) / 1000;
-            }
-            
-            // Для высоких помещений добавляем советы
-            if (height > 3.5) {
-                solutions.recommended.description += ` Особое внимание уделено высоте помещения (${height}м) - рекомендованы светильники с направленным светом.`;
-                solutions.placement.pattern = 'с учетом высоты, увеличен шаг';
-            }
-            
-            // Для коммерческих помещений
-            if (roomType.includes('офис') || roomType.includes('торгов')) {
-                solutions.payback = '1-2';
-                solutions.energyConsumption *= 2; // Больше часов работы
-            }
-            
-            return solutions;
-        }
-
-        function getRoomCategory(area, height) {
-            if (area < 10) return 'Маленькое помещение';
-            if (area < 20) return 'Компактное помещение';
-            if (area < 35) return 'Среднее помещение';
-            if (area < 50) return 'Просторное помещение';
-            if (area < 80) return 'Большое помещение';
-            if (area < 120) return 'Очень большое помещение';
-            return 'Промышленное/коммерческое помещение';
-        }
-
-        function getAreaStatus(area) {
-            if (area < 15) return 'Маленькая';
-            if (area < 30) return 'Средняя';
-            if (area < 50) return 'Большая';
-            if (area < 80) return 'Очень большая';
-            return 'Гигантская';
-        }
-
-        function getHeightStatus(height) {
-            if (height < 2.5) return 'Низкая';
-            if (height < 3.0) return 'Стандартная';
-            if (height < 3.5) return 'Повышенная';
-            if (height < 4.5) return 'Высокая';
-            return 'Очень высокая';
-        }
-
-        function getRoomTypeComplexity(roomType) {
-            if (roomType.includes('детск')) return 'Высокая';
-            if (roomType.includes('офис') || roomType.includes('кабинет')) return 'Средняя';
-            if (roomType.includes('торгов')) return 'Профессиональная';
-            return 'Стандартная';
-        }
-
-        function getRecommendedColorTemperature(roomType) {
-            if (roomType.includes('детск') || roomType.includes('жил')) {
-                return '2700-3000K (теплый белый)';
-            } else if (roomType.includes('офис') || roomType.includes('кабинет')) {
-                return '4000-4500K (нейтральный белый)';
-            } else if (roomType.includes('торгов')) {
-                return '5000-6000K (холодный белый)';
-            } else if (roomType.includes('сануз')) {
-                return '3000-3500K (универсальный)';
-            } else {
-                return '3000-4000K (универсальный)';
-            }
-        }
-
-        function getHeightSpecificTips(height, area) {
-            let tips = '';
-            
-            if (height > 4.0) {
-                tips += `
-                    <p><strong>🔝 Для высоты ${height}м:</strong></p>
-                    <ul>
-                        <li>Используйте подвесные светильники с регулируемой длиной</li>
-                        <li>Рассмотрите светильники с узким углом рассеивания (30-60°)</li>
-                        <li>Обязательна установка на высоте 2-2.5м от пола</li>
-                        <li>Для обслуживания потребуется стремянка высотой ${Math.ceil(height - 1)}м</li>
-                    </ul>
-                `;
-            } else if (height > 3.0) {
-                tips += `
-                    <p><strong>📏 Для высоты ${height}м:</strong></p>
-                    <ul>
-                        <li>Подойдут стандартные подвесные светильники</li>
-                        <li>Рекомендуемый угол рассеивания: 90-120°</li>
-                        <li>Учитывайте коэффициент высоты при расчете</li>
-                    </ul>
-                `;
-            }
-            
-            if (area > 50 && height > 3.5) {
-                tips += `
-                    <p><strong>⚡ Особенности больших высоких помещений:</strong></p>
-                    <ul>
-                        <li>Рекомендуется комбинированное освещение</li>
-                        <li>Обязательно зонирование светом</li>
-                        <li>Рассмотрите систему управления освещением</li>
-                        <li>Требуется профессиональный расчет и монтаж</li>
-                    </ul>
-                `;
-            }
-            
-            return tips || '<p>Стандартная высота помещения, подходят большинство типов светильников.</p>';
-        }
-
-        // ==================== ПРОФЕССИОНАЛЬНЫЙ КАЛЬКУЛЯТОР ====================
-        function validateField(field, min, max, errorElement) {
-            const value = parseFloat(field.value);
-            
-            if (field.value === '' || isNaN(value) || value < min || value > max) {
-                field.classList.add('error');
-                if (errorElement) errorElement.style.display = 'block';
-                return false;
-            } else {
-                field.classList.remove('error');
-                if (errorElement) errorElement.style.display = 'none';
-                return true;
-            }
-        }
-        
-        // Получение коэффициента использования
-        function getUtilizationCoefficient(roomTypeText) {
-            return COEFFICIENTS.utilization[roomTypeText] || 0.5;
-        }
-        
-        // Получение комфортного множителя
-        function getComfortMultiplier(roomTypeText) {
-            return COEFFICIENTS.comfortMultipliers[roomTypeText] || 1.5;
-        }
-        
-        // Получение коэффициента высоты
-        function getHeightMultiplier(height) {
-            for (const level of COEFFICIENTS.heightMultipliers) {
-                if (height <= level.max) {
-                    return {
-                        multiplier: level.multiplier,
-                        label: level.label
-                    };
-                }
-            }
-            return { multiplier: 6.0, label: 'Экстремальная высота' };
-        }
-        
-        // Генерация вариантов ламп
-        function generateLampOptions() {
-            lampsGrid.innerHTML = '';
-            
-            // Оставляем только базовые варианты для выбора пользователя
-            const basicLamps = [
-                { power: 6, lumens: 510, socket: 'E14', name: 'Стандартный' },
-                { power: 9, lumens: 765, socket: 'E14', name: 'Стандартный' },
-                { power: 14, lumens: 1150, socket: 'E14', name: 'Стандартный' },
-                { power: 20, lumens: 1700, socket: 'E27', name: 'Стандартный' },
-                { power: 30, lumens: 2550, socket: 'E27', name: 'Мощный' },
-                { power: 50, lumens: 4250, socket: 'E27', name: 'Крупный' }
-            ];
-            
-            basicLamps.forEach((lamp, index) => {
-                const lampCount = Math.ceil(requiredLumens / lamp.lumens);
-                const lampOption = document.createElement('div');
-                lampOption.className = `lamp-option ${index === 3 ? 'selected' : ''}`;
-                
-                lampOption.innerHTML = `
-                    <div class="lamp-power">${lamp.power} Вт</div>
-                    <div class="lamp-lumens">${lamp.lumens.toLocaleString()} лм</div>
-                    <div class="lamp-count">${lampCount} шт.</div>
-                    <div class="lamp-socket">${lamp.socket}</div>
-                `;
-                
-                lampOption.addEventListener('click', () => {
-                    document.querySelectorAll('.lamp-option').forEach(opt => {
-                        opt.classList.remove('selected');
-                    });
-                    lampOption.classList.add('selected');
-                    
-                    // Обновляем основную карточку
-                    lampsResult.textContent = lampCount;
-                    const lampsLabel = lampsResult.parentElement.querySelector('.result-label');
-                    const lampsUnit = lampsResult.parentElement.querySelector('.result-unit');
-                    lampsLabel.textContent = `LED ${lamp.power}Вт`;
-                    lampsUnit.textContent = `шт × ${lamp.lumens.toLocaleString()}лм`;
-                });
-                
-                lampsGrid.appendChild(lampOption);
-            });
-        }
-        
-        function calculateIllumination() {
-            const isValid = validateField(lengthInput, 0.1, 100, document.getElementById('lengthError')) &&
-                          validateField(widthInput, 0.1, 100, document.getElementById('widthError')) &&
-                          validateField(heightInput, 1.5, 15, document.getElementById('heightError'));
-            
-            if (!isValid) {
-                resultsDiv.classList.add('hidden');
-                emptyResultsDiv.classList.remove('hidden');
-                aiAnalyzeBtn.disabled = true;
-                return;
-            }
-            
-            const length = parseFloat(lengthInput.value);
-            const width = parseFloat(widthInput.value);
-            const height = parseFloat(heightInput.value);
-            const area = length * width;
-            
-            // Определяем базовую освещенность
-            let baseLux;
-            let roomTypeText;
-            
-            if (roomTypeSelect.value === 'custom') {
-                baseLux = parseInt(customLux.value) || 150;
-                roomTypeText = 'Пользовательский...';
-                if (baseLux < 1) baseLux = 1;
-                if (baseLux > 10000) baseLux = 10000;
-                customLux.value = baseLux;
-            } else {
-                baseLux = parseInt(roomTypeSelect.value) || 150;
-                roomTypeText = roomTypeSelect.options[roomTypeSelect.selectedIndex].text;
-            }
-            
-            // Применяем режим (СНиП или Комфорт)
-            let targetLux = baseLux;
-            let modeText = 'СНиП';
-            
-            if (currentMode === 'comfort') {
-                const comfortMultiplier = getComfortMultiplier(roomTypeText);
-                targetLux = Math.round(baseLux * comfortMultiplier);
-                modeText = 'Комфорт';
-            }
-            
-            // Получаем коэффициенты
-            const utilizationCoefficient = getUtilizationCoefficient(roomTypeText);
-            const reserveCoefficient = COEFFICIENTS.reserve;
-            const heightData = getHeightMultiplier(height);
-            heightMultiplierValue = heightData.multiplier;
-            
-            // ПРОФЕССИОНАЛЬНАЯ ФОРМУЛА С КОМПЕНСАЦИЕЙ ВЫСОТЫ:
-            // Φ = (E × S × k × Kh) / η
-            requiredLumens = Math.round((targetLux * area * reserveCoefficient * heightMultiplierValue) / utilizationCoefficient);
-            
-            // Базовый вариант для отображения (LED 20Вт)
-            const defaultLampPower = 20;
-            const defaultLampLumens = 1700;
-            const defaultLampCount = Math.ceil(requiredLumens / defaultLampLumens);
-            
-            // Сохраняем данные для AI анализа
-            calculationData = {
-                length,
-                width,
-                height,
-                area,
-                baseLux,
-                roomTypeText,
-                targetLux,
-                modeText,
-                currentMode,
-                utilizationCoefficient,
-                reserveCoefficient,
-                heightMultiplierValue,
-                heightLabel: heightData.label,
-                requiredLumens,
-                date: new Date().toLocaleString()
-            };
-            
-            // Обновляем отображение
-            areaResult.textContent = area.toFixed(1);
-            luxResult.textContent = targetLux;
-            lumenResult.textContent = requiredLumens.toLocaleString();
-            lampsResult.textContent = defaultLampCount;
-            
-            // Обновляем информацию о режиме
-            const luxUnit = luxCard.querySelector('.result-unit');
-            luxUnit.textContent = `лк (${modeText})`;
-            totalLuxResult.textContent = `${targetLux} лк (${modeText})`;
-            modeLabel.textContent = currentMode === 'snip' 
-                ? 'Нормативная освещенность по СНиП' 
-                : 'Комфортная освещенность для глаз';
-            
-            // Обновляем информацию о коэффициентах
-            const totalMultiplierValue = ((reserveCoefficient * heightMultiplierValue) / utilizationCoefficient).toFixed(2);
-            coefficientValue.textContent = utilizationCoefficient;
-            reserveValue.textContent = reserveCoefficient;
-            heightCoefficient.textContent = `×${heightMultiplierValue.toFixed(1)}`;
-            totalMultiplier.textContent = totalMultiplierValue;
-            
-            // Обновляем карточку освещенности
-            luxCard.classList.toggle('highlight', currentMode === 'comfort');
-            
-            // Показываем предупреждение о высоте
-            if (height > 3.0) {
-                heightWarning.classList.add('active');
-                heightMultiplier.textContent = `×${heightMultiplierValue.toFixed(1)} (${heightData.label})`;
-            } else {
-                heightWarning.classList.remove('active');
-            }
-            
-            // Активируем кнопку AI анализа
-            aiAnalyzeBtn.disabled = false;
-            
-            // Обновляем варианты ламп, если секция открыта
-            if (lampsSection.classList.contains('active')) {
-                generateLampOptions();
-            }
-            
-            emptyResultsDiv.classList.add('hidden');
-            resultsDiv.classList.remove('hidden');
-        }
-        
-        let calculationTimeout;
-        function debouncedCalculate() {
-            clearTimeout(calculationTimeout);
-            calculationTimeout = setTimeout(calculateIllumination, 300);
-        }
-
-        // ==================== ОБРАБОТЧИКИ СОБЫТИЙ КАЛЬКУЛЯТОРА ====================
-        calculateBtn.addEventListener('click', calculateIllumination);
-        
-        lengthInput.addEventListener('input', debouncedCalculate);
-        widthInput.addEventListener('input', debouncedCalculate);
-        heightInput.addEventListener('input', debouncedCalculate);
-        roomTypeSelect.addEventListener('change', debouncedCalculate);
-        
-        function restoreValueIfEmpty(field, defaultValue) {
-            if (field.value === '') {
-                field.value = defaultValue;
-                field.classList.remove('error');
-                const errorId = field.id + 'Error';
-                const errorElement = document.getElementById(errorId);
-                if (errorElement) errorElement.style.display = 'none';
-                debouncedCalculate();
-            }
-        }
-        
-        lengthInput.addEventListener('blur', () => restoreValueIfEmpty(lengthInput, 5.0));
-        widthInput.addEventListener('blur', () => restoreValueIfEmpty(widthInput, 4.0));
-        heightInput.addEventListener('blur', () => restoreValueIfEmpty(heightInput, 2.7));
-
-        // ==================== ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМОВ ====================
-        modeSnipBtn.addEventListener('click', () => {
-            setMode('snip');
-        });
-
-        modeComfortBtn.addEventListener('click', () => {
-            setMode('comfort');
-        });
-
-        function setMode(mode) {
-            currentMode = mode;
-            modeSnipBtn.classList.toggle('active', mode === 'snip');
-            modeComfortBtn.classList.toggle('active', mode === 'comfort');
-            calculateIllumination();
-        }
-
-        // ==================== КНОПКА ВЫБОРА ЛАМП ====================
-        lampsToggleBtn.addEventListener('click', () => {
-            lampsSection.classList.toggle('active');
-            if (lampsSection.classList.contains('active')) {
-                lampsToggleBtn.innerHTML = '<i class="fas fa-times"></i> Скрыть варианты ламп';
-                generateLampOptions();
-            } else {
-                lampsToggleBtn.innerHTML = '<i class="fas fa-lightbulb"></i> Выбрать другие типы ламп';
-            }
-        });
-
-        // ==================== ФУНКЦИИ МЕНЮ ====================
-        menuToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            dropdownMenu.classList.toggle('active');
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!menuToggle.contains(e.target) && !dropdownMenu.contains(e.target)) {
-                dropdownMenu.classList.remove('active');
-            }
-        });
-
-        // ==================== ФОРМАТИРОВАНИЕ ТЕЛЕФОНА ====================
-        userPhoneInput.addEventListener('input', function(e) {
-            let value = this.value.replace(/\D/g, '');
-            
-            if (value.length > 0) {
-                if (value[0] === '7' || value[0] === '8') {
-                    value = value.substring(1);
-                }
-                
-                let formatted = '+7 (';
-                
-                if (value.length > 0) {
-                    formatted += value.substring(0, 3);
-                }
-                if (value.length > 3) {
-                    formatted += ') ' + value.substring(3, 6);
-                }
-                if (value.length > 6) {
-                    formatted += '-' + value.substring(6, 8);
-                }
-                if (value.length > 8) {
-                    formatted += '-' + value.substring(8, 10);
-                }
-                
-                this.value = formatted;
-            }
-        });
-
-        // ==================== СОХРАНЕНИЕ КОНТАКТОВ ====================
-        document.getElementById('contactForm').addEventListener('submit', function(e) {
-            e.preventDefault(); // Останавливаем стандартную отправку формы
-    
-            const phone = userPhoneInput.value.trim();
-            const email = userEmailInput.value.trim();
-            
-            if (!phone || phone.length < 10) {
-                alert('Пожалуйста, введите корректный номер телефона');
-                userPhoneInput.focus();
-                return;
-            }
-            
-            // СОХРАНЯЕМ КОНТАКТЫ
-            userContacts.phone = phone;
-            userContacts.email = email || 'Не указан';
-            
-            // Сохраняем в localStorage
-            localStorage.setItem('userPhone', phone);
-            if (email) {
-                localStorage.setItem('userEmail', email);
-            }
-            
-            console.log('Контакты сохранены:', userContacts);
-            
-            // Визуальный фидбек на КНОПКЕ (не на форме!)
-            const saveBtn = document.getElementById('saveContactsBtn');
-            const originalText = saveBtn.innerHTML;
-            saveBtn.innerHTML = '<i class="fas fa-check"></i> Сохранено';
-            saveBtn.style.background = 'var(--success)';
-            
-            // Показываем сообщение в чате
-            addMessage(`✅ Контакты сохранены: ${phone}${email ? ', ' + email : ''}`, 'user');
-            
-            setTimeout(() => {
-                saveBtn.innerHTML = originalText;
-                saveBtn.style.background = '';
-            }, 3000);
-        });
 
         // ==================== ОСНОВНЫЕ ФУНКЦИИ ЧАТА ====================
         async function sendToTelegram(message) {
@@ -2874,9 +827,7 @@
                 } else if (userMessage.toLowerCase().includes('срочн') || userMessage.toLowerCase().includes('аварий')) {
                     responseText = "Понимаем срочность! Наш электрик свяжется с вами в течение 15 минут.";
                 } else if (userMessage.toLowerCase().includes('свет') || userMessage.toLowerCase().includes('освещ')) {
-                    responseText = "Для расчета освещения используйте калькулятор в меню (Норма Света + AI) или опишите вашу задачу здесь.";
-                } else if (userMessage.toLowerCase().includes('ai') || userMessage.toLowerCase().includes('ии')) {
-                    responseText = "AI анализ доступен в калькуляторе освещения! Нажмите кнопку 'AI Анализ и рекомендации' после расчета.";
+                    responseText = "Для расчета освещения используйте калькулятор в меню или опишите вашу задачу здесь.";
                 } else {
                     const responses = [
                         "Спасибо за обращение в Electric group! Мы выполняем качественный монтаж электропроводки для частных и коммерческих объектов. Если мы не ответили сразу, пожалуйста, проявите терпение — в данный момент мы можем быть заняты выполнением ответственных работ. Мы обязательно свяжемся с вами в ближайшее время.",
@@ -2986,6 +937,86 @@
             }
         }
 
+        // ==================== ФУНКЦИИ МЕНЮ ====================
+        menuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('active');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!menuToggle.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                dropdownMenu.classList.remove('active');
+            }
+        });
+
+        // ==================== ФОРМАТИРОВАНИЕ ТЕЛЕФОНА ====================
+        userPhoneInput.addEventListener('input', function(e) {
+            let value = this.value.replace(/\D/g, '');
+            
+            if (value.length > 0) {
+                if (value[0] === '7' || value[0] === '8') {
+                    value = value.substring(1);
+                }
+                
+                let formatted = '+7 (';
+                
+                if (value.length > 0) {
+                    formatted += value.substring(0, 3);
+                }
+                if (value.length > 3) {
+                    formatted += ') ' + value.substring(3, 6);
+                }
+                if (value.length > 6) {
+                    formatted += '-' + value.substring(6, 8);
+                }
+                if (value.length > 8) {
+                    formatted += '-' + value.substring(8, 10);
+                }
+                
+                this.value = formatted;
+            }
+        });
+
+        // ==================== СОХРАНЕНИЕ КОНТАКТОВ ====================
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Останавливаем стандартную отправку формы
+    
+            const phone = userPhoneInput.value.trim();
+            const email = userEmailInput.value.trim();
+            
+            if (!phone || phone.length < 10) {
+                alert('Пожалуйста, введите корректный номер телефона');
+                userPhoneInput.focus();
+                return;
+            }
+            
+            // СОХРАНЯЕМ КОНТАКТЫ
+            userContacts.phone = phone;
+            userContacts.email = email || 'Не указан';
+            
+            // Сохраняем в localStorage
+            localStorage.setItem('userPhone', phone);
+            if (email) {
+                localStorage.setItem('userEmail', email);
+            }
+            
+            console.log('Контакты сохранены:', userContacts);
+            
+            // Визуальный фидбек на КНОПКЕ (не на форме!)
+            const saveBtn = document.getElementById('saveContactsBtn');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="fas fa-check"></i> Сохранено';
+            saveBtn.style.background = 'var(--success)';
+            
+            // Показываем сообщение в чате
+            addMessage(`✅ Контакты сохранены: ${phone}${email ? ', ' + email : ''}`, 'user');
+            
+            setTimeout(() => {
+                saveBtn.innerHTML = originalText;
+                saveBtn.style.background = '';
+            }, 3000);
+        });
+
         // ==================== ОБРАБОТЧИКИ СОБЫТИЙ ЧАТА ====================
         sendBtn.addEventListener('click', sendMessage);
         
@@ -3007,8 +1038,6 @@
         window.addEventListener('load', () => {
             document.getElementById('currentTime').textContent = 
                 new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            
-            calculateIllumination();
 
             // ЗАГРУЖАЕМ КОНТАКТЫ ИЗ LOCALSTORAGE
             const savedPhone = localStorage.getItem('userPhone');
