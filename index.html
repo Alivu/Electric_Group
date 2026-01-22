@@ -3772,16 +3772,24 @@ document.addEventListener('DOMContentLoaded', function() {
 // Регистрация Service Worker для PWA
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
-    navigator.serviceWorker.register('sw.js')
+    navigator.serviceWorker.register('https://raw.githubusercontent.com/Alivu/alivu.github.io/main/date/sw.js')
       .then(function(registration) {
-        console.log('ServiceWorker зарегистрирован успешно: ', registration.scope);
+        console.log('✅ ServiceWorker зарегистрирован: ', registration.scope);
+        
+        // Показываем уведомление для пользователя
         showNotification('Приложение готово к работе офлайн!');
+        
+        // Проверяем обновления
+        registration.addEventListener('updatefound', () => {
+          console.log('🔄 Обнаружено обновление Service Worker');
+        });
       })
       .catch(function(err) {
-        console.log('Ошибка регистрации ServiceWorker: ', err);
+        console.log('❌ Ошибка регистрации ServiceWorker: ', err);
+        showNotification('Офлайн-режим недоступен: ' + err.message);
       });
   });
-}		
+}	
     </script>
 </body>
 </html>
