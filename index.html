@@ -966,8 +966,11 @@
 			
             
             .estimate-controls {
-                width: 100%;
-                justify-content: center;
+        width: 100%;
+        justify-content: center;
+        gap: 6px !important;           /* ← Меньше расстояние между кнопками */
+        margin-top: 3px !important;    /* ← Отступ сверху */
+        flex-wrap: wrap !important;    /* ← Перенос если не помещается */
             }
             
             .dropdown-toggle {
