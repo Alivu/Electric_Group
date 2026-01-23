@@ -979,15 +979,27 @@
     /* Первая кнопка - без левой границы */
     .estimate-controls .btn:first-child {
         border-left: none !important;
+		width: 50% !important;            /* ← ТОЧНО половина */
+        flex: 0 0 50% !important;         /* ← Не растягивать */
+        border-radius: 0 !important;
+        margin: 0 !important;
+        padding: 8px 0 !important;
     }
     
     /* Последняя кнопка - без правой границы */
     .estimate-controls .btn:last-child {
         border-right: none !important;
+		width: 60% !important;            /* ← БОЛЬШЕ половины */
+        flex: 1 !important;               /* ← Занимает оставшееся пространство */
+        border-radius: 0 !important;
+        margin: 0 !important;
+        padding: 8px 0 !important;
+        margin-left: -10% !important;     /* ← Наложение на первую кнопку */
     }
     
     /* Контейнер - тоже без отступов */
     .estimate-controls {
+		margin-bottom: 1px !important;    /* ← НИЖНИЙ ОТСТУП 1px */
         width: 100% !important;
         margin: 0 !important;
         padding: 0 !important;
