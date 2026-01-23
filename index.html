@@ -965,15 +965,21 @@
        		 padding: 6px 10px !important; /* БЫЛО 10px 15px - МЕНЬШЕ РАЗМЕР */
         	font-size: 0.8rem !important; /* МЕЛЧЕ ТЕКСТ НА КНОПКАХ */
     		}
+
+
+
 			
-            
+.estimate-controls {
+        display: grid;
+        grid-template-columns: 50% 60%;   /* ← 50% и 60% */
+        gap: 0;
+        margin-bottom: 1px;
+    }
+    
     .estimate-controls .btn {
-        width: 50% !important;            /* Половина ширины */
-        border-radius: 0 !important;      /* ← БЕЗ ЗАКРУГЛЕНИЯ! */
-        margin: 0 !important;             /* ← БЕЗ ОТСТУПОВ! */
-        padding: 8px 0 !important;        /* ← Только вертикальные отступы */
-        border-left: 1px solid rgba(255,255,255,0.3) !important; /* Разделитель */
-        border-right: 1px solid rgba(255,255,255,0.3) !important;
+        border-radius: 0;
+        margin: 0;
+        padding: 8px 0;
     }
     
     /* Первая кнопка - без левой границы */
@@ -993,17 +999,7 @@
         margin: 0 !important;
         padding: 8px 0 !important;
         margin-left: -10% !important;     /* ← Наложение на первую кнопку */
-    }
-    
-    /* Контейнер - тоже без отступов */
-    .estimate-controls {
-		margin-bottom: 1px !important;    /* ← НИЖНИЙ ОТСТУП 1px */
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        gap: 0 !important;                /* ← НУЛЕВОЕ расстояние */
-        border: 1px solid #3498db;        /* Общая рамка вокруг обеих кнопок */
-        border-radius: 0 !important;
+
 			}	
             .dropdown-toggle {
                 min-width: 100%;
