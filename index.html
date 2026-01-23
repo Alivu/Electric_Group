@@ -967,15 +967,33 @@
     		}
 			
             
-            .estimate-controls {
-        width: 100%;
-        justify-content: center;
-        gap: 6px !important;           /* ← Меньше расстояние между кнопками */
-        margin-top: 3px !important;    /* ← Отступ сверху */
-        flex-wrap: wrap !important;    /* ← Перенос если не помещается */
-            }
-		    .estimate-controls .btn {
-        	width: 50% !important;            /* Кнопки на всю ширину */
+    .estimate-controls .btn {
+        width: 50% !important;            /* Половина ширины */
+        border-radius: 0 !important;      /* ← БЕЗ ЗАКРУГЛЕНИЯ! */
+        margin: 0 !important;             /* ← БЕЗ ОТСТУПОВ! */
+        padding: 8px 0 !important;        /* ← Только вертикальные отступы */
+        border-left: 1px solid rgba(255,255,255,0.3) !important; /* Разделитель */
+        border-right: 1px solid rgba(255,255,255,0.3) !important;
+    }
+    
+    /* Первая кнопка - без левой границы */
+    .estimate-controls .btn:first-child {
+        border-left: none !important;
+    }
+    
+    /* Последняя кнопка - без правой границы */
+    .estimate-controls .btn:last-child {
+        border-right: none !important;
+    }
+    
+    /* Контейнер - тоже без отступов */
+    .estimate-controls {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        gap: 0 !important;                /* ← НУЛЕВОЕ расстояние */
+        border: 1px solid #3498db;        /* Общая рамка вокруг обеих кнопок */
+        border-radius: 0 !important;
 			}	
             .dropdown-toggle {
                 min-width: 100%;
