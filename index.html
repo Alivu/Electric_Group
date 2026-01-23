@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups">
-    <title>Чат Электриков</title>
+    <title>Братство Электриков ЧР</title>
     <style>
         * {
             margin: 0;
@@ -45,10 +45,23 @@
             color: #FF9800;
         }
 
+        .logo-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .logo-title .logo {
+            margin-bottom: 0;
+        }
+
         h1 {
             color: #2c5364;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             font-size: 2rem;
+            text-align: center;
         }
 
         .subtitle {
@@ -56,6 +69,18 @@
             margin-bottom: 30px;
             font-size: 1.1rem;
             line-height: 1.5;
+            text-align: center;
+        }
+
+        .location-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #FF9800 0%, #FF5722 100%);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-top: 5px;
         }
 
         .online-stats {
@@ -65,6 +90,17 @@
             padding: 25px;
             margin: 25px 0;
             box-shadow: 0 10px 30px rgba(44, 83, 100, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .online-stats:before {
+            content: "⚡";
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 2rem;
+            opacity: 0.2;
         }
 
         .online-count {
@@ -201,6 +237,25 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .chat-header-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chat-header-title h2 {
+            font-size: 1.4rem;
+            margin: 0;
+        }
+
+        .chat-header-title span {
+            background: #FF9800;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: bold;
         }
 
         .user-info {
@@ -442,8 +497,9 @@
             
             .chat-header {
                 padding: 15px 20px;
-                flex-wrap: wrap;
+                flex-direction: column;
                 gap: 15px;
+                text-align: center;
             }
             
             .messages-container {
@@ -452,6 +508,11 @@
             
             .message {
                 max-width: 85%;
+            }
+            
+            .chat-stats {
+                flex-direction: column;
+                gap: 10px;
             }
         }
 
@@ -465,6 +526,56 @@
             color: #666;
             display: none;
         }
+
+        /* Электрическая тематика */
+        .electric-theme {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .electric-theme:before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #FF9800, #FF5722, #2c5364);
+            animation: electricFlow 3s infinite linear;
+        }
+
+        @keyframes electricFlow {
+            0% { background-position: -100px 0; }
+            100% { background-position: 100px 0; }
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 2px solid #FF9800;
+        }
+
+        .welcome-message h3 {
+            color: #2c5364;
+            margin-bottom: 10px;
+        }
+
+        .welcome-message p {
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .rules {
+            font-size: 0.9rem;
+            color: #888;
+            text-align: center;
+            margin-top: 10px;
+            padding: 10px;
+            border-top: 1px solid #eee;
+        }
     </style>
     
     <!-- Firebase SDK -->
@@ -474,53 +585,66 @@
 </head>
 <body>
     <!-- Экран входа -->
-    <div class="login-container" id="loginScreen">
-        <div class="logo">🔌</div>
-        <h1>Чат Электриков</h1>
-        <p class="subtitle">Профессиональное сообщество для обмена опытом, обсуждения проектов и решения сложных задач</p>
+    <div class="login-container electric-theme" id="loginScreen">
+        <div class="logo-title">
+            <div class="logo">🔌</div>
+            <h1>Братство Электриков ЧР</h1>
+        </div>
+        <p class="subtitle">Профессиональное сообщество электриков Чеченской Республики</p>
+        <div class="location-badge">Чеченская Республика</div>
         
         <div class="online-stats">
             <span class="online-count" id="onlineCount">0</span>
-            <span class="online-label">электриков онлайн сейчас</span>
+            <span class="online-label">братьев-электриков онлайн</span>
         </div>
         
         <button class="google-btn" id="googleLoginBtn">
             <img src="https://www.google.com/favicon.ico" alt="Google">
-            Войти через Google
+            Войти как электрик
         </button>
         
         <div class="benefits">
-            <h3><span>⚡</span> Возможности для электриков:</h3>
+            <h3><span>⚡</span> Наш устав:</h3>
             <ul>
-                <li>Обсуждение сложных электромонтажных работ</li>
-                <li>Консультации по ПУЭ и другим нормативам</li>
-                <li>Подбор оборудования и материалов</li>
-                <li>Обмен схемами и проектами</li>
-                <li>Координация работы на крупных объектах</li>
+                <li>Взаимопомощь и поддержка коллег</li>
+                <li>Обмен профессиональным опытом</li>
+                <li>Консультации по ПУЭ и ГОСТам</li>
+                <li>Решение сложных электромонтажных задач</li>
+                <li>Координация на объектах ЧР</li>
+                <li>Повышение квалификации</li>
             </ul>
         </div>
         
         <div class="status" id="statusMessage"></div>
+        
+        <div class="rules">
+            Только для профессиональных электриков Чеченской Республики
+        </div>
     </div>
     
     <!-- Экран чата -->
-    <div class="chat-container" id="chatScreen">
+    <div class="chat-container electric-theme" id="chatScreen">
         <!-- Шапка чата -->
         <div class="chat-header">
+            <div class="chat-header-title">
+                <h2>Братство Электриков ЧР</h2>
+                <span>ЧР</span>
+            </div>
+            
             <div class="user-info">
                 <div class="user-avatar" id="userAvatar">
                     <!-- Аватар загрузится через JS -->
                 </div>
                 <div class="user-details">
-                    <h3 id="userName">Пользователь</h3>
-                    <p id="userEmail">email@example.com</p>
+                    <h3 id="userName">Электрик</h3>
+                    <p id="userEmail">Чеченская Республика</p>
                 </div>
             </div>
             
             <div class="chat-stats">
                 <div class="online-badge">
                     <span class="online-dot"></span>
-                    <span id="activeOnlineCount">0</span> онлайн
+                    <span id="activeOnlineCount">0</span> братьев онлайн
                 </div>
                 <button class="logout-btn" id="logoutBtn">Выйти</button>
             </div>
@@ -533,18 +657,19 @@
             
             <!-- Сообщения -->
             <div class="messages-container" id="messagesContainer">
-                <!-- Сообщения загружаются через Firebase -->
-                <div class="message system">
-                    <div class="message-content" style="text-align: center; background: #e9ecef; color: #666;">
-                        Добро пожаловать в профессиональный чат электриков! Начните общение.
-                    </div>
+                <!-- Приветственное сообщение -->
+                <div class="welcome-message">
+                    <h3>Добро пожаловать в Братство Электриков ЧР! ⚡</h3>
+                    <p>Это профессиональное сообщество электриков Чеченской Республики.</p>
+                    <p>Уважайте коллег, помогайте друг другу, соблюдайте технику безопасности!</p>
+                    <p style="color: #FF9800; font-weight: bold;">Безопасность прежде всего!</p>
                 </div>
             </div>
             
             <!-- Поле ввода -->
             <div class="message-input-area">
                 <input type="text" class="message-input" id="messageInput" 
-                       placeholder="Напишите сообщение..." maxlength="1000">
+                       placeholder="Напишите сообщение для братьев-электриков..." maxlength="1000">
                 <button class="send-btn" id="sendMessageBtn">➤</button>
             </div>
         </div>
@@ -594,11 +719,11 @@ function initializeFirebase() {
     });
 }
 
-// ========== КЛАСС УПРАВЛЕНИЯ ЧАТОМ ==========
-class ElectricianChat {
+// ========== КЛАСС УПРАВЛЕНИЯ ЧАТОМ БРАТСТВА ==========
+class BrotherhoodChat {
     constructor() {
         this.user = null;
-        this.roomId = 'main-electricians-room';
+        this.roomId = 'brotherhood-electricians-chr';
         this.unsubscribeMessages = null;
         this.unsubscribeOnline = null;
         this.unsubscribeTyping = null;
@@ -651,7 +776,7 @@ class ElectricianChat {
             }
         });
         
-        console.log("✅ Чат инициализирован");
+        console.log("✅ Чат Братства инициализирован");
     }
     
     setupEventListeners() {
@@ -691,7 +816,7 @@ class ElectricianChat {
             // Сохраняем пользователя в Firestore
             await this.saveUserToFirestore(this.user);
             
-            showStatus("✅ Успешный вход!", "success");
+            showStatus("✅ Добро пожаловать в Братство!", "success");
             
         } catch (error) {
             console.error("❌ Ошибка входа:", error);
@@ -717,13 +842,15 @@ class ElectricianChat {
         try {
             await db.collection('users').doc(user.uid).set({
                 uid: user.uid,
-                displayName: user.displayName || 'Электрик',
+                displayName: user.displayName || 'Электрик ЧР',
                 email: user.email,
                 photoURL: user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'E')}&background=2c5364&color=fff`,
                 lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
                 isOnline: true,
                 profession: 'electrician',
-                joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+                location: 'Чеченская Республика',
+                joinedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                brotherhoodMember: true
             }, { merge: true });
             
             console.log("✅ Пользователь сохранен в Firestore");
@@ -758,8 +885,8 @@ class ElectricianChat {
         this.user = user;
         
         // Обновляем информацию о пользователе
-        this.userName.textContent = user.displayName || 'Электрик';
-        this.userEmail.textContent = user.email || '';
+        this.userName.textContent = user.displayName || 'Электрик ЧР';
+        this.userEmail.textContent = 'Чеченская Республика';
         
         // Устанавливаем аватар
         if (user.photoURL) {
@@ -799,12 +926,13 @@ class ElectricianChat {
         this.chatScreen.style.display = 'none';
         this.loginScreen.style.display = 'block';
         
-        // Очищаем сообщения
+        // Очищаем сообщения (оставляем приветственное)
         this.messagesContainer.innerHTML = `
-            <div class="message system">
-                <div class="message-content" style="text-align: center; background: #e9ecef; color: #666;">
-                    Добро пожаловать в профессиональный чат электриков! Начните общение.
-                </div>
+            <div class="welcome-message">
+                <h3>Добро пожаловать в Братство Электриков ЧР! ⚡</h3>
+                <p>Это профессиональное сообщество электриков Чеченской Республики.</p>
+                <p>Уважайте коллег, помогайте друг другу, соблюдайте технику безопасности!</p>
+                <p style="color: #FF9800; font-weight: bold;">Безопасность прежде всего!</p>
             </div>
         `;
     }
@@ -817,14 +945,15 @@ class ElectricianChat {
             await db.collection('rooms').doc(this.roomId)
                 .collection('online').doc(this.user.uid).set({
                     uid: this.user.uid,
-                    name: this.user.displayName || 'Электрик',
-                    email: this.user.email,
+                    name: this.user.displayName || 'Электрик ЧР',
+                    location: 'Чеченская Республика',
                     photoURL: this.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.user.displayName || 'E')}&background=2c5364&color=fff`,
-                    lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+                    lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+                    brotherhood: true
                 });
             
             // Обновляем статус каждые 30 секунд
-            setInterval(() => {
+            this.onlineInterval = setInterval(() => {
                 if (this.user) {
                     db.collection('rooms').doc(this.roomId)
                         .collection('online').doc(this.user.uid).update({
@@ -854,19 +983,26 @@ class ElectricianChat {
     subscribeToMessages() {
         this.unsubscribeMessages = db.collection('rooms').doc(this.roomId)
             .collection('messages')
-            .orderBy('timestamp', 'asc')
-            .limit(100)
+            .orderBy('timestamp', 'desc')
+            .limit(50)
             .onSnapshot((snapshot) => {
-                // Очищаем контейнер, но оставляем системное сообщение
-                const systemMsg = this.messagesContainer.querySelector('.system');
+                // Очищаем контейнер, но оставляем приветственное сообщение
+                const welcomeMsg = this.messagesContainer.querySelector('.welcome-message');
                 this.messagesContainer.innerHTML = '';
-                if (systemMsg) {
-                    this.messagesContainer.appendChild(systemMsg);
+                if (welcomeMsg) {
+                    this.messagesContainer.appendChild(welcomeMsg);
                 }
                 
-                // Добавляем все сообщения
+                // Добавляем все сообщения в обратном порядке (новые сверху)
+                const messages = [];
                 snapshot.forEach((doc) => {
-                    const message = doc.data();
+                    messages.push(doc.data());
+                });
+                
+                // Сортируем по времени (старые вниз, новые вверху)
+                messages.sort((a, b) => a.timestamp - b.timestamp);
+                
+                messages.forEach((message) => {
                     this.displayMessage(message);
                 });
                 
@@ -894,11 +1030,12 @@ class ElectricianChat {
                 .collection('messages').add({
                     text: text,
                     userId: this.user.uid,
-                    userName: this.user.displayName || 'Электрик',
+                    userName: this.user.displayName || 'Электрик ЧР',
                     userEmail: this.user.email,
-                    userPhoto: this.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.user.displayName || 'E')}&background=2c5364&color=fff`,
+                    userPhoto: this.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.displayName || 'E')}&background=2c5364&color=fff`,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    isElectrician: true
+                    location: 'Чеченская Республика',
+                    brotherhood: true
                 });
             
             // Очищаем поле ввода
@@ -930,7 +1067,7 @@ class ElectricianChat {
                         `<div style="width:100%;height:100%;background:#2c5364;color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;">${(message.userName || 'E').charAt(0).toUpperCase()}</div>`
                     }
                 </div>
-                <span class="message-author">${message.userName || 'Электрик'}</span>
+                <span class="message-author">${message.userName || 'Электрик ЧР'}</span>
                 <span class="message-time">${messageTime}</span>
             </div>
             <div class="message-content">${escapeHtml(message.text)}</div>
@@ -948,7 +1085,7 @@ class ElectricianChat {
                 await db.collection('rooms').doc(this.roomId)
                     .collection('typing').doc(this.user.uid).set({
                         userId: this.user.uid,
-                        userName: this.user.displayName || 'Электрик',
+                        userName: this.user.displayName || 'Электрик ЧР',
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
             } else {
@@ -968,7 +1105,7 @@ class ElectricianChat {
                 snapshot.forEach((doc) => {
                     const data = doc.data();
                     if (data.userId !== this.user?.uid) {
-                        typingUsers.push(data.userName || 'Электрик');
+                        typingUsers.push(data.userName || 'Электрик ЧР');
                     }
                 });
                 
@@ -1022,10 +1159,10 @@ window.addEventListener('load', async function() {
         await initializeFirebase();
         
         // Создаем экземпляр чата
-        chat = new ElectricianChat();
+        chat = new BrotherhoodChat();
         
-        console.log("✅ Чат электриков загружен!");
-        showStatus("Чат готов к работе!", "success");
+        console.log("✅ Братство Электриков ЧР готово к работе!");
+        showStatus("Братство Электриков ЧР готово!", "success");
         
     } catch (error) {
         console.error("❌ Не удалось запустить чат:", error);
