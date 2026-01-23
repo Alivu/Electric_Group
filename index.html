@@ -969,9 +969,9 @@
 
 
 			
-.estimate-controls {
+    .estimate-controls {
         display: grid;
-        grid-template-columns: 50% 48%;   /* ← 50% и 60% */
+        grid-template-columns: 50% 50%;   /* ← ДВЕ РАВНЫЕ колонки */
         gap: 0;
         margin-bottom: 1px;
     }
@@ -979,31 +979,37 @@
     .estimate-controls .btn {
         border-radius: 0;
         margin: 0;
-        padding: 8px 0;
+        padding: 8px 2px !important;      /* ← Маленькие горизонтальные отступы */
+        white-space: nowrap !important;   /* ← Текст НЕ ПЕРЕНАСЫВАЕТСЯ! */
+        overflow: hidden !important;      /* ← Обрезать если не помещается */
+        text-overflow: ellipsis !important; /* ← "..." если длинный текст */
+        font-size: 0.75rem !important;    /* ← Ещё меньше текст */
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 32px !important;          /* ← Фиксированная высота */
+        min-height: 32px !important;
+        line-height: 1 !important;        /* ← Межстрочный = 1 */
     }
     
-    /* Первая кнопка - без левой границы */
-    .estimate-controls .btn:first-child {
-		width: 50% !important;            /* ← ТОЧНО половина */
-        flex: 0 0 50% !important;         /* ← Не растягивать */
-        border-radius: 0 !important;
-        margin: 0 !important;
-        padding: 8px 0 !important;
+    /* Особо для длинного текста "Печать прайса" */
+    #printPriceBtn {
+        font-size: 0.7rem !important;     /* ← Ещё меньше для этой кнопки */
+        padding: 8px 1px !important;      /* ← Минимальные отступы */
     }
     
-    /* Последняя кнопка - без правой границы */
-    .estimate-controls .btn:last-child {
-		width: 50% !important;            /* ← БОЛЬШЕ половины */
-        flex: 1 !important;               /* ← Занимает оставшееся пространство */
-        border-radius: 0 !important;
-        margin: 0 !important;
-        padding: 8px 0 !important;
-        margin-left: -10% !important;     /* ← Наложение на первую кнопку */
-
-			}	
-            .dropdown-toggle {
-                min-width: 100%;
-            }
+    /* Для иконок внутри кнопок */
+    .btn i {
+        font-size: 0.8rem !important;
+        margin-right: 3px !important;     /* ← Маленький отступ от иконки */
+    }
+    
+    .dropdown-toggle {
+        min-width: 100%;
+        justify-content: center;
+    }
+}
             
             .price-item {
                 grid-template-columns: 40px 1fr 40px 70px;
