@@ -940,12 +940,14 @@
        			 line-height: 1.2 !important; /* Правильный межстрочный интервал */
    			 }
 				/* УМЕНЬШАЕМ ПАНЕЛЬ С ВКЛАДКАМИ (Прайс-лист / Смета) */
-            .nav-panel {
-                flex-direction: column;
-                padding: 2px 2px !important; /* БЫЛО 5px - МЕНЬШЕ ВНУТРЕННИХ ОТСТУПОВ */
-				margin-bottom: 0px !important; /* МЕНЬШЕ ОТСТУП ПОД ПАНЕЛЬЮ */
-            }
-
+    .nav-panel {
+        flex-direction: column !important;   /* ← ОДНА НАД ДРУГОЙ */
+        align-items: stretch !important;     /* ← Растянуть на всю ширину */
+        padding: 0 !important;               /* ← НИКАКИХ внутренних отступов */
+        margin: 0 !important;                /* ← НИКАКИХ внешних отступов */
+        gap: 0 !important;                   /* ← НУЛЕВОЕ расстояние между строками */
+        row-gap: 0 !important;               /* ← НУЛЕВОЙ вертикальный gap */
+    }
 			
 			
             .tabs {
