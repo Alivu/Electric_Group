@@ -1054,166 +1054,126 @@ setupPullToRefresh() {
     if (!header) return;
     
     let startY = 0;
-    let isRefreshing = false;
+    let pullDistance = 0;
+    let isDragging = false;
     
-    // Создаем индикатор
+    // Создаем индикатор заранее
     let refreshIndicator = document.querySelector('.refresh-indicator');
     if (!refreshIndicator) {
         refreshIndicator = document.createElement('div');
         refreshIndicator.className = 'refresh-indicator';
-        refreshIndicator.innerHTML = '🔄 Отпустите для обновления';
-        refreshIndicator.style.cssText = `
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: linear-gradient(135deg, #FF9800 0%, #FF5722 100%);
-            color: white;
-            text-align: center;
-            padding: 15px;
-            font-weight: bold;
-            z-index: 1000;
-            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
-            display: none;
-        `;
+        refreshIndicator.innerHTML = '🔄 Отпустите для обновления страницы';
         header.appendChild(refreshIndicator);
     }
     
-    // Touch события
-    header.addEventListener('touchstart', (e) => {
-        if (this.messagesContainer.scrollTop === 0 && !isRefreshing) {
-            startY = e.touches[0].pageY;
-        }
-    }, { passive: true });
+    const touchStart = (e) => {
+        // Активируем всегда, не зависимо от позиции скролла
+        startY = e.touches ? e.touches[0].clientY : e.clientY;
+        isDragging = true;
+        header.style.transition = 'none';
+    };
     
-    header.addEventListener('touchmove', (e) => {
-        if (!startY || isRefreshing) return;
+    const touchMove = (e) => {
+        if (!isDragging) return;
         
-        const currentY = e.touches[0].pageY;
-        const pullDistance = currentY - startY;
+        const currentY = e.touches ? e.touches[0].clientY : e.clientY;
+        pullDistance = currentY - startY;
         
+        // Позволяем тянуть только вниз
         if (pullDistance > 0) {
-            // Показываем индикатор при потягивании вниз
-            if (pullDistance > 50) {
+            e.preventDefault();
+            
+            // Ограничиваем максимальное расстояние
+            const maxPull = 150;
+            const limitedPull = Math.min(pullDistance, maxPull);
+            
+            // Плавно перемещаем весь контейнер чата
+            document.querySelector('.chat-container').style.transform = `translateY(${limitedPull}px)`;
+            
+            // Показываем индикатор когда потянули достаточно
+            if (pullDistance > 60) {
                 refreshIndicator.style.display = 'block';
-                refreshIndicator.style.transform = `translateY(${Math.min(pullDistance - 50, 30)}px)`;
+                refreshIndicator.style.opacity = Math.min((pullDistance - 60) / 40, 1);
+            } else {
+                refreshIndicator.style.display = 'none';
             }
         }
-    }, { passive: true });
+    };
     
-    header.addEventListener('touchend', () => {
-        if (!startY || isRefreshing) return;
+    const touchEnd = () => {
+        if (!isDragging) return;
         
-        const refreshIndicator = document.querySelector('.refresh-indicator');
-        if (refreshIndicator && refreshIndicator.style.display === 'block') {
-            // Запускаем обновление
-            this.refreshChat();
+        // Возвращаем анимацию
+        const chatContainer = document.querySelector('.chat-container');
+        chatContainer.style.transition = 'transform 0.3s ease';
+        chatContainer.style.transform = 'translateY(0)';
+        
+        // Если потянули достаточно, обновляем страницу
+        if (pullDistance > 100) {
+            refreshIndicator.innerHTML = '🔄 Обновление страницы...';
+            refreshIndicator.style.background = 'linear-gradient(135deg, #2c5364 0%, #203a43 100%)';
+            
+            // Обновляем страницу через 500ms для визуального фидбэка
+            setTimeout(() => {
+                location.reload();
+            }, 500);
         }
         
         // Скрываем индикатор
-        if (refreshIndicator) {
+        setTimeout(() => {
             refreshIndicator.style.display = 'none';
-            refreshIndicator.style.transform = 'translateY(0)';
-        }
+            refreshIndicator.style.opacity = '0';
+            refreshIndicator.style.background = 'linear-gradient(135deg, #FF9800 0%, #FF5722 100%)';
+            refreshIndicator.innerHTML = '🔄 Отпустите для обновления страницы';
+        }, 300);
         
+        // Сброс
         startY = 0;
-    }, { passive: true });
+        pullDistance = 0;
+        isDragging = false;
+        
+        // Через 300ms возвращаем transition для будущих анимаций
+        setTimeout(() => {
+            chatContainer.style.transition = 'transform 0.2s ease';
+        }, 300);
+    };
+    
+    // Touch события
+    header.addEventListener('touchstart', touchStart, { passive: true });
+    header.addEventListener('touchmove', touchMove, { passive: false });
+    header.addEventListener('touchend', touchEnd, { passive: true });
     
     // Мышь события (для десктопа)
     header.addEventListener('mousedown', (e) => {
-        if (this.messagesContainer.scrollTop === 0 && !isRefreshing) {
-            startY = e.pageY;
-            header.style.cursor = 'grabbing';
-        }
+        touchStart(e);
+        header.style.cursor = 'grabbing';
     });
     
     header.addEventListener('mousemove', (e) => {
-        if (!startY || isRefreshing || e.buttons !== 1) return;
-        
-        const currentY = e.pageY;
-        const pullDistance = currentY - startY;
-        
-        if (pullDistance > 0) {
-            if (pullDistance > 50) {
-                refreshIndicator.style.display = 'block';
-                refreshIndicator.style.transform = `translateY(${Math.min(pullDistance - 50, 30)}px)`;
-            }
+        if (isDragging && e.buttons === 1) {
+            touchMove(e);
         }
     });
     
     header.addEventListener('mouseup', () => {
-        if (!startY || isRefreshing) return;
-        
-        const refreshIndicator = document.querySelector('.refresh-indicator');
-        if (refreshIndicator && refreshIndicator.style.display === 'block') {
-            this.refreshChat();
-        }
-        
-        if (refreshIndicator) {
-            refreshIndicator.style.display = 'none';
-            refreshIndicator.style.transform = 'translateY(0)';
-        }
-        
-        startY = 0;
-        header.style.cursor = '';
+        touchEnd();
+        header.style.cursor = 'grab';
     });
     
     header.addEventListener('mouseleave', () => {
-        const refreshIndicator = document.querySelector('.refresh-indicator');
-        if (refreshIndicator) {
-            refreshIndicator.style.display = 'none';
-            refreshIndicator.style.transform = 'translateY(0)';
+        if (isDragging) {
+            touchEnd();
+            header.style.cursor = 'grab';
         }
-        startY = 0;
-        header.style.cursor = '';
+    });
+    
+    // Предотвращаем выделение текста при драге
+    header.addEventListener('selectstart', (e) => {
+        if (isDragging) {
+            e.preventDefault();
+        }
     });
 }
-
-async refreshChat() {
-    const refreshIndicator = document.querySelector('.refresh-indicator');
-    const header = document.querySelector('.chat-header');
-    
-    if (refreshIndicator) {
-        refreshIndicator.innerHTML = '🔄 Обновление...';
-        refreshIndicator.style.background = 'linear-gradient(135deg, #2c5364 0%, #203a43 100%)';
-    }
-    
-    try {
-        // Переподписываемся на сообщения
-        if (this.unsubscribeMessages) {
-            this.unsubscribeMessages();
-        }
-        
-        if (this.unsubscribeOnline) {
-            this.unsubscribeOnline();
-        }
-        
-        // Переподписываемся
-        this.loadOnlineUsers();
-        this.subscribeToMessages();
-        
-        showStatus("✅ Чат обновлен", "success");
-        
-    } catch (error) {
-        console.error("❌ Ошибка обновления:", error);
-        showStatus("Ошибка обновления", "error");
-    }
-    
-    // Убираем индикатор через 1.5 секунды
-    setTimeout(() => {
-        if (refreshIndicator) {
-            refreshIndicator.style.display = 'none';
-            refreshIndicator.style.background = 'linear-gradient(135deg, #FF9800 0%, #FF5722 100%)';
-            refreshIndicator.innerHTML = '🔄 Отпустите для обновления';
-            refreshIndicator.style.transform = 'translateY(0)';
-        }
-        
-        if (header) {
-            header.style.cursor = '';
-        }
-    }, 1500);
-}
-    
     // ========== ОБРАБОТКА ПРОКРУТКИ ==========
     handleScroll() {
         const container = this.messagesContainer;
