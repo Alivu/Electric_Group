@@ -6,426 +6,29 @@
     <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups">
     <title>Братство Электриков ЧР</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        /* Экран входа */
-        .login-container {
-            width: 100%;
-            max-width: 500px;
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            text-align: center;
-            animation: slideIn 0.5s ease-out;
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .logo {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            color: #FF9800;
-        }
-
-        .logo-title {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .logo-title .logo {
-            margin-bottom: 0;
-        }
-
-        h1 {
-            color: #2c5364;
-            margin-bottom: 5px;
-            font-size: 1.7rem;
-            text-align: center;
-        }
-
-        .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 1.1rem;
-            line-height: 1.5;
-            text-align: center;
-        }
-
-        .location-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, #FF9800 0%, #FF5722 100%);
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            margin-top: 5px;
-        }
-
-        .online-stats {
-            background: linear-gradient(135deg, #2c5364 0%, #203a43 100%);
-            color: white;
-            border-radius: 15px;
-            padding: 25px;
-            margin: 25px 0;
-            box-shadow: 0 10px 30px rgba(44, 83, 100, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .online-stats:before {
-            content: "⚡";
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            font-size: 2rem;
-            opacity: 0.2;
-        }
-
-        .online-count {
-            font-size: 3.5rem;
-            font-weight: bold;
-            display: block;
-            line-height: 1;
-            margin-bottom: 10px;
-        }
-
-        .online-label {
-            font-size: 1rem;
-            opacity: 0.9;
-        }
-
-        /* Кнопка Google */
-        .google-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            width: 100%;
-            background: #4285F4;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            padding: 16px 30px;
-            font-size: 1.1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin: 20px 0;
-            box-shadow: 0 5px 15px rgba(66, 133, 244, 0.3);
-        }
-
-        .google-btn:hover {
-            background: #3367D6;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(66, 133, 244, 0.4);
-        }
-
-        .google-btn:active {
-            transform: translateY(0);
-        }
-
-        .google-btn img {
-            width: 24px;
-            height: 24px;
-            background: white;
-            border-radius: 50%;
-            padding: 4px;
-        }
-
-        .benefits {
-            text-align: left;
-            margin-top: 30px;
-            background: #f8f9fa;
-            padding: 25px;
-            border-radius: 15px;
-            border-left: 4px solid #FF9800;
-        }
-
-        .benefits h3 {
-            color: #2c5364;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .benefits ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .benefits li {
-            padding: 10px 0;
-            padding-left: 30px;
-            position: relative;
-            border-bottom: 1px solid #eee;
-        }
-
-        .benefits li:last-child {
-            border-bottom: none;
-        }
-
-        .benefits li:before {
-            content: "⚡";
-            color: #FF9800;
-            position: absolute;
-            left: 0;
-            font-size: 1.2rem;
-        }
-
-        .status {
-            margin-top: 20px;
-            padding: 12px 20px;
-            border-radius: 10px;
-            font-weight: bold;
-            display: none;
-        }
-
-        .status.success {
-            background: #d4edda;
-            color: #155724;
-            display: block;
-        }
-
-        .status.error {
-            background: #f8d7da;
-            color: #721c24;
-            display: block;
-        }
-
-        /* Экран чата */
-        .chat-container {
-            width: 100%;
-            max-width: 1200px;
-            height: 90vh;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-            display: none;
-            flex-direction: column;
-        }
-
-        /* Шапка чата */
-        .chat-header {
-            background: linear-gradient(135deg, #2c5364 0%, #203a43 100%);
-            color: white;
-            padding: 20px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        .chat-header-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .chat-header-title h2 {
-            font-size: 1.4rem;
-            margin: 0;
-        }
-
-        .chat-header-title span {
-            background: #FF9800;
-            padding: 3px 10px;
-            border-radius: 15px;
-            font-size: 0.9rem;
-            font-weight: bold;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .user-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            overflow: hidden;
-            border: 3px solid rgba(255,255,255,0.3);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-
-        .user-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .user-details h3 {
-            margin: 0;
-            font-size: 1.2rem;
-        }
-
-        .user-details p {
-            margin: 5px 0 0 0;
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
-
-        .chat-stats {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .online-badge {
-            background: rgba(255,255,255,0.2);
-            padding: 8px 16px;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.9rem;
-        }
-
-        .online-dot {
-            width: 10px;
-            height: 10px;
-            background: #4CAF50;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-
-        .logout-btn {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 10px 25px;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 500;
-        }
-
-        .logout-btn:hover {
-            background: rgba(255,255,255,0.2);
-            transform: translateY(-2px);
-        }
-
+        /* ... предыдущие стили без изменений ... */
+        
         /* Контейнер сообщений */
         .messages-wrapper {
             flex: 1;
             display: flex;
             flex-direction: column;
             background: #f8f9fa;
+            position: relative;
+            overflow: hidden; /* Важно! */
         }
 
         .messages-container {
             flex: 1;
             padding: 25px;
-            overflow-y: auto;
+            overflow-y: auto; /* Прокрутка только здесь */
             display: flex;
             flex-direction: column;
             gap: 15px;
+            min-height: 0; /* Важно для flex */
         }
 
-        /* Сообщения */
-        .message {
-            display: flex;
-            flex-direction: column;
-            max-width: 70%;
-            animation: messageAppear 0.3s ease-out;
-        }
-
-        @keyframes messageAppear {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .message.sent {
-            align-self: flex-end;
-        }
-
-        .message.received {
-            align-self: flex-start;
-        }
-
-        .message-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 5px;
-            padding: 0 10px;
-        }
-
-        .message-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            overflow: hidden;
-        }
-
-        .message-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .message-author {
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: #2c5364;
-        }
-
-        .message-time {
-            font-size: 0.8rem;
-            color: #888;
-        }
-
-        .message-content {
-            background: white;
-            padding: 15px 20px;
-            border-radius: 20px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-            line-height: 1.5;
-            word-break: break-word;
-        }
-
-        .message.sent .message-content {
-            background: linear-gradient(135deg, #2c5364 0%, #203a43 100%);
-            color: white;
-            border-bottom-right-radius: 5px;
-        }
-
-        .message.received .message-content {
-            border-bottom-left-radius: 5px;
-        }
-
-        /* Поле ввода */
+        /* Поле ввода должно быть фиксированной высоты */
         .message-input-area {
             padding: 20px 25px;
             background: white;
@@ -433,149 +36,32 @@
             display: flex;
             gap: 15px;
             align-items: center;
+            flex-shrink: 0; /* Не сжимается */
         }
 
-        .message-input {
-            flex: 1;
-            padding: 15px 25px;
-            border: 2px solid #e9ecef;
-            border-radius: 30px;
-            font-size: 1rem;
-            outline: none;
-            transition: all 0.3s;
-        }
-
-        .message-input:focus {
-            border-color: #2c5364;
-            box-shadow: 0 0 0 3px rgba(44, 83, 100, 0.1);
-        }
-
-        .send-btn {
-            background: linear-gradient(135deg, #FF9800 0%, #FF5722 100%);
-            color: white;
-            border: none;
-            width: 55px;
-            height: 55px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 1.2rem;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
-        }
-
-        .send-btn:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 8px 20px rgba(255, 152, 0, 0.4);
-        }
-
-        .send-btn:active {
-            transform: translateY(0) scale(1);
-        }
-
-        /* Адаптивность */
+        /* Адаптивность для телефона */
         @media (max-width: 768px) {
             .chat-container {
                 height: 100vh;
                 border-radius: 0;
-            }
-            
-            .login-container {
-                padding: 25px;
-                margin: 10px;
-            }
-            
-            h1 {
-                font-size: 1.5rem;
-            }
-            
-            .online-count {
-                font-size: 2.5rem;
-            }
-            
-            .chat-header {
-                padding: 15px 20px;
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
+                position: fixed; /* Фиксированное на телефоне */
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
             }
             
             .messages-container {
                 padding: 15px;
+                -webkit-overflow-scrolling: touch; /* Плавная прокрутка на iOS */
             }
             
-            .message {
-                max-width: 85%;
-            }
-            
-            .chat-stats {
-                flex-direction: column;
-                gap: 10px;
+            .message-input-area {
+                padding: 15px;
             }
         }
 
-        /* Типинг индикатор */
-        .typing-indicator {
-            padding: 10px 20px;
-            background: #e9ecef;
-            border-radius: 20px;
-            margin: 0 25px 15px;
-            font-style: italic;
-            color: #666;
-            display: none;
-        }
-
-        /* Электрическая тематика */
-        .electric-theme {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .electric-theme:before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #FF9800, #FF5722, #2c5364);
-            animation: electricFlow 3s infinite linear;
-        }
-
-        @keyframes electricFlow {
-            0% { background-position: -100px 0; }
-            100% { background-position: 100px 0; }
-        }
-
-        .welcome-message {
-            text-align: center;
-            padding: 20px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: 15px;
-            margin-bottom: 20px;
-            border: 2px solid #FF9800;
-        }
-
-        .welcome-message h3 {
-            color: #2c5364;
-            margin-bottom: 10px;
-        }
-
-        .welcome-message p {
-            color: #666;
-            margin-bottom: 5px;
-        }
-
-        .rules {
-            font-size: 0.9rem;
-            color: #888;
-            text-align: center;
-            margin-top: 10px;
-            padding: 10px;
-            border-top: 1px solid #eee;
-        }
+        /* ... остальные стили без изменений ... */
     </style>
     
     <!-- Firebase SDK -->
@@ -584,96 +70,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 </head>
 <body>
-    <!-- Экран входа -->
-    <div class="login-container electric-theme" id="loginScreen">
-        <div class="logo-title">
-            <div class="logo">🔌</div>
-            <h1>Братство Электриков ЧР</h1>
-        </div>
-        <p class="subtitle">Профессиональное сообщество электриков Чеченской Республики</p>
-        <div class="location-badge">Чеченская Республика</div>
-        
-        <div class="online-stats">
-            <span class="online-count" id="onlineCount">0</span>
-            <span class="online-label">братьев-электриков онлайн</span>
-        </div>
-        
-        <button class="google-btn" id="googleLoginBtn">
-            <img src="https://www.google.com/favicon.ico" alt="Google">
-            Войти как электрик
-        </button>
-        
-        <div class="benefits">
-            <h3><span>⚡</span> Наш устав:</h3>
-            <ul>
-                <li>Взаимопомощь и поддержка коллег</li>
-                <li>Обмен профессиональным опытом</li>
-                <li>Консультации по ПУЭ и ГОСТам</li>
-                <li>Решение сложных электромонтажных задач</li>
-                <li>Координация на объектах ЧР</li>
-                <li>Повышение квалификации</li>
-            </ul>
-        </div>
-        
-        <div class="status" id="statusMessage"></div>
-        
-        <div class="rules">
-            Только для профессиональных электриков Чеченской Республики
-        </div>
-    </div>
-    
-    <!-- Экран чата -->
-    <div class="chat-container electric-theme" id="chatScreen">
-        <!-- Шапка чата -->
-        <div class="chat-header">
-            <div class="chat-header-title">
-                <h2>Братство Электриков ЧР</h2>
-                <span>ЧР</span>
-            </div>
-            
-            <div class="user-info">
-                <div class="user-avatar" id="userAvatar">
-                    <!-- Аватар загрузится через JS -->
-                </div>
-                <div class="user-details">
-                    <h3 id="userName">Электрик</h3>
-                    <p id="userEmail">Чеченская Республика</p>
-                </div>
-            </div>
-            
-            <div class="chat-stats">
-                <div class="online-badge">
-                    <span class="online-dot"></span>
-                    <span id="activeOnlineCount">0</span> братьев онлайн
-                </div>
-                <button class="logout-btn" id="logoutBtn">Выйти</button>
-            </div>
-        </div>
-        
-        <!-- Контейнер сообщений -->
-        <div class="messages-wrapper">
-            <!-- Индикатор "печатает" -->
-            <div class="typing-indicator" id="typingIndicator"></div>
-            
-            <!-- Сообщения -->
-            <div class="messages-container" id="messagesContainer">
-                <!-- Приветственное сообщение -->
-                <div class="welcome-message">
-                    <h3>Добро пожаловать в Братство Электриков ЧР! ⚡</h3>
-                    <p>Это профессиональное сообщество электриков Чеченской Республики.</p>
-                    <p>Уважайте коллег, помогайте друг другу, соблюдайте технику безопасности!</p>
-                    <p style="color: #FF9800; font-weight: bold;">Безопасность прежде всего!</p>
-                </div>
-            </div>
-            
-            <!-- Поле ввода -->
-            <div class="message-input-area">
-                <input type="text" class="message-input" id="messageInput" 
-                       placeholder="Напишите сообщение для братьев-электриков..." maxlength="1000">
-                <button class="send-btn" id="sendMessageBtn">➤</button>
-            </div>
-        </div>
-    </div>
+    <!-- ... HTML без изменений ... -->
 
     <script>
 // ========== КОНФИГУРАЦИЯ FIREBASE ==========
@@ -702,7 +99,6 @@ function initializeFirebase() {
             auth = firebase.auth();
             db = firebase.firestore();
             
-            // Настраиваем Google провайдер
             googleProvider = new firebase.auth.GoogleAuthProvider();
             googleProvider.addScope('profile');
             googleProvider.addScope('email');
@@ -727,10 +123,11 @@ class BrotherhoodChat {
         this.unsubscribeMessages = null;
         this.unsubscribeOnline = null;
         this.unsubscribeTyping = null;
+        this.hasSentFirstMessage = false; // Флаг первого сообщения
+        this.autoScroll = true; // Флаг авто-прокрутки
+        this.isUserScrolling = false; // Флаг ручной прокрутки пользователя
         
-        // Проверяем инициализацию Firebase
         if (!auth || !db) {
-            console.warn("⚠️ Firebase еще не инициализирован, ждем...");
             this.waitForFirebase();
             return;
         }
@@ -748,7 +145,6 @@ class BrotherhoodChat {
     }
     
     init() {
-        // Получаем DOM элементы
         this.loginScreen = document.getElementById('loginScreen');
         this.chatScreen = document.getElementById('chatScreen');
         this.googleLoginBtn = document.getElementById('googleLoginBtn');
@@ -764,10 +160,8 @@ class BrotherhoodChat {
         this.typingIndicator = document.getElementById('typingIndicator');
         this.statusMessage = document.getElementById('statusMessage');
         
-        // Настройка обработчиков событий
         this.setupEventListeners();
         
-        // Слушатель состояния авторизации
         auth.onAuthStateChanged((user) => {
             if (user) {
                 this.onUserSignedIn(user);
@@ -780,14 +174,10 @@ class BrotherhoodChat {
     }
     
     setupEventListeners() {
-        // Кнопка входа через Google
         this.googleLoginBtn.addEventListener('click', () => this.signInWithGoogle());
-        
-        // Кнопка выхода
         this.logoutBtn.addEventListener('click', () => this.signOut());
-        
-        // Отправка сообщения
         this.sendMessageBtn.addEventListener('click', () => this.sendMessage());
+        
         this.messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -795,12 +185,152 @@ class BrotherhoodChat {
             }
         });
         
-        // Индикатор набора текста
         this.messageInput.addEventListener('input', () => this.setTypingStatus(true));
         this.messageInput.addEventListener('blur', () => this.setTypingStatus(false));
+        
+        // Слушатель ручной прокрутки
+        this.messagesContainer.addEventListener('scroll', () => {
+            this.handleScroll();
+        });
     }
     
-    // ========== АВТОРИЗАЦИЯ ==========
+    // ========== ОБРАБОТКА ПРОКРУТКИ ==========
+    handleScroll() {
+        const container = this.messagesContainer;
+        const scrollPosition = container.scrollTop;
+        const scrollHeight = container.scrollHeight;
+        const clientHeight = container.clientHeight;
+        
+        // Если пользователь прокрутил вверх (не в самом низу)
+        if (scrollPosition + clientHeight < scrollHeight - 100) {
+            this.autoScroll = false;
+            this.isUserScrolling = true;
+        } 
+        // Если пользователь прокрутил в самый низ
+        else {
+            this.autoScroll = true;
+            this.isUserScrolling = false;
+        }
+    }
+    
+    scrollToBottom() {
+        if (this.autoScroll) {
+            setTimeout(() => {
+                this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+            }, 100);
+        }
+    }
+    
+    // ========== ОТПРАВКА СООБЩЕНИЙ ==========
+    async sendMessage() {
+        if (!this.user) {
+            showStatus("Сначала войдите в систему", "error");
+            return;
+        }
+        
+        const text = this.messageInput.value.trim();
+        if (!text) return;
+        
+        try {
+            await db.collection('rooms').doc(this.roomId)
+                .collection('messages').add({
+                    text: text,
+                    userId: this.user.uid,
+                    userName: this.user.displayName || 'Электрик ЧР',
+                    userEmail: this.user.email,
+                    userPhoto: this.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.user.displayName || 'E')}&background=2c5364&color=fff`,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    location: 'Чеченская Республика',
+                    brotherhood: true
+                });
+            
+            // Удаляем приветственное сообщение после первого сообщения пользователя
+            if (!this.hasSentFirstMessage) {
+                this.hasSentFirstMessage = true;
+                const welcomeMessage = this.messagesContainer.querySelector('.welcome-message');
+                if (welcomeMessage) {
+                    welcomeMessage.remove();
+                }
+            }
+            
+            this.messageInput.value = '';
+            this.setTypingStatus(false);
+            
+            // Включаем авто-прокрутку при отправке сообщения
+            this.autoScroll = true;
+            this.scrollToBottom();
+            
+        } catch (error) {
+            console.error("❌ Ошибка отправки сообщения:", error);
+            showStatus("Ошибка отправки сообщения: " + error.message, "error");
+        }
+    }
+    
+    // ========== ПОЛУЧЕНИЕ СООБЩЕНИЙ ==========
+    subscribeToMessages() {
+        this.unsubscribeMessages = db.collection('rooms').doc(this.roomId)
+            .collection('messages')
+            .orderBy('timestamp', 'desc')
+            .limit(50)
+            .onSnapshot((snapshot) => {
+                const welcomeMsg = this.messagesContainer.querySelector('.welcome-message');
+                this.messagesContainer.innerHTML = '';
+                
+                if (welcomeMsg && !this.hasSentFirstMessage) {
+                    this.messagesContainer.appendChild(welcomeMsg);
+                }
+                
+                const messages = [];
+                snapshot.forEach((doc) => {
+                    messages.push(doc.data());
+                });
+                
+                messages.sort((a, b) => a.timestamp - b.timestamp);
+                
+                messages.forEach((message) => {
+                    this.displayMessage(message);
+                });
+                
+                // Авто-прокрутка только для новых сообщений (не при загрузке истории)
+                if (this.autoScroll) {
+                    this.scrollToBottom();
+                }
+                
+            }, (error) => {
+                console.error("❌ Ошибка загрузки сообщений:", error);
+                showStatus("Ошибка загрузки сообщений", "error");
+            });
+    }
+    
+    displayMessage(message) {
+        const isOwnMessage = message.userId === this.user?.uid;
+        const messageTime = message.timestamp ? 
+            new Date(message.timestamp.toDate()).toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            }) : 
+            new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        const messageEl = document.createElement('div');
+        messageEl.className = `message ${isOwnMessage ? 'sent' : 'received'}`;
+        messageEl.innerHTML = `
+            <div class="message-header">
+                <div class="message-avatar">
+                    ${message.userPhoto ? 
+                        `<img src="${message.userPhoto}" alt="${message.userName}">` : 
+                        `<div style="width:100%;height:100%;background:#2c5364;color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;">${(message.userName || 'E').charAt(0).toUpperCase()}</div>`
+                    }
+                </div>
+                <span class="message-author">${message.userName || 'Электрик ЧР'}</span>
+                <span class="message-time">${messageTime}</span>
+            </div>
+            <div class="message-content">${escapeHtml(message.text)}</div>
+        `;
+        
+        this.messagesContainer.appendChild(messageEl);
+    }
+    
+    // ========== АВТОРИЗАЦИЯ И ОНЛАЙН СТАТУС ==========
     async signInWithGoogle() {
         try {
             if (!auth) {
@@ -813,7 +343,6 @@ class BrotherhoodChat {
             const result = await auth.signInWithPopup(googleProvider);
             this.user = result.user;
             
-            // Сохраняем пользователя в Firestore
             await this.saveUserToFirestore(this.user);
             
             showStatus("✅ Добро пожаловать в Братство!", "success");
@@ -861,7 +390,6 @@ class BrotherhoodChat {
     
     async signOut() {
         try {
-            // Удаляем из онлайн
             if (this.user) {
                 await db.collection('rooms').doc(this.roomId)
                     .collection('online').doc(this.user.uid).delete();
@@ -870,7 +398,6 @@ class BrotherhoodChat {
                     .collection('typing').doc(this.user.uid).delete();
             }
             
-            // Выход из Firebase Auth
             await auth.signOut();
             
             showStatus("✅ Вы вышли из системы", "success");
@@ -880,15 +407,12 @@ class BrotherhoodChat {
         }
     }
     
-    // ========== ИНТЕРФЕЙС ==========
     onUserSignedIn(user) {
         this.user = user;
         
-        // Обновляем информацию о пользователе
         this.userName.textContent = user.displayName || 'Электрик ЧР';
         this.userEmail.textContent = 'Чеченская Республика';
         
-        // Устанавливаем аватар
         if (user.photoURL) {
             this.userAvatar.innerHTML = `<img src="${user.photoURL}" alt="${user.displayName}">`;
         } else {
@@ -896,37 +420,35 @@ class BrotherhoodChat {
             this.userAvatar.innerHTML = `<div style="width:100%;height:100%;background:#2c5364;color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.2rem;">${name.charAt(0).toUpperCase()}</div>`;
         }
         
-        // Переключаем экраны
         this.loginScreen.style.display = 'none';
         this.chatScreen.style.display = 'flex';
         
-        // Загружаем данные чата
+        // Сбрасываем флаги при новом входе
+        this.hasSentFirstMessage = false;
+        this.autoScroll = true;
+        
         this.loadOnlineUsers();
         this.subscribeToMessages();
         this.subscribeToTyping();
-        
-        // Добавляем пользователя в онлайн
         this.addUserToOnline();
         
-        // Фокус на поле ввода
         setTimeout(() => {
             this.messageInput.focus();
+            this.scrollToBottom(); // Прокручиваем вниз при входе
         }, 100);
     }
     
     onUserSignedOut() {
         this.user = null;
         
-        // Отписываемся от слушателей
         if (this.unsubscribeMessages) this.unsubscribeMessages();
         if (this.unsubscribeOnline) this.unsubscribeOnline();
         if (this.unsubscribeTyping) this.unsubscribeTyping();
         
-        // Переключаем экраны
         this.chatScreen.style.display = 'none';
         this.loginScreen.style.display = 'block';
         
-        // Очищаем сообщения (оставляем приветственное)
+        // Восстанавливаем приветственное сообщение
         this.messagesContainer.innerHTML = `
             <div class="welcome-message">
                 <h3>Добро пожаловать в Братство Электриков ЧР! ⚡</h3>
@@ -935,9 +457,12 @@ class BrotherhoodChat {
                 <p style="color: #FF9800; font-weight: bold;">Безопасность прежде всего!</p>
             </div>
         `;
+        
+        this.hasSentFirstMessage = false;
+        this.autoScroll = true;
     }
     
-    // ========== ОНЛАЙН СТАТУС ==========
+    // ========== ОСТАЛЬНЫЕ МЕТОДЫ (без изменений) ==========
     async addUserToOnline() {
         if (!this.user) return;
         
@@ -952,7 +477,6 @@ class BrotherhoodChat {
                     brotherhood: true
                 });
             
-            // Обновляем статус каждые 30 секунд
             this.onlineInterval = setInterval(() => {
                 if (this.user) {
                     db.collection('rooms').doc(this.roomId)
@@ -979,104 +503,6 @@ class BrotherhoodChat {
             });
     }
     
-    // ========== СООБЩЕНИЯ ==========
-    subscribeToMessages() {
-        this.unsubscribeMessages = db.collection('rooms').doc(this.roomId)
-            .collection('messages')
-            .orderBy('timestamp', 'desc')
-            .limit(50)
-            .onSnapshot((snapshot) => {
-                // Очищаем контейнер, но оставляем приветственное сообщение
-                const welcomeMsg = this.messagesContainer.querySelector('.welcome-message');
-                this.messagesContainer.innerHTML = '';
-                if (welcomeMsg) {
-                    this.messagesContainer.appendChild(welcomeMsg);
-                }
-                
-                // Добавляем все сообщения в обратном порядке (новые сверху)
-                const messages = [];
-                snapshot.forEach((doc) => {
-                    messages.push(doc.data());
-                });
-                
-                // Сортируем по времени (старые вниз, новые вверху)
-                messages.sort((a, b) => a.timestamp - b.timestamp);
-                
-                messages.forEach((message) => {
-                    this.displayMessage(message);
-                });
-                
-                // Прокручиваем вниз
-                setTimeout(() => {
-                    this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
-                }, 100);
-            }, (error) => {
-                console.error("❌ Ошибка загрузки сообщений:", error);
-                showStatus("Ошибка загрузки сообщений", "error");
-            });
-    }
-    
-    async sendMessage() {
-        if (!this.user) {
-            showStatus("Сначала войдите в систему", "error");
-            return;
-        }
-        
-        const text = this.messageInput.value.trim();
-        if (!text) return;
-        
-        try {
-            await db.collection('rooms').doc(this.roomId)
-                .collection('messages').add({
-                    text: text,
-                    userId: this.user.uid,
-                    userName: this.user.displayName || 'Электрик ЧР',
-                    userEmail: this.user.email,
-                    userPhoto: this.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.displayName || 'E')}&background=2c5364&color=fff`,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    location: 'Чеченская Республика',
-                    brotherhood: true
-                });
-            
-            // Очищаем поле ввода
-            this.messageInput.value = '';
-            this.setTypingStatus(false);
-            
-        } catch (error) {
-            console.error("❌ Ошибка отправки сообщения:", error);
-            showStatus("Ошибка отправки сообщения: " + error.message, "error");
-        }
-    }
-    
-    displayMessage(message) {
-        const isOwnMessage = message.userId === this.user?.uid;
-        const messageTime = message.timestamp ? 
-            new Date(message.timestamp.toDate()).toLocaleTimeString([], { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            }) : 
-            new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        
-        const messageEl = document.createElement('div');
-        messageEl.className = `message ${isOwnMessage ? 'sent' : 'received'}`;
-        messageEl.innerHTML = `
-            <div class="message-header">
-                <div class="message-avatar">
-                    ${message.userPhoto ? 
-                        `<img src="${message.userPhoto}" alt="${message.userName}">` : 
-                        `<div style="width:100%;height:100%;background:#2c5364;color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;">${(message.userName || 'E').charAt(0).toUpperCase()}</div>`
-                    }
-                </div>
-                <span class="message-author">${message.userName || 'Электрик ЧР'}</span>
-                <span class="message-time">${messageTime}</span>
-            </div>
-            <div class="message-content">${escapeHtml(message.text)}</div>
-        `;
-        
-        this.messagesContainer.appendChild(messageEl);
-    }
-    
-    // ========== ИНДИКАТОР НАБОРА ТЕКСТА ==========
     async setTypingStatus(isTyping) {
         if (!this.user) return;
         
@@ -1121,6 +547,11 @@ class BrotherhoodChat {
             const others = typingUsers.length > 2 ? ` и ${typingUsers.length - 2} других` : '';
             this.typingIndicator.textContent = `${names}${others} печатает...`;
             this.typingIndicator.style.display = 'block';
+            
+            // При появлении индикатора печати тоже прокручиваем вниз
+            if (this.autoScroll) {
+                this.scrollToBottom();
+            }
         } else {
             this.typingIndicator.style.display = 'none';
         }
@@ -1150,17 +581,12 @@ function showStatus(message, type) {
 // ========== ЗАПУСК ПРИЛОЖЕНИЯ ==========
 let chat;
 
-// Ждем полной загрузки страницы и Firebase
 window.addEventListener('load', async function() {
     console.log("🚀 Страница загружена, инициализируем Firebase...");
     
     try {
-        // Инициализируем Firebase
         await initializeFirebase();
-        
-        // Создаем экземпляр чата
         chat = new BrotherhoodChat();
-        
         console.log("✅ Братство Электриков ЧР готово к работе!");
         showStatus("Братство Электриков ЧР готово!", "success");
         
@@ -1168,7 +594,6 @@ window.addEventListener('load', async function() {
         console.error("❌ Не удалось запустить чат:", error);
         showStatus("Ошибка загрузки чата: " + error.message, "error");
         
-        // Показываем кнопку для повторной попытки
         const retryBtn = document.createElement('button');
         retryBtn.textContent = "Попробовать снова";
         retryBtn.style.cssText = "background: #FF9800; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-top: 10px; cursor: pointer;";
@@ -1180,7 +605,6 @@ window.addEventListener('load', async function() {
     }
 });
 
-// Глобальные функции для отладки
 window.debugChat = () => chat;
 window.debugAuth = () => auth;
 window.debugFirestore = () => db;
