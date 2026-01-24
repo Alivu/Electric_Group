@@ -466,6 +466,23 @@
         /* Используем env для безопасных областей */
         padding-bottom: env(safe-area-inset-bottom);
     }
+
+/* Стиль для индикатора обновления */
+.refresh-indicator {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #FF9800 0%, #FF5722 100%);
+    color: white;
+    text-align: center;
+    padding: 15px;
+    font-weight: bold;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+    display: none;
+}
+
     
     .login-container {
         padding: 25px;
@@ -481,12 +498,24 @@
         font-size: 2.5rem;
     }
     
-    .chat-header {
-        padding: 15px 20px;
-        padding-top: max(15px, env(safe-area-inset-top));
-        flex-wrap: wrap;
-        gap: 15px;
-    }
+.chat-header {
+    background: linear-gradient(135deg, #2c5364 0%, #203a43 100%);
+    color: white;
+    padding: 20px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    flex-shrink: 0;
+    cursor: grab; /* Добавлено */
+    user-select: none; /* Добавлено */
+    transition: transform 0.2s ease; /* Добавлено */
+    position: relative; /* Добавлено для позиционирования индикатора */
+}
+
+.chat-header:active {
+    cursor: grabbing;
+}
     
     .messages-container {
         padding: 15px 15px 95px; /* УВЕЛИЧИВАЕМ ОТСТУП СНИЗУ */
@@ -822,136 +851,211 @@ class ElectricianChat {
         });
     }
     
-    // ========== PULL-TO-REFRESH ФУНКЦИОНАЛЬНОСТЬ ==========
-    setupPullToRefresh() {
-        const header = document.querySelector('.chat-header');
-        let startY = 0;
-        let pullDistance = 0;
-        let isRefreshing = false;
-        
-        header.addEventListener('touchstart', (e) => {
-            if (this.messagesContainer.scrollTop === 0) {
-                startY = e.touches[0].pageY;
-            }
-        }, { passive: true });
-        
-        header.addEventListener('touchmove', (e) => {
-            if (startY && !isRefreshing) {
-                const currentY = e.touches[0].pageY;
-                pullDistance = currentY - startY;
-                
-                // Если потянули вниз более 50px
-                if (pullDistance > 50) {
-                    this.showRefreshIndicator();
-                }
-            }
-        }, { passive: true });
-        
-        header.addEventListener('touchend', () => {
-            if (pullDistance > 50 && !isRefreshing) {
-                this.refreshChat();
-            }
-            startY = 0;
-            pullDistance = 0;
-        }, { passive: true });
-        
-        // Также для мыши
-        header.addEventListener('mousedown', (e) => {
-            if (this.messagesContainer.scrollTop === 0) {
-                startY = e.pageY;
-                header.style.cursor = 'grabbing';
-            }
-        });
-        
-        header.addEventListener('mousemove', (e) => {
-            if (startY && !isRefreshing && e.buttons === 1) {
-                const currentY = e.pageY;
-                pullDistance = currentY - startY;
-                
-                if (pullDistance > 50) {
-                    this.showRefreshIndicator();
-                }
-            }
-        });
-        
-        header.addEventListener('mouseup', () => {
-            if (pullDistance > 50 && !isRefreshing) {
-                this.refreshChat();
-            }
-            startY = 0;
-            pullDistance = 0;
-            header.style.cursor = '';
-        });
-        
-        header.addEventListener('mouseleave', () => {
-            startY = 0;
-            pullDistance = 0;
-            header.style.cursor = '';
-        });
+// ========== PULL-TO-REFRESH ФУНКЦИОНАЛЬНОСТЬ ==========
+setupPullToRefresh() {
+    const header = document.querySelector('.chat-header');
+    if (!header) return;
+    
+    let startY = 0;
+    let pullDistance = 0;
+    let isRefreshing = false;
+    let isPullActive = false;
+    
+    // Создаем индикатор заранее
+    let refreshIndicator = document.querySelector('.refresh-indicator');
+    if (!refreshIndicator) {
+        refreshIndicator = document.createElement('div');
+        refreshIndicator.className = 'refresh-indicator';
+        refreshIndicator.innerHTML = '🔄 Отпустите для обновления';
+        refreshIndicator.style.cssText = `
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #FF9800 0%, #FF5722 100%);
+            color: white;
+            text-align: center;
+            padding: 15px;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+            display: none;
+        `;
+        document.querySelector('.chat-header').appendChild(refreshIndicator);
     }
     
-    showRefreshIndicator() {
-        // Создаем индикатор обновления если его нет
-        let refreshIndicator = document.querySelector('.refresh-indicator');
-        if (!refreshIndicator) {
-            refreshIndicator = document.createElement('div');
-            refreshIndicator.className = 'refresh-indicator';
-            refreshIndicator.innerHTML = '🔄 Отпустите для обновления';
-            refreshIndicator.style.cssText = `
-                position: absolute;
-                top: 100%;
-                left: 0;
-                right: 0;
-                background: linear-gradient(135deg, #FF9800 0%, #FF5722 100%);
-                color: white;
-                text-align: center;
-                padding: 15px;
-                font-weight: bold;
-                z-index: 1000;
-                box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
-            `;
-            document.querySelector('.chat-header').appendChild(refreshIndicator);
-        }
-    }
-    
-    async refreshChat() {
-        const refreshIndicator = document.querySelector('.refresh-indicator');
+    const showRefresh = () => {
         if (refreshIndicator) {
-            refreshIndicator.innerHTML = '🔄 Обновление...';
-            refreshIndicator.style.background = 'linear-gradient(135deg, #2c5364 0%, #203a43 100%)';
+            refreshIndicator.style.display = 'block';
+            header.style.transform = 'translateY(10px)';
+        }
+    };
+    
+    const hideRefresh = () => {
+        if (refreshIndicator) {
+            refreshIndicator.style.display = 'none';
+            header.style.transform = 'translateY(0)';
+        }
+    };
+    
+    // Touch события
+    header.addEventListener('touchstart', (e) => {
+        if (this.messagesContainer.scrollTop === 0 && !isRefreshing) {
+            startY = e.touches[0].clientY;
+            isPullActive = true;
+        }
+    }, { passive: true });
+    
+    header.addEventListener('touchmove', (e) => {
+        if (!isPullActive || isRefreshing) return;
+        
+        const currentY = e.touches[0].clientY;
+        pullDistance = currentY - startY;
+        
+        if (pullDistance > 0) {
+            e.preventDefault();
+            
+            if (pullDistance > 80) {
+                showRefresh();
+                refreshIndicator.innerHTML = '🔄 Отпустите для обновления';
+            } else {
+                hideRefresh();
+            }
+            
+            // Плавное перемещение заголовка
+            header.style.transform = `translateY(${Math.min(pullDistance / 2, 40)}px)`;
+        }
+    }, { passive: false });
+    
+    header.addEventListener('touchend', () => {
+        if (!isPullActive) return;
+        
+        if (pullDistance > 80 && !isRefreshing) {
+            this.refreshChat();
         }
         
-        try {
-            // Переподписываемся на сообщения (эффект обновления)
-            if (this.unsubscribeMessages) {
-                this.unsubscribeMessages();
-            }
-            
-            // Обновляем онлайн пользователей
-            if (this.unsubscribeOnline) {
-                this.unsubscribeOnline();
-            }
-            
-            // Переподписываемся
-            this.loadOnlineUsers();
-            this.subscribeToMessages();
-            
-            // Показываем статус
-            showStatus("✅ Чат обновлен", "success");
-            
-        } catch (error) {
-            console.error("❌ Ошибка обновления:", error);
-            showStatus("Ошибка обновления", "error");
+        // Анимация возврата
+        header.style.transform = 'translateY(0)';
+        hideRefresh();
+        
+        // Сброс
+        startY = 0;
+        pullDistance = 0;
+        isPullActive = false;
+    }, { passive: true });
+    
+    // Мышь события
+    header.addEventListener('mousedown', (e) => {
+        if (this.messagesContainer.scrollTop === 0 && !isRefreshing) {
+            startY = e.clientY;
+            isPullActive = true;
+            header.style.cursor = 'grabbing';
         }
+    });
+    
+    header.addEventListener('mousemove', (e) => {
+        if (!isPullActive || isRefreshing || !e.buttons) return;
+        
+        const currentY = e.clientY;
+        pullDistance = currentY - startY;
+        
+        if (pullDistance > 0) {
+            if (pullDistance > 80) {
+                showRefresh();
+                refreshIndicator.innerHTML = '🔄 Отпустите для обновления';
+            } else {
+                hideRefresh();
+            }
+            
+            // Плавное перемещение заголовка
+            header.style.transform = `translateY(${Math.min(pullDistance / 2, 40)}px)`;
+        }
+    });
+    
+    header.addEventListener('mouseup', () => {
+        if (!isPullActive) return;
+        
+        if (pullDistance > 80 && !isRefreshing) {
+            this.refreshChat();
+        }
+        
+        // Анимация возврата
+        header.style.transform = 'translateY(0)';
+        hideRefresh();
+        header.style.cursor = 'grab';
+        
+        // Сброс
+        startY = 0;
+        pullDistance = 0;
+        isPullActive = false;
+    });
+    
+    header.addEventListener('mouseleave', () => {
+        if (isPullActive) {
+            header.style.transform = 'translateY(0)';
+            hideRefresh();
+            header.style.cursor = 'grab';
+            
+            startY = 0;
+            pullDistance = 0;
+            isPullActive = false;
+        }
+    });
+}
+
+async refreshChat() {
+    const refreshIndicator = document.querySelector('.refresh-indicator');
+    const header = document.querySelector('.chat-header');
+    let isRefreshing = true;
+    
+    if (refreshIndicator) {
+        refreshIndicator.innerHTML = '🔄 Обновление...';
+        refreshIndicator.style.background = 'linear-gradient(135deg, #2c5364 0%, #203a43 100%)';
+    }
+    
+    if (header) {
+        header.style.cursor = 'wait';
+    }
+    
+    try {
+        // Переподписываемся на сообщения (эффект обновления)
+        if (this.unsubscribeMessages) {
+            this.unsubscribeMessages();
+        }
+        
+        // Обновляем онлайн пользователей
+        if (this.unsubscribeOnline) {
+            this.unsubscribeOnline();
+        }
+        
+        // Переподписываемся
+        this.loadOnlineUsers();
+        this.subscribeToMessages();
+        
+        // Показываем статус
+        showStatus("✅ Чат обновлен", "success");
+        
+    } catch (error) {
+        console.error("❌ Ошибка обновления:", error);
+        showStatus("Ошибка обновления", "error");
+    } finally {
+        isRefreshing = false;
         
         // Убираем индикатор через 1.5 секунды
         setTimeout(() => {
             if (refreshIndicator) {
-                refreshIndicator.remove();
+                refreshIndicator.style.display = 'none';
+                refreshIndicator.style.background = 'linear-gradient(135deg, #FF9800 0%, #FF5722 100%)';
+                refreshIndicator.innerHTML = '🔄 Отпустите для обновления';
+            }
+            
+            if (header) {
+                header.style.cursor = 'grab';
+                header.style.transform = 'translateY(0)';
             }
         }, 1500);
     }
-    
+
     // ========== ОБРАБОТКА ПРОКРУТКИ ==========
     handleScroll() {
         const container = this.messagesContainer;
