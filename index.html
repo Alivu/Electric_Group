@@ -1406,8 +1406,6 @@ setupPullToRefresh() {
     subscribeToMessages() {
         this.unsubscribeMessages = db.collection('rooms').doc(this.roomId)
             .collection('messages')
-            .where('deleted', '!=', true)
-            .orderBy('deleted') 
             .orderBy('timestamp', 'asc')
             .limit(100)
             .onSnapshot((snapshot) => {
