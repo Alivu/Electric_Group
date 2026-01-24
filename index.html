@@ -153,20 +153,6 @@ class BrotherhoodChat {
         this.setupEventListeners();
         
         // Слушатель состояния авторизации
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                this.onUserSignedIn(user);
-            } else {
-                this.onUserSignedOut();
-            }
-        });
-        
-        console.log("✅ Чат Братства инициализирован");
-    }
-        
-        this.setupEventListeners();
-        
-        // Слушатель состояния авторизации
         if (auth) {
             auth.onAuthStateChanged((user) => {
                 if (user) {
@@ -233,7 +219,7 @@ class BrotherhoodChat {
     }
     
     scrollToBottom() {
-        if (this.autoScroll) {
+        if (this.autoScroll && this.messagesContainer) {
             setTimeout(() => {
                 this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
             }, 100);
@@ -293,26 +279,28 @@ class BrotherhoodChat {
             .limit(50)
             .onSnapshot((snapshot) => {
                 const welcomeMsg = this.messagesContainer.querySelector('.welcome-message');
-                this.messagesContainer.innerHTML = '';
-                
-                if (welcomeMsg && !this.hasSentFirstMessage) {
-                    this.messagesContainer.appendChild(welcomeMsg);
-                }
-                
-                const messages = [];
-                snapshot.forEach((doc) => {
-                    messages.push(doc.data());
-                });
-                
-                messages.sort((a, b) => a.timestamp - b.timestamp);
-                
-                messages.forEach((message) => {
-                    this.displayMessage(message);
-                });
-                
-                // Авто-прокрутка только для новых сообщений (не при загрузке истории)
-                if (this.autoScroll) {
-                    this.scrollToBottom();
+                if (this.messagesContainer) {
+                    this.messagesContainer.innerHTML = '';
+                    
+                    if (welcomeMsg && !this.hasSentFirstMessage) {
+                        this.messagesContainer.appendChild(welcomeMsg);
+                    }
+                    
+                    const messages = [];
+                    snapshot.forEach((doc) => {
+                        messages.push(doc.data());
+                    });
+                    
+                    messages.sort((a, b) => a.timestamp - b.timestamp);
+                    
+                    messages.forEach((message) => {
+                        this.displayMessage(message);
+                    });
+                    
+                    // Авто-прокрутка только для новых сообщений (не при загрузке истории)
+                    if (this.autoScroll) {
+                        this.scrollToBottom();
+                    }
                 }
                 
             }, (error) => {
@@ -322,7 +310,7 @@ class BrotherhoodChat {
     }
     
     displayMessage(message) {
-        const isOwnMessage = message.userId === this.user?.uid;
+        const isOwnMessage = this.user && message.userId === this.user.uid;
         const messageTime = message.timestamp ? 
             new Date(message.timestamp.toDate()).toLocaleTimeString([], { 
                 hour: '2-digit', 
@@ -346,7 +334,9 @@ class BrotherhoodChat {
             <div class="message-content">${escapeHtml(message.text)}</div>
         `;
         
-        this.messagesContainer.appendChild(messageEl);
+        if (this.messagesContainer) {
+            this.messagesContainer.appendChild(messageEl);
+        }
     }
     
     // ========== АВТОРИЗАЦИЯ И ОНЛАЙН СТАТУС ==========
@@ -429,18 +419,20 @@ class BrotherhoodChat {
     onUserSignedIn(user) {
         this.user = user;
         
-        this.userName.textContent = user.displayName || 'Электрик ЧР';
-        this.userEmail.textContent = 'Чеченская Республика';
+        if (this.userName) this.userName.textContent = user.displayName || 'Электрик ЧР';
+        if (this.userEmail) this.userEmail.textContent = 'Чеченская Республика';
         
-        if (user.photoURL) {
-            this.userAvatar.innerHTML = `<img src="${user.photoURL}" alt="${user.displayName}">`;
-        } else {
-            const name = user.displayName || 'E';
-            this.userAvatar.innerHTML = `<div style="width:100%;height:100%;background:#2c5364;color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.2rem;">${name.charAt(0).toUpperCase()}</div>`;
+        if (this.userAvatar) {
+            if (user.photoURL) {
+                this.userAvatar.innerHTML = `<img src="${user.photoURL}" alt="${user.displayName}">`;
+            } else {
+                const name = user.displayName || 'E';
+                this.userAvatar.innerHTML = `<div style="width:100%;height:100%;background:#2c5364;color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.2rem;">${name.charAt(0).toUpperCase()}</div>`;
+            }
         }
         
-        this.loginScreen.style.display = 'none';
-        this.chatScreen.style.display = 'flex';
+        if (this.loginScreen) this.loginScreen.style.display = 'none';
+        if (this.chatScreen) this.chatScreen.style.display = 'flex';
         
         // Сбрасываем флаги при новом входе
         this.hasSentFirstMessage = false;
@@ -452,7 +444,7 @@ class BrotherhoodChat {
         this.addUserToOnline();
         
         setTimeout(() => {
-            this.messageInput.focus();
+            if (this.messageInput) this.messageInput.focus();
             this.scrollToBottom(); // Прокручиваем вниз при входе
         }, 100);
     }
@@ -464,24 +456,26 @@ class BrotherhoodChat {
         if (this.unsubscribeOnline) this.unsubscribeOnline();
         if (this.unsubscribeTyping) this.unsubscribeTyping();
         
-        this.chatScreen.style.display = 'none';
-        this.loginScreen.style.display = 'block';
+        if (this.chatScreen) this.chatScreen.style.display = 'none';
+        if (this.loginScreen) this.loginScreen.style.display = 'block';
         
         // Восстанавливаем приветственное сообщение
-        this.messagesContainer.innerHTML = `
-            <div class="welcome-message">
-                <h3>Добро пожаловать в Братство Электриков ЧР! ⚡</h3>
-                <p>Это профессиональное сообщество электриков Чеченской Республики.</p>
-                <p>Уважайте коллег, помогайте друг другу, соблюдайте технику безопасности!</p>
-                <p style="color: #FF9800; font-weight: bold;">Безопасность прежде всего!</p>
-            </div>
-        `;
+        if (this.messagesContainer) {
+            this.messagesContainer.innerHTML = `
+                <div class="welcome-message">
+                    <h3>Добро пожаловать в Братство Электриков ЧР! ⚡</h3>
+                    <p>Это профессиональное сообщество электриков Чеченской Республики.</p>
+                    <p>Уважайте коллег, помогайте друг другу, соблюдайте технику безопасности!</p>
+                    <p style="color: #FF9800; font-weight: bold;">Безопасность прежде всего!</p>
+                </div>
+            `;
+        }
         
         this.hasSentFirstMessage = false;
         this.autoScroll = true;
     }
     
-    // ========== ОСТАЛЬНЫЕ МЕТОДЫ (без изменений) ==========
+    // ========== ОСТАЛЬНЫЕ МЕТОДЫ ==========
     async addUserToOnline() {
         if (!this.user) return;
         
@@ -515,8 +509,8 @@ class BrotherhoodChat {
             .collection('online')
             .onSnapshot((snapshot) => {
                 const onlineCount = snapshot.size;
-                this.onlineCount.textContent = onlineCount;
-                this.activeOnlineCount.textContent = onlineCount;
+                if (this.onlineCount) this.onlineCount.textContent = onlineCount;
+                if (this.activeOnlineCount) this.activeOnlineCount.textContent = onlineCount;
             }, (error) => {
                 console.error("❌ Ошибка загрузки онлайн пользователей:", error);
             });
@@ -549,7 +543,7 @@ class BrotherhoodChat {
                 const typingUsers = [];
                 snapshot.forEach((doc) => {
                     const data = doc.data();
-                    if (data.userId !== this.user?.uid) {
+                    if (this.user && data.userId !== this.user.uid) {
                         typingUsers.push(data.userName || 'Электрик ЧР');
                     }
                 });
@@ -561,21 +555,22 @@ class BrotherhoodChat {
     }
     
     showTypingIndicator(typingUsers) {
-        if (typingUsers.length > 0) {
-            const names = typingUsers.slice(0, 2).join(', ');
-            const others = typingUsers.length > 2 ? ` и ${typingUsers.length - 2} других` : '';
-            this.typingIndicator.textContent = `${names}${others} печатает...`;
-            this.typingIndicator.style.display = 'block';
-            
-            // При появлении индикатора печати тоже прокручиваем вниз
-            if (this.autoScroll) {
-                this.scrollToBottom();
+        if (this.typingIndicator) {
+            if (typingUsers.length > 0) {
+                const names = typingUsers.slice(0, 2).join(', ');
+                const others = typingUsers.length > 2 ? ` и ${typingUsers.length - 2} других` : '';
+                this.typingIndicator.textContent = `${names}${others} печатает...`;
+                this.typingIndicator.style.display = 'block';
+                
+                // При появлении индикатора печати тоже прокручиваем вниз
+                if (this.autoScroll) {
+                    this.scrollToBottom();
+                }
+            } else {
+                this.typingIndicator.style.display = 'none';
             }
-        } else {
-            this.typingIndicator.style.display = 'none';
         }
     }
-}
 
 // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
 function escapeHtml(text) {
@@ -613,7 +608,8 @@ async function initializeApp() {
     // Сначала проверяем, что все DOM элементы существуют
     const requiredElements = [
         'loginScreen', 'chatScreen', 'googleLoginBtn',
-        'messagesContainer', 'messageInput', 'sendMessageBtn'
+        'messagesContainer', 'messageInput', 'sendMessageBtn',
+        'statusMessage'
     ];
     
     const missingElements = requiredElements.filter(id => !document.getElementById(id));
