@@ -649,7 +649,7 @@
         </div>
     </div>
 
-    <script>
+<script>
 // ========== КОНФИГУРАЦИЯ FIREBASE ==========
 const firebaseConfig = {
     apiKey: "AIzaSyCRJh0fFbJAc6dFz1O21SbjyAaPbMV58xc",
@@ -693,7 +693,27 @@ function initializeFirebase() {
     });
 }
 
-    }// ========== КЛАСС УПРАВЛЕНИЯ ЧАТОМ ==========
+// ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function showStatus(message, type) {
+    const statusEl = document.getElementById('statusMessage');
+    statusEl.textContent = message;
+    statusEl.className = 'status ' + type;
+    statusEl.style.display = 'block';
+    
+    if (type === 'success' || type === 'error') {
+        setTimeout(() => {
+            statusEl.style.display = 'none';
+        }, 5000);
+    }
+}
+
+// ========== КЛАСС УПРАВЛЕНИЯ ЧАТОМ ==========
 class ElectricianChat {
     constructor() {
         this.user = null;
@@ -1305,26 +1325,6 @@ class ElectricianChat {
     }
 }
 
-// ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function showStatus(message, type) {
-    const statusEl = document.getElementById('statusMessage');
-    statusEl.textContent = message;
-    statusEl.className = 'status ' + type;
-    statusEl.style.display = 'block';
-    
-    if (type === 'success' || type === 'error') {
-        setTimeout(() => {
-            statusEl.style.display = 'none';
-        }, 5000);
-    }
-}
-
 // ========== ЗАПУСК ПРИЛОЖЕНИЯ ==========
 let chat;
 
@@ -1362,6 +1362,6 @@ window.addEventListener('load', async function() {
 window.debugChat = () => chat;
 window.debugAuth = () => auth;
 window.debugFirestore = () => db;
-    </script>
+</script>
 </body>
 </html>
