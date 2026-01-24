@@ -440,6 +440,7 @@
     
     .chat-container {
         height: 100vh;
+        height: -webkit-fill-available; /* Для Safari */
         border-radius: 0;
         max-width: 100%;
         position: fixed;
@@ -447,6 +448,8 @@
         left: 0;
         right: 0;
         bottom: 0;
+        /* Используем env для безопасных областей */
+        padding-bottom: env(safe-area-inset-bottom);
     }
     
     .login-container {
@@ -465,12 +468,13 @@
     
     .chat-header {
         padding: 15px 20px;
+        padding-top: max(15px, env(safe-area-inset-top));
         flex-wrap: wrap;
         gap: 15px;
     }
     
     .messages-container {
-        padding: 15px 15px 85px; /* УВЕЛИЧИВАЕМ ОТСТУП СНИЗУ ДЛЯ ПОЛЯ ВВОДА */
+        padding: 15px 15px 95px; /* УВЕЛИЧИВАЕМ ОТСТУП СНИЗУ */
     }
     
     .message {
@@ -479,9 +483,8 @@
     
     .message-input-area {
         padding: 15px 20px;
-        /* УБИРАЕМ margin-top: -30px для мобильных */
         margin-top: 0;
-        /* Добавляем фиксированное положение для мобильных */
+        /* Исправленная фиксация с учетом safe area */
         position: fixed;
         bottom: 0;
         left: 0;
@@ -490,18 +493,14 @@
         z-index: 100;
         border-top: 1px solid #e9ecef;
         box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-    }
-    
-    /* Дополнительно: предотвращаем всплывающую клавиатуру от скрытия поля ввода */
-    @supports (-webkit-touch-callout: none) {
-        .message-input-area {
-            padding-bottom: max(15px, env(safe-area-inset-bottom));
-        }
+        /* Важно: учитываем safe area снизу */
+        padding-bottom: max(15px, env(safe-area-inset-bottom));
+        bottom: env(safe-area-inset-bottom);
     }
     
     /* Увеличиваем область сообщений чтобы компенсировать фиксированное поле ввода */
     .messages-wrapper {
-        padding-bottom: 70px; /* Высота поля ввода на мобильных */
+        padding-bottom: calc(70px + env(safe-area-inset-bottom));
     }
 }
 
