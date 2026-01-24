@@ -432,59 +432,78 @@
             transform: translateY(0) scale(1);
         }
 
-        /* Адаптивность */
-        @media (max-width: 768px) {
-            body {
-                padding: 0;
-            }
-            
-            .chat-container {
-                height: 100vh;
-                border-radius: 0;
-                max-width: 100%;
-            }
-            
-            .login-container {
-                padding: 25px;
-                margin: 10px;
-                border-radius: 15px;
-            }
-            
-            h1 {
-                font-size: 1.5rem;
-            }
-            
-            .online-count {
-                font-size: 2.5rem;
-            }
-            
-            .chat-header {
-                padding: 15px 20px;
-                flex-wrap: wrap;
-                gap: 15px;
-            }
-            
-            .messages-container {
-                padding: 15px;
-            }
-            
-            .message {
-                max-width: 85%;
-            }
-            
-            .message-input-area {
-                padding: 15px 20px;
-            }
-            
-            /* Фиксируем позицию на мобильных */
-            .chat-container {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-            }
+/* Адаптивность */
+@media (max-width: 768px) {
+    body {
+        padding: 0;
+    }
+    
+    .chat-container {
+        height: 100vh;
+        border-radius: 0;
+        max-width: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
+    
+    .login-container {
+        padding: 25px;
+        margin: 10px;
+        border-radius: 15px;
+    }
+    
+    h1 {
+        font-size: 1.5rem;
+    }
+    
+    .online-count {
+        font-size: 2.5rem;
+    }
+    
+    .chat-header {
+        padding: 15px 20px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .messages-container {
+        padding: 15px 15px 85px; /* УВЕЛИЧИВАЕМ ОТСТУП СНИЗУ ДЛЯ ПОЛЯ ВВОДА */
+    }
+    
+    .message {
+        max-width: 85%;
+    }
+    
+    .message-input-area {
+        padding: 15px 20px;
+        /* УБИРАЕМ margin-top: -30px для мобильных */
+        margin-top: 0;
+        /* Добавляем фиксированное положение для мобильных */
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        z-index: 100;
+        border-top: 1px solid #e9ecef;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    }
+    
+    /* Дополнительно: предотвращаем всплывающую клавиатуру от скрытия поля ввода */
+    @supports (-webkit-touch-callout: none) {
+        .message-input-area {
+            padding-bottom: max(15px, env(safe-area-inset-bottom));
         }
+    }
+    
+    /* Увеличиваем область сообщений чтобы компенсировать фиксированное поле ввода */
+    .messages-wrapper {
+        padding-bottom: 70px; /* Высота поля ввода на мобильных */
+    }
+}
 
         /* Типинг индикатор */
         .typing-indicator {
