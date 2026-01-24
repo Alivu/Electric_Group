@@ -114,6 +114,32 @@ function initializeFirebase() {
         }
     });
 }
+// ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function showStatus(message, type) {
+    const statusEl = document.getElementById('statusMessage');
+    if (!statusEl) {
+        console.log("Status:", message, type);
+        return;
+    }
+    
+    statusEl.textContent = message;
+    statusEl.className = 'status ' + type;
+    statusEl.style.display = 'block';
+    
+    if (type === 'success' || type === 'error') {
+        setTimeout(() => {
+            if (statusEl) {
+                statusEl.style.display = 'none';
+            }
+        }, 5000);
+    }
+}
 
 // ========== КЛАСС УПРАВЛЕНИЯ ЧАТОМ БРАТСТВА ==========
 class BrotherhoodChat {
@@ -572,32 +598,6 @@ class BrotherhoodChat {
         }
     }
 
-// ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function showStatus(message, type) {
-    const statusEl = document.getElementById('statusMessage');
-    if (!statusEl) {
-        console.log("Status:", message, type);
-        return;
-    }
-    
-    statusEl.textContent = message;
-    statusEl.className = 'status ' + type;
-    statusEl.style.display = 'block';
-    
-    if (type === 'success' || type === 'error') {
-        setTimeout(() => {
-            if (statusEl) {
-                statusEl.style.display = 'none';
-            }
-        }, 5000);
-    }
-}
 
 // ========== ЗАПУСК ПРИЛОЖЕНИЯ ==========
 let chat = null;
