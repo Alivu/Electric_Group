@@ -127,27 +127,14 @@ class BrotherhoodChat {
         this.autoScroll = true;
         this.isUserScrolling = false;
         
-        // Проверяем, что Firebase инициализирован
-        if (!auth || !db) {
-            console.error("❌ Firebase не инициализирован");
-            setTimeout(() => {
-                if (auth && db) {
-                    this.init();
-                } else {
-                    console.error("❌ Firebase все еще не инициализирован");
-                }
-            }, 1000);
-            return;
-        }
-        
-        // Запускаем инициализацию
+        // Просто инициализируем - мы уверены, что все готово
         this.init();
     }
     
     init() {
         console.log("🚀 Инициализация чата...");
         
-        // Получаем DOM элементы с проверкой
+        // Получаем DOM элементы
         this.loginScreen = document.getElementById('loginScreen');
         this.chatScreen = document.getElementById('chatScreen');
         this.googleLoginBtn = document.getElementById('googleLoginBtn');
@@ -163,21 +150,19 @@ class BrotherhoodChat {
         this.typingIndicator = document.getElementById('typingIndicator');
         this.statusMessage = document.getElementById('statusMessage');
         
-        // Проверяем, что все необходимые элементы существуют
-        const requiredElements = [
-            'loginScreen', 'chatScreen', 'googleLoginBtn'
-        ];
+        this.setupEventListeners();
         
-        const missingElements = requiredElements.filter(id => !document.getElementById(id));
+        // Слушатель состояния авторизации
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                this.onUserSignedIn(user);
+            } else {
+                this.onUserSignedOut();
+            }
+        });
         
-        if (missingElements.length > 0) {
-            console.error("❌ Отсутствуют элементы:", missingElements);
-            console.log("Повторная попытка через 500мс...");
-            setTimeout(() => this.init(), 500);
-            return;
-        }
-        
-        console.log("✅ Все DOM элементы найдены");
+        console.log("✅ Чат Братства инициализирован");
+    }
         
         this.setupEventListeners();
         
@@ -601,13 +586,20 @@ function escapeHtml(text) {
 
 function showStatus(message, type) {
     const statusEl = document.getElementById('statusMessage');
+    if (!statusEl) {
+        console.log("Status:", message, type);
+        return;
+    }
+    
     statusEl.textContent = message;
     statusEl.className = 'status ' + type;
     statusEl.style.display = 'block';
     
     if (type === 'success' || type === 'error') {
         setTimeout(() => {
-            statusEl.style.display = 'none';
+            if (statusEl) {
+                statusEl.style.display = 'none';
+            }
         }, 5000);
     }
 }
@@ -615,22 +607,34 @@ function showStatus(message, type) {
 // ========== ЗАПУСК ПРИЛОЖЕНИЯ ==========
 let chat = null;
 
-// Ждем полной загрузки DOM
-document.addEventListener('DOMContentLoaded', async function() {
-    console.log("🚀 DOM загружен, инициализируем приложение...");
+async function initializeApp() {
+    console.log("🚀 Инициализация приложения...");
+    
+    // Сначала проверяем, что все DOM элементы существуют
+    const requiredElements = [
+        'loginScreen', 'chatScreen', 'googleLoginBtn',
+        'messagesContainer', 'messageInput', 'sendMessageBtn'
+    ];
+    
+    const missingElements = requiredElements.filter(id => !document.getElementById(id));
+    
+    if (missingElements.length > 0) {
+        console.error("❌ Отсутствуют элементы:", missingElements);
+        setTimeout(initializeApp, 100);
+        return;
+    }
+    
+    console.log("✅ Все DOM элементы найдены");
     
     try {
         // Инициализируем Firebase
         await initializeFirebase();
         console.log("✅ Firebase инициализирован");
         
-        // Ждем немного чтобы DOM точно был готов
-        setTimeout(() => {
-            // Создаем экземпляр чата
-            chat = new BrotherhoodChat();
-            console.log("✅ Братство Электриков ЧР готово к работе!");
-            showStatus("Братство Электриков ЧР готово!", "success");
-        }, 100);
+        // Создаем экземпляр чата
+        chat = new BrotherhoodChat();
+        console.log("✅ Братство Электриков ЧР готово к работе!");
+        showStatus("Братство Электриков ЧР готово!", "success");
         
     } catch (error) {
         console.error("❌ Не удалось запустить чат:", error);
@@ -648,7 +652,14 @@ document.addEventListener('DOMContentLoaded', async function() {
             statusEl.appendChild(retryBtn);
         }
     }
-});
+}
+
+// Запускаем приложение когда DOM готов
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+    initializeApp();
+}
 
 // Глобальные функции для отладки
 window.debugChat = () => chat;
