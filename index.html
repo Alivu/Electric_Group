@@ -1006,7 +1006,7 @@ setupPullToRefresh() {
 async refreshChat() {
     const refreshIndicator = document.querySelector('.refresh-indicator');
     const header = document.querySelector('.chat-header');
-    let isRefreshing = true;
+    this.isRefreshing = true;
     
     if (refreshIndicator) {
         refreshIndicator.innerHTML = '🔄 Обновление...';
