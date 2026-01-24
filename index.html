@@ -22,7 +22,22 @@
             padding: 20px;
             overflow: hidden;
         }
+.back-btn {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 10px 25px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 500;
+    margin-right: 10px;
+}
 
+.back-btn:hover {
+    background: rgba(255,255,255,0.2);
+    transform: translateY(-2px);
+}
         /* Экран входа */
         .login-container {
             width: 100%;
@@ -502,6 +517,31 @@
     .messages-wrapper {
         padding-bottom: calc(70px + env(safe-area-inset-bottom));
     }
+
+    .chat-stats {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .back-btn, .logout-btn {
+        padding: 8px 15px;
+        font-size: 0.9rem;
+    }
+    
+    /* Стиль для заголовка при pull-to-refresh */
+    .chat-header {
+        cursor: grab;
+        user-select: none;
+        transition: transform 0.2s;
+    }
+    
+    .chat-header:active {
+        cursor: grabbing;
+    }
+
+    
 }
 
         /* Типинг индикатор */
@@ -580,6 +620,7 @@
                     <span class="online-dot"></span>
                     <span id="activeOnlineCount">0</span> онлайн
                 </div>
+                <button class="back-btn" id="backBtn">Назад</button>
                 <button class="logout-btn" id="logoutBtn">Выйти</button>
             </div>
         </div>
@@ -749,6 +790,243 @@ class ElectricianChat {
                 }, 300);
             }
         });
+    }// ========== КЛАСС УПРАВЛЕНИЯ ЧАТОМ ==========
+class ElectricianChat {
+    constructor() {
+        this.user = null;
+        this.roomId = 'main-electricians-room';
+        this.unsubscribeMessages = null;
+        this.unsubscribeOnline = null;
+        this.unsubscribeTyping = null;
+        this.firstMessageSent = false;
+        this.shouldAutoScroll = true;
+        this.userScrolledUp = false;
+        this.systemMessageRemoved = false;
+        
+        // Проверяем инициализацию Firebase
+        if (!auth || !db) {
+            console.warn("⚠️ Firebase еще не инициализирован, ждем...");
+            this.waitForFirebase();
+            return;
+        }
+        
+        this.init();
+    }
+    
+    waitForFirebase() {
+        const checkInterval = setInterval(() => {
+            if (auth && db) {
+                clearInterval(checkInterval);
+                this.init();
+            }
+        }, 100);
+    }
+    
+    init() {
+        // Получаем DOM элементы
+        this.loginScreen = document.getElementById('loginScreen');
+        this.chatScreen = document.getElementById('chatScreen');
+        this.googleLoginBtn = document.getElementById('googleLoginBtn');
+        this.logoutBtn = document.getElementById('logoutBtn');
+        this.userName = document.getElementById('userName');
+        this.userEmail = document.getElementById('userEmail');
+        this.userAvatar = document.getElementById('userAvatar');
+        this.onlineCount = document.getElementById('onlineCount');
+        this.activeOnlineCount = document.getElementById('activeOnlineCount');
+        this.messagesContainer = document.getElementById('messagesContainer');
+        this.messageInput = document.getElementById('messageInput');
+        this.sendMessageBtn = document.getElementById('sendMessageBtn');
+        this.typingIndicator = document.getElementById('typingIndicator');
+        this.statusMessage = document.getElementById('statusMessage');
+        
+        // Настройка обработчиков событий
+        this.setupEventListeners();
+        
+        // Слушатель состояния авторизации
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                this.onUserSignedIn(user);
+            } else {
+                this.onUserSignedOut();
+            }
+        });
+        
+        console.log("✅ Чат инициализирован");
+    }
+    
+    setupEventListeners() {
+        // Кнопка входа через Google
+        this.googleLoginBtn.addEventListener('click', () => this.signInWithGoogle());
+        
+        // Кнопка выхода
+        this.logoutBtn.addEventListener('click', () => this.signOut());
+        
+        // Кнопка "Назад"
+        this.backBtn = document.getElementById('backBtn');
+        if (this.backBtn) {
+            this.backBtn.addEventListener('click', () => {
+                if (confirm('Вернуться на главную страницу?')) {
+                    window.location.href = 'https://alivu.github.io/';
+                }
+            });
+        }
+        
+        // Отправка сообщения
+        this.sendMessageBtn.addEventListener('click', () => this.sendMessage());
+        this.messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                this.sendMessage();
+            }
+        });
+        
+        // Индикатор набора текста
+        this.messageInput.addEventListener('input', () => this.setTypingStatus(true));
+        this.messageInput.addEventListener('blur', () => this.setTypingStatus(false));
+        
+        // Отслеживание прокрутки пользователя
+        this.messagesContainer.addEventListener('scroll', () => {
+            this.handleScroll();
+        });
+        
+        // Для мобильных устройств: предотвращаем всплывающую клавиатуру от изменения размера
+        window.addEventListener('resize', () => {
+            if (this.user) {
+                setTimeout(() => {
+                    this.scrollToBottom();
+                }, 300);
+            }
+        });
+    }
+    
+    // ========== PULL-TO-REFRESH ФУНКЦИОНАЛЬНОСТЬ ==========
+    setupPullToRefresh() {
+        const header = document.querySelector('.chat-header');
+        let startY = 0;
+        let pullDistance = 0;
+        let isRefreshing = false;
+        
+        header.addEventListener('touchstart', (e) => {
+            if (this.messagesContainer.scrollTop === 0) {
+                startY = e.touches[0].pageY;
+            }
+        }, { passive: true });
+        
+        header.addEventListener('touchmove', (e) => {
+            if (startY && !isRefreshing) {
+                const currentY = e.touches[0].pageY;
+                pullDistance = currentY - startY;
+                
+                // Если потянули вниз более 50px
+                if (pullDistance > 50) {
+                    this.showRefreshIndicator();
+                }
+            }
+        }, { passive: true });
+        
+        header.addEventListener('touchend', () => {
+            if (pullDistance > 50 && !isRefreshing) {
+                this.refreshChat();
+            }
+            startY = 0;
+            pullDistance = 0;
+        }, { passive: true });
+        
+        // Также для мыши
+        header.addEventListener('mousedown', (e) => {
+            if (this.messagesContainer.scrollTop === 0) {
+                startY = e.pageY;
+                header.style.cursor = 'grabbing';
+            }
+        });
+        
+        header.addEventListener('mousemove', (e) => {
+            if (startY && !isRefreshing && e.buttons === 1) {
+                const currentY = e.pageY;
+                pullDistance = currentY - startY;
+                
+                if (pullDistance > 50) {
+                    this.showRefreshIndicator();
+                }
+            }
+        });
+        
+        header.addEventListener('mouseup', () => {
+            if (pullDistance > 50 && !isRefreshing) {
+                this.refreshChat();
+            }
+            startY = 0;
+            pullDistance = 0;
+            header.style.cursor = '';
+        });
+        
+        header.addEventListener('mouseleave', () => {
+            startY = 0;
+            pullDistance = 0;
+            header.style.cursor = '';
+        });
+    }
+    
+    showRefreshIndicator() {
+        // Создаем индикатор обновления если его нет
+        let refreshIndicator = document.querySelector('.refresh-indicator');
+        if (!refreshIndicator) {
+            refreshIndicator = document.createElement('div');
+            refreshIndicator.className = 'refresh-indicator';
+            refreshIndicator.innerHTML = '🔄 Отпустите для обновления';
+            refreshIndicator.style.cssText = `
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: linear-gradient(135deg, #FF9800 0%, #FF5722 100%);
+                color: white;
+                text-align: center;
+                padding: 15px;
+                font-weight: bold;
+                z-index: 1000;
+                box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+            `;
+            document.querySelector('.chat-header').appendChild(refreshIndicator);
+        }
+    }
+    
+    async refreshChat() {
+        const refreshIndicator = document.querySelector('.refresh-indicator');
+        if (refreshIndicator) {
+            refreshIndicator.innerHTML = '🔄 Обновление...';
+            refreshIndicator.style.background = 'linear-gradient(135deg, #2c5364 0%, #203a43 100%)';
+        }
+        
+        try {
+            // Переподписываемся на сообщения (эффект обновления)
+            if (this.unsubscribeMessages) {
+                this.unsubscribeMessages();
+            }
+            
+            // Обновляем онлайн пользователей
+            if (this.unsubscribeOnline) {
+                this.unsubscribeOnline();
+            }
+            
+            // Переподписываемся
+            this.loadOnlineUsers();
+            this.subscribeToMessages();
+            
+            // Показываем статус
+            showStatus("✅ Чат обновлен", "success");
+            
+        } catch (error) {
+            console.error("❌ Ошибка обновления:", error);
+            showStatus("Ошибка обновления", "error");
+        }
+        
+        // Убираем индикатор через 1.5 секунды
+        setTimeout(() => {
+            if (refreshIndicator) {
+                refreshIndicator.remove();
+            }
+        }, 1500);
     }
     
     // ========== ОБРАБОТКА ПРОКРУТКИ ==========
@@ -889,6 +1167,9 @@ class ElectricianChat {
         
         // Добавляем пользователя в онлайн
         this.addUserToOnline();
+        
+        // Инициализируем pull-to-refresh
+        this.setupPullToRefresh();
         
         // Фокус на поле ввода
         setTimeout(() => {
