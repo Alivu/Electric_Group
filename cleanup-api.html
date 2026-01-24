@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Очистки Чата - Electric Group</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c5364;
+            border-bottom: 2px solid #2c5364;
+            padding-bottom: 10px;
+        }
+        .status {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            display: none;
+        }
+        .success { background: #d4edda; color: #155724; display: block; }
+        .error { background: #f8d7da; color: #721c24; display: block; }
+        .info { background: #d1ecf1; color: #0c5460; display: block; }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+        }
+        .url-box {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 API для автоматической очистки чата</h1>
+        
+        <div class="status info" id="status">Инициализация...</div>
+        
+        <div id="result"></div>
+        
+        <h2>📋 Инструкция для cron-job.org:</h2>
+        <div class="url-box">
+            <strong>URL для настройки:</strong><br>
+            <code id="apiUrl">https://alivu.github.io/Electric_Group/cleanup-api.html?key=ВАШ_КЛЮЧ</code>
+        </div>
+        
+        <h3>🔧 Параметры:</h3>
+        <ul>
+            <li><strong>key</strong> - секретный ключ (обязательно)</li>
+            <li><strong>limit</strong> - сколько оставить сообщений (опционально, по умолчанию 0)</li>
+            <li><strong>dry_run</strong> - тестовый запуск без удаления (true/false)</li>
+        </ul>
+        
+        <h3>📊 Примеры запросов:</h3>
+        <pre>
+// Полная очистка
+https://alivu.github.io/Electric_Group/cleanup-api.html?key=electric2024
+
+// Оставить 50 последних сообщений
+https://alivu.github.io/Electric_Group/cleanup-api.html?key=electric2024&limit=50
+
+// Тестовый запуск (без удаления)
+https://alivu.github.io/Electric_Group/cleanup-api.html?key=electric2024&dry_run=true
+        </pre>
+        
+        <h3>✅ Ответ API:</h3>
+        <pre id="responseExample">
+{
+    "success": true,
+    "deleted": 125,
+    "kept": 50,
+    "total_before": 175,
+    "total_after": 50,
+    "timestamp": "2024-01-24T04:00:00.000Z",
+    "message": "Чат очищен успешно"
+}
+        </pre>
+    </div>
+
+    <script>
+    // ========== КОНФИГУРАЦИЯ ==========
+    const CONFIG = {
+        // 🔒 ИЗМЕНИТЕ ЭТОТ КЛЮЧ на свой сложный!
+        SECRET_KEY: 'electric2024',
+        
+        // Идентификатор комнаты чата
+        ROOM_ID: 'main-electricians-room',
+        
+        // По умолчанию оставлять сообщений (0 = удалить все)
+        DEFAULT_KEEP: 0,
+        
+        // Максимальное количество сообщений для удаления за раз
+        MAX_BATCH_SIZE: 400
+    };
+    
+    // ========== ЭЛЕМЕНТЫ DOM ==========
+    const statusEl = document.getElementById('status');
+    const resultEl = document.getElementById('result');
+    const apiUrlEl = document.getElementById('apiUrl');
+    const responseExampleEl = document.getElementById('responseExample');
+    
+    // ========== ОСНОВНАЯ ФУНКЦИЯ ==========
+    async function initializeAndClean() {
+        try {
+            // 1. Парсим параметры URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const key = urlParams.get('key');
+            const keepLimit = parseInt(urlParams.get('limit')) || CONFIG.DEFAULT_KEEP;
+            const dryRun = urlParams.get('dry_run') === 'true';
+            
+            // 2. Проверяем ключ
+            updateStatus('🔐 Проверка ключа...', 'info');
+            
+            if (key !== CONFIG.SECRET_KEY) {
+                throw new Error('Неверный секретный ключ');
+            }
+            
+            // 3. Обновляем URL в интерфейсе
+            apiUrlEl.textContent = `${window.location.origin}${window.location.pathname}?key=${CONFIG.SECRET_KEY}`;
+            
+            // 4. Инициализируем Firebase
+            updateStatus('🔥 Инициализация Firebase...', 'info');
+            
+            const firebaseConfig = {
+                apiKey: "AIzaSyCRJh0fFbJAc6dFz1O21SbjyAaPbMV58xc",
+                authDomain: "electrician-chat.firebaseapp.com",
+                projectId: "electrician-chat",
+                storageBucket: "electrician-chat.firebasestorage.app",
+                messagingSenderId: "1005885507362",
+                appId: "1:1005885507362:web:c030a98505761b0add877b"
+            };
+            
+            // Проверяем, не инициализирован ли уже Firebase
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            
+            // 5. Авторизуемся анонимно
+            updateStatus('👤 Анонимная авторизация...', 'info');
+            
+            await firebase.auth().signInAnonymously();
+            
+            // 6. Выполняем очистку
+            const result = await cleanChat(keepLimit, dryRun);
+            
+            // 7. Показываем результат
+            showResult(result);
+            
+        } catch (error) {
+            showError(error);
+        }
+    }
+    
+    // ========== ФУНКЦИЯ ОЧИСТКИ ЧАТА ==========
+    async function cleanChat(keepLimit = 0, dryRun = false) {
+        updateStatus('📊 Получение сообщений...', 'info');
+        
+        const db = firebase.firestore();
+        const messagesRef = db.collection('rooms').doc(CONFIG.ROOM_ID).collection('messages');
+        
+        // Получаем все сообщения, отсортированные по времени
+        const snapshot = await messagesRef
+            .orderBy('timestamp', 'desc')
+            .get();
+        
+        const totalBefore = snapshot.size;
+        
+        // Если оставляем 0 сообщений или меньше чем есть - удаляем все
+        const messagesToKeep = Math.min(keepLimit, totalBefore);
+        const messagesToDelete = totalBefore - messagesToKeep;
+        
+        updateStatus(`📈 Статистика: ${totalBefore} всего, удаляем ${messagesToDelete}, оставляем ${messagesToKeep}`, 'info');
+        
+        if (dryRun) {
+            updateStatus('🧪 ТЕСТОВЫЙ РЕЖИМ: удаление не выполняется', 'info');
+            return {
+                success: true,
+                deleted: 0,
+                kept: messagesToKeep,
+                total_before: totalBefore,
+                total_after: messagesToKeep,
+                dry_run: true,
+                message: 'Тестовый запуск успешен'
+            };
+        }
+        
+        if (messagesToDelete <= 0) {
+            updateStatus('✅ Нечего удалять', 'success');
+            return {
+                success: true,
+                deleted: 0,
+                kept: messagesToKeep,
+                total_before: totalBefore,
+                total_after: messagesToKeep,
+                message: 'Нечего удалять'
+            };
+        }
+        
+        // Удаляем старые сообщения (кроме тех, что оставляем)
+        updateStatus(`🗑️ Удаление ${messagesToDelete} сообщений...`, 'info');
+        
+        let deletedCount = 0;
+        const messagesToRemove = snapshot.docs.slice(messagesToKeep);
+        
+        // Удаляем пакетами
+        for (let i = 0; i < messagesToRemove.length; i += CONFIG.MAX_BATCH_SIZE) {
+            const batch = db.batch();
+            const chunk = messagesToRemove.slice(i, i + CONFIG.MAX_BATCH_SIZE);
+            
+            chunk.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+            
+            await batch.commit();
+            deletedCount += chunk.length;
+            
+            updateStatus(`🗑️ Удалено: ${deletedCount}/${messagesToDelete}...`, 'info');
+            
+            // Пауза между пакетами чтобы не превысить лимиты
+            if (i + CONFIG.MAX_BATCH_SIZE < messagesToRemove.length) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+        
+        // Добавляем системное сообщение если что-то удалили
+        if (deletedCount > 0) {
+            await messagesRef.add({
+                text: `🧹 Автоматическая очистка: удалено ${deletedCount} старых сообщений.`,
+                userId: 'system-auto-clean',
+                userName: 'Система',
+                userEmail: 'system@electric-group.com',
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                isSystem: true,
+                isElectrician: true
+            });
+        }
+        
+        updateStatus('✅ Очистка завершена!', 'success');
+        
+        return {
+            success: true,
+            deleted: deletedCount,
+            kept: messagesToKeep,
+            total_before: totalBefore,
+            total_after: messagesToKeep,
+            timestamp: new Date().toISOString(),
+            message: `Удалено ${deletedCount} сообщений, оставлено ${messagesToKeep}`
+        };
+    }
+    
+    // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+    function updateStatus(message, type = 'info') {
+        statusEl.textContent = message;
+        statusEl.className = 'status ' + type;
+        console.log(`[${type.toUpperCase()}] ${message}`);
+    }
+    
+    function showResult(data) {
+        resultEl.innerHTML = `
+            <div class="status success">
+                <h3>✅ ${data.message}</h3>
+                <p><strong>Удалено:</strong> ${data.deleted} сообщений</p>
+                <p><strong>Оставлено:</strong> ${data.kept} сообщений</p>
+                <p><strong>Было:</strong> ${data.total_before} → <strong>Стало:</strong> ${data.total_after}</p>
+                <p><strong>Время:</strong> ${new Date(data.timestamp || Date.now()).toLocaleString()}</p>
+            </div>
+        `;
+        
+        // Обновляем пример ответа реальными данными
+        responseExampleEl.textContent = JSON.stringify(data, null, 2);
+    }
+    
+    function showError(error) {
+        const errorData = {
+            success: false,
+            error: error.message,
+            timestamp: new Date().toISOString()
+        };
+        
+        resultEl.innerHTML = `
+            <div class="status error">
+                <h3>❌ Ошибка</h3>
+                <p><strong>Сообщение:</strong> ${error.message}</p>
+                <p><strong>Время:</strong> ${new Date().toLocaleString()}</p>
+            </div>
+        `;
+        
+        responseExampleEl.textContent = JSON.stringify(errorData, null, 2);
+        
+        console.error('Ошибка:', error);
+    }
+    
+    // ========== ЗАПУСК ПРИ ЗАГРУЗКЕ ==========
+    document.addEventListener('DOMContentLoaded', () => {
+        // Запускаем автоматически если есть ключ в URL
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('key')) {
+            initializeAndClean();
+        } else {
+            updateStatus('🔑 Добавьте параметр ?key=ВАШ_КЛЮЧ в URL', 'info');
+        }
+    });
+    </script>
+</body>
+</html>
