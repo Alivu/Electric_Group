@@ -127,25 +127,26 @@ class BrotherhoodChat {
         this.autoScroll = true;
         this.isUserScrolling = false;
         
+        // Проверяем, что Firebase инициализирован
         if (!auth || !db) {
-            this.waitForFirebase();
+            console.error("❌ Firebase не инициализирован");
+            setTimeout(() => {
+                if (auth && db) {
+                    this.init();
+                } else {
+                    console.error("❌ Firebase все еще не инициализирован");
+                }
+            }, 1000);
             return;
         }
         
-        // Ждем немного перед инициализацией
-        setTimeout(() => this.init(), 100);
-    }
-    
-    waitForFirebase() {
-        const checkInterval = setInterval(() => {
-            if (auth && db) {
-                clearInterval(checkInterval);
-                setTimeout(() => this.init(), 100);
-            }
-        }, 100);
+        // Запускаем инициализацию
+        this.init();
     }
     
     init() {
+        console.log("🚀 Инициализация чата...");
+        
         // Получаем DOM элементы с проверкой
         this.loginScreen = document.getElementById('loginScreen');
         this.chatScreen = document.getElementById('chatScreen');
@@ -163,11 +164,20 @@ class BrotherhoodChat {
         this.statusMessage = document.getElementById('statusMessage');
         
         // Проверяем, что все необходимые элементы существуют
-        if (!this.loginScreen || !this.chatScreen || !this.googleLoginBtn) {
-            console.error("❌ Не все DOM элементы найдены. Повторная попытка через 500мс...");
+        const requiredElements = [
+            'loginScreen', 'chatScreen', 'googleLoginBtn'
+        ];
+        
+        const missingElements = requiredElements.filter(id => !document.getElementById(id));
+        
+        if (missingElements.length > 0) {
+            console.error("❌ Отсутствуют элементы:", missingElements);
+            console.log("Повторная попытка через 500мс...");
             setTimeout(() => this.init(), 500);
             return;
         }
+        
+        console.log("✅ Все DOM элементы найдены");
         
         this.setupEventListeners();
         
@@ -603,21 +613,24 @@ function showStatus(message, type) {
 }
 
 // ========== ЗАПУСК ПРИЛОЖЕНИЯ ==========
-let chat;
+let chat = null;
 
 // Ждем полной загрузки DOM
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log("🚀 DOM загружен, инициализируем Firebase...");
+    console.log("🚀 DOM загружен, инициализируем приложение...");
     
     try {
         // Инициализируем Firebase
         await initializeFirebase();
+        console.log("✅ Firebase инициализирован");
         
-        // Создаем экземпляр чата
-        chat = new BrotherhoodChat();
-        
-        console.log("✅ Братство Электриков ЧР готово к работе!");
-        showStatus("Братство Электриков ЧР готово!", "success");
+        // Ждем немного чтобы DOM точно был готов
+        setTimeout(() => {
+            // Создаем экземпляр чата
+            chat = new BrotherhoodChat();
+            console.log("✅ Братство Электриков ЧР готово к работе!");
+            showStatus("Братство Электриков ЧР готово!", "success");
+        }, 100);
         
     } catch (error) {
         console.error("❌ Не удалось запустить чат:", error);
@@ -636,6 +649,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
 });
+
+// Глобальные функции для отладки
+window.debugChat = () => chat;
+window.debugAuth = () => auth;
+window.debugFirestore = () => db;
 
 // Глобальные функции для отладки
 window.debugChat = () => chat;
