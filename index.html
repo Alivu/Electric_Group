@@ -1073,7 +1073,7 @@ setupPullToRefresh() {
     if (!refreshIndicator) {
         refreshIndicator = document.createElement('div');
         refreshIndicator.className = 'refresh-indicator';
-        refreshIndicator.innerHTML = '🔄 Отпустите для обновления страницы';
+        refreshIndicator.innerHTML = '';
         header.appendChild(refreshIndicator);
     }
     
@@ -1135,7 +1135,7 @@ setupPullToRefresh() {
             refreshIndicator.style.display = 'none';
             refreshIndicator.style.opacity = '0';
             refreshIndicator.style.background = 'linear-gradient(135deg, #FF9800 0%, #FF5722 100%)';
-            refreshIndicator.innerHTML = '🔄 Отпустите для обновления страницы';
+            refreshIndicator.innerHTML = '';
         }, 300);
         
         // Сброс
