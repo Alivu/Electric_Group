@@ -123,28 +123,30 @@ class BrotherhoodChat {
         this.unsubscribeMessages = null;
         this.unsubscribeOnline = null;
         this.unsubscribeTyping = null;
-        this.hasSentFirstMessage = false; // Флаг первого сообщения
-        this.autoScroll = true; // Флаг авто-прокрутки
-        this.isUserScrolling = false; // Флаг ручной прокрутки пользователя
+        this.hasSentFirstMessage = false;
+        this.autoScroll = true;
+        this.isUserScrolling = false;
         
         if (!auth || !db) {
             this.waitForFirebase();
             return;
         }
         
-        this.init();
+        // Ждем немного перед инициализацией
+        setTimeout(() => this.init(), 100);
     }
     
     waitForFirebase() {
         const checkInterval = setInterval(() => {
             if (auth && db) {
                 clearInterval(checkInterval);
-                this.init();
+                setTimeout(() => this.init(), 100);
             }
         }, 100);
     }
     
     init() {
+        // Получаем DOM элементы с проверкой
         this.loginScreen = document.getElementById('loginScreen');
         this.chatScreen = document.getElementById('chatScreen');
         this.googleLoginBtn = document.getElementById('googleLoginBtn');
@@ -160,38 +162,60 @@ class BrotherhoodChat {
         this.typingIndicator = document.getElementById('typingIndicator');
         this.statusMessage = document.getElementById('statusMessage');
         
+        // Проверяем, что все необходимые элементы существуют
+        if (!this.loginScreen || !this.chatScreen || !this.googleLoginBtn) {
+            console.error("❌ Не все DOM элементы найдены. Повторная попытка через 500мс...");
+            setTimeout(() => this.init(), 500);
+            return;
+        }
+        
         this.setupEventListeners();
         
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                this.onUserSignedIn(user);
-            } else {
-                this.onUserSignedOut();
-            }
-        });
+        // Слушатель состояния авторизации
+        if (auth) {
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    this.onUserSignedIn(user);
+                } else {
+                    this.onUserSignedOut();
+                }
+            });
+        }
         
         console.log("✅ Чат Братства инициализирован");
     }
     
     setupEventListeners() {
-        this.googleLoginBtn.addEventListener('click', () => this.signInWithGoogle());
-        this.logoutBtn.addEventListener('click', () => this.signOut());
-        this.sendMessageBtn.addEventListener('click', () => this.sendMessage());
+        // Проверяем существование элементов перед добавлением обработчиков
+        if (this.googleLoginBtn) {
+            this.googleLoginBtn.addEventListener('click', () => this.signInWithGoogle());
+        }
         
-        this.messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                this.sendMessage();
-            }
-        });
+        if (this.logoutBtn) {
+            this.logoutBtn.addEventListener('click', () => this.signOut());
+        }
         
-        this.messageInput.addEventListener('input', () => this.setTypingStatus(true));
-        this.messageInput.addEventListener('blur', () => this.setTypingStatus(false));
+        if (this.sendMessageBtn) {
+            this.sendMessageBtn.addEventListener('click', () => this.sendMessage());
+        }
         
-        // Слушатель ручной прокрутки
-        this.messagesContainer.addEventListener('scroll', () => {
-            this.handleScroll();
-        });
+        if (this.messageInput) {
+            this.messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.sendMessage();
+                }
+            });
+            
+            this.messageInput.addEventListener('input', () => this.setTypingStatus(true));
+            this.messageInput.addEventListener('blur', () => this.setTypingStatus(false));
+        }
+        
+        if (this.messagesContainer) {
+            this.messagesContainer.addEventListener('scroll', () => {
+                this.handleScroll();
+            });
+        }
     }
     
     // ========== ОБРАБОТКА ПРОКРУТКИ ==========
@@ -581,12 +605,17 @@ function showStatus(message, type) {
 // ========== ЗАПУСК ПРИЛОЖЕНИЯ ==========
 let chat;
 
-window.addEventListener('load', async function() {
-    console.log("🚀 Страница загружена, инициализируем Firebase...");
+// Ждем полной загрузки DOM
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log("🚀 DOM загружен, инициализируем Firebase...");
     
     try {
+        // Инициализируем Firebase
         await initializeFirebase();
+        
+        // Создаем экземпляр чата
         chat = new BrotherhoodChat();
+        
         console.log("✅ Братство Электриков ЧР готово к работе!");
         showStatus("Братство Электриков ЧР готово!", "success");
         
@@ -594,17 +623,21 @@ window.addEventListener('load', async function() {
         console.error("❌ Не удалось запустить чат:", error);
         showStatus("Ошибка загрузки чата: " + error.message, "error");
         
+        // Показываем кнопку для повторной попытки
         const retryBtn = document.createElement('button');
         retryBtn.textContent = "Попробовать снова";
         retryBtn.style.cssText = "background: #FF9800; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-top: 10px; cursor: pointer;";
         retryBtn.onclick = () => location.reload();
         
         const statusEl = document.getElementById('statusMessage');
-        statusEl.appendChild(document.createElement('br'));
-        statusEl.appendChild(retryBtn);
+        if (statusEl) {
+            statusEl.appendChild(document.createElement('br'));
+            statusEl.appendChild(retryBtn);
+        }
     }
 });
 
+// Глобальные функции для отладки
 window.debugChat = () => chat;
 window.debugAuth = () => auth;
 window.debugFirestore = () => db;
