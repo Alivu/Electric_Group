@@ -20,6 +20,7 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
+            overflow: hidden;
         }
 
         /* Экран входа */
@@ -201,6 +202,7 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            flex-shrink: 0;
         }
 
         .user-info {
@@ -287,6 +289,7 @@
             display: flex;
             flex-direction: column;
             background: #f8f9fa;
+            overflow: hidden;
         }
 
         .messages-container {
@@ -296,6 +299,10 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
+            /* Плавная прокрутка для iOS */
+            -webkit-overflow-scrolling: touch;
+            /* Минимальная высота для лучшей работы с клавиатурой на мобильных */
+            min-height: 0;
         }
 
         /* Сообщения */
@@ -304,6 +311,7 @@
             flex-direction: column;
             max-width: 70%;
             animation: messageAppear 0.3s ease-out;
+            flex-shrink: 0;
         }
 
         @keyframes messageAppear {
@@ -378,6 +386,7 @@
             display: flex;
             gap: 15px;
             align-items: center;
+            flex-shrink: 0;
         }
 
         .message-input {
@@ -388,6 +397,8 @@
             font-size: 1rem;
             outline: none;
             transition: all 0.3s;
+            -webkit-appearance: none; /* Убираем стили iOS */
+            -webkit-border-radius: 30px; /* Для iOS */
         }
 
         .message-input:focus {
@@ -409,6 +420,7 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
+            flex-shrink: 0;
         }
 
         .send-btn:hover {
@@ -422,14 +434,20 @@
 
         /* Адаптивность */
         @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+            
             .chat-container {
                 height: 100vh;
                 border-radius: 0;
+                max-width: 100%;
             }
             
             .login-container {
                 padding: 25px;
                 margin: 10px;
+                border-radius: 15px;
             }
             
             h1 {
@@ -453,6 +471,19 @@
             .message {
                 max-width: 85%;
             }
+            
+            .message-input-area {
+                padding: 15px 20px;
+            }
+            
+            /* Фиксируем позицию на мобильных */
+            .chat-container {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+            }
         }
 
         /* Типинг индикатор */
@@ -464,6 +495,15 @@
             font-style: italic;
             color: #666;
             display: none;
+            flex-shrink: 0;
+        }
+
+        /* Системное сообщение */
+        .message.system {
+            align-self: center;
+            max-width: 90%;
+            text-align: center;
+            margin: 10px 0;
         }
     </style>
     
@@ -602,6 +642,10 @@ class ElectricianChat {
         this.unsubscribeMessages = null;
         this.unsubscribeOnline = null;
         this.unsubscribeTyping = null;
+        this.firstMessageSent = false;
+        this.shouldAutoScroll = true;
+        this.userScrolledUp = false;
+        this.systemMessageRemoved = false;
         
         // Проверяем инициализацию Firebase
         if (!auth || !db) {
@@ -673,6 +717,49 @@ class ElectricianChat {
         // Индикатор набора текста
         this.messageInput.addEventListener('input', () => this.setTypingStatus(true));
         this.messageInput.addEventListener('blur', () => this.setTypingStatus(false));
+        
+        // Отслеживание прокрутки пользователя
+        this.messagesContainer.addEventListener('scroll', () => {
+            this.handleScroll();
+        });
+        
+        // Для мобильных устройств: предотвращаем всплывающую клавиатуру от изменения размера
+        window.addEventListener('resize', () => {
+            if (this.user) {
+                setTimeout(() => {
+                    this.scrollToBottom();
+                }, 300);
+            }
+        });
+    }
+    
+    // ========== ОБРАБОТКА ПРОКРУТКИ ==========
+    handleScroll() {
+        const container = this.messagesContainer;
+        const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+        
+        // Если пользователь внизу (или близко к низу), включаем авто-прокрутку
+        if (scrollBottom <= 50) {
+            this.shouldAutoScroll = true;
+            this.userScrolledUp = false;
+        } 
+        // Если пользователь прокрутил вверх, отключаем авто-прокрутку
+        else if (container.scrollTop > 0) {
+            this.shouldAutoScroll = false;
+            this.userScrolledUp = true;
+        }
+        
+        // Если пользователь прокрутил обратно в самый низ, включаем авто-прокрутку
+        if (scrollBottom === 0) {
+            this.shouldAutoScroll = true;
+            this.userScrolledUp = false;
+        }
+    }
+    
+    scrollToBottom() {
+        if (this.shouldAutoScroll) {
+            this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+        }
     }
     
     // ========== АВТОРИЗАЦИЯ ==========
@@ -743,6 +830,10 @@ class ElectricianChat {
                     .collection('typing').doc(this.user.uid).delete();
             }
             
+            // Сбрасываем флаги
+            this.firstMessageSent = false;
+            this.systemMessageRemoved = false;
+            
             // Выход из Firebase Auth
             await auth.signOut();
             
@@ -799,7 +890,13 @@ class ElectricianChat {
         this.chatScreen.style.display = 'none';
         this.loginScreen.style.display = 'block';
         
-        // Очищаем сообщения
+        // Сбрасываем флаги
+        this.firstMessageSent = false;
+        this.systemMessageRemoved = false;
+        this.shouldAutoScroll = true;
+        this.userScrolledUp = false;
+        
+        // Очищаем сообщения и добавляем системное
         this.messagesContainer.innerHTML = `
             <div class="message system">
                 <div class="message-content" style="text-align: center; background: #e9ecef; color: #666;">
@@ -857,11 +954,18 @@ class ElectricianChat {
             .orderBy('timestamp', 'asc')
             .limit(100)
             .onSnapshot((snapshot) => {
-                // Очищаем контейнер, но оставляем системное сообщение
-                const systemMsg = this.messagesContainer.querySelector('.system');
+                // Очищаем контейнер
                 this.messagesContainer.innerHTML = '';
-                if (systemMsg) {
-                    this.messagesContainer.appendChild(systemMsg);
+                
+                // Добавляем системное сообщение только если оно не было удалено
+                if (!this.systemMessageRemoved) {
+                    this.messagesContainer.innerHTML = `
+                        <div class="message system">
+                            <div class="message-content" style="text-align: center; background: #e9ecef; color: #666;">
+                                Добро пожаловать в профессиональный чат электриков! Начните общение.
+                            </div>
+                        </div>
+                    `;
                 }
                 
                 // Добавляем все сообщения
@@ -870,9 +974,9 @@ class ElectricianChat {
                     this.displayMessage(message);
                 });
                 
-                // Прокручиваем вниз
+                // Прокручиваем вниз если нужно
                 setTimeout(() => {
-                    this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+                    this.scrollToBottom();
                 }, 100);
             }, (error) => {
                 console.error("❌ Ошибка загрузки сообщений:", error);
@@ -890,6 +994,12 @@ class ElectricianChat {
         if (!text) return;
         
         try {
+            // Удаляем системное сообщение после первого отправленного сообщения
+            if (!this.firstMessageSent) {
+                this.firstMessageSent = true;
+                this.systemMessageRemoved = true;
+            }
+            
             await db.collection('rooms').doc(this.roomId)
                 .collection('messages').add({
                     text: text,
@@ -904,6 +1014,9 @@ class ElectricianChat {
             // Очищаем поле ввода
             this.messageInput.value = '';
             this.setTypingStatus(false);
+            
+            // Включаем авто-прокрутку при отправке
+            this.shouldAutoScroll = true;
             
         } catch (error) {
             console.error("❌ Ошибка отправки сообщения:", error);
