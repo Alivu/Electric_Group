@@ -14,7 +14,67 @@
 <meta name="twitter:description" content="Профессиональное сообщество электриков. Обсуждение, помощь, решения.">
 <meta name="twitter:image" content="https://alivu.github.io/Icon/icon-512x512.png">
     <style>
+/* ====== СТИЛИ ДЛЯ ПРЕВЬЮ ЦИТАТЫ НАД ПОЛЕМ ВВОДА ====== */
+.quote-preview {
+    background: rgba(44, 83, 100, 0.1);
+    border-left: 4px solid #2c5364;
+    padding: 12px 15px;
+    margin: 0 25px 15px;
+    border-radius: 8px;
+    position: relative;
+    display: none; /* По умолчанию скрыто */
+}
 
+.quote-content {
+    position: relative;
+    padding-right: 25px;
+}
+
+.quote-content strong {
+    color: #2c5364;
+    font-size: 0.9em;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.quote-content span {
+    color: #666;
+    font-size: 0.9em;
+    line-height: 1.4;
+    display: block;
+    word-break: break-word;
+}
+
+.cancel-quote-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: white;
+    border: 1px solid #ddd;
+    color: #666;
+    cursor: pointer;
+    font-size: 16px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.cancel-quote-btn:hover {
+    background: #f8f9fa;
+    color: #dc3545;
+}
+
+@media (max-width: 768px) {
+    .quote-preview {
+        margin: 0 15px 10px;
+        padding: 10px 12px;
+    }
+}
 
 /* Стили для цитированного сообщения ВНУТРИ сообщения */
 .quoted-message {
@@ -1085,18 +1145,19 @@
         <!-- Контейнер сообщений -->
         <div class="messages-wrapper">
             <!-- Индикатор "печатает" -->
-            <div class="typing-indicator" id="typingIndicator"></div>
+<div class="typing-indicator" id="typingIndicator"></div>
 
-                        <div class="quote-preview" id="quotePreview" style="display: none;">
-                <div class="quote-content">
-                    <strong id="quoteAuthor">Автор</strong>
-                    <p id="quoteText">Текст цитаты...</p>
-                    <button class="cancel-quote-btn" id="cancelQuoteBtn">×</button>
-                </div>
-            </div>
-            
-            <!-- Сообщения -->
-            <div class="messages-container" id="messagesContainer">
+<!-- Блок для превью цитаты (ДОБАВЬТЕ ЭТОТ КОД) -->
+<div class="quote-preview" id="quotePreview" style="display: none;">
+    <div class="quote-content">
+        <strong id="quoteAuthor">Автор</strong>
+        <span id="quoteText">Текст цитаты...</span>
+        <button class="cancel-quote-btn" id="cancelQuoteBtn">×</button>
+    </div>
+</div>
+
+<!-- Сообщения -->
+<div class="messages-container" id="messagesContainer">
                 <!-- Сообщения загружаются через Firebase -->
                 <div class="message system">
                     <div class="message-content" style="text-align: center; background: #e9ecef; color: #666;">
