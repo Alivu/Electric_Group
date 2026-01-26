@@ -14,6 +14,50 @@
 <meta name="twitter:description" content="Профессиональное сообщество электриков. Обсуждение, помощь, решения.">
 <meta name="twitter:image" content="https://alivu.github.io/Icon/icon-512x512.png">
     <style>
+
+
+/* Стили для цитированного сообщения ВНУТРИ сообщения */
+.quoted-message {
+    background: rgba(44, 83, 100, 0.08);
+    border-left: 3px solid #2c5364;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    font-size: 0.9em;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.quote-author {
+    font-weight: bold;
+    color: #2c5364;
+    font-size: 0.85em;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.quote-text {
+    color: #666;
+    line-height: 1.4;
+    font-style: italic;
+    display: block;
+    word-break: break-word;
+}
+
+/* Для своих сообщений - другой цвет цитаты */
+.message.sent .quoted-message {
+    background: rgba(255, 255, 255, 0.2);
+    border-left-color: rgba(255, 255, 255, 0.5);
+}
+
+.message.sent .quote-author {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.message.sent .quote-text {
+    color: rgba(255, 255, 255, 0.8);
+}
+        
         * {
             margin: 0;
             padding: 0;
@@ -1932,15 +1976,22 @@ startReplyToMessage(docId, messageData) {
         quotePreview.style.display = 'block';
         document.getElementById('quoteAuthor').textContent = 
             messageData.userName || 'Электрик';
-        document.getElementById('quoteText').textContent = 
-            messageData.text.length > 50 ? 
-            messageData.text.substring(0, 50) + '...' : 
-            messageData.text;
+        
+        // ⚠️ ВАЖНО: сохраняем ПОЛНЫЙ текст для отправки
+        // В превью показываем обрезанный, но сохраняем полный
+        const fullText = messageData.text;
+        const previewText = fullText.length > 50 ? 
+            fullText.substring(0, 50) + '...' : 
+            fullText;
+            
+        document.getElementById('quoteText').textContent = previewText;
         
         // Сохраняем данные цитаты
         quotePreview.setAttribute('data-quote-id', docId);
         quotePreview.setAttribute('data-quote-author', messageData.userName || 'Электрик');
-        quotePreview.setAttribute('data-quote-text', messageData.text);
+        quotePreview.setAttribute('data-quote-text', fullText);  // ⚠️ ПОЛНЫЙ текст!
+        
+        console.log('✅ Цитата сохранена. Полный текст:', fullText);
     }
     
     // Фокус на поле ввода
