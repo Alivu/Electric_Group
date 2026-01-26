@@ -1733,19 +1733,33 @@ addMessageActions(messageEl, messageData, docId) {
     const actionsDiv = document.createElement('div');
     actionsDiv.className = 'message-actions';
     actionsDiv.innerHTML = `
-        <button class="edit-btn" data-id="${docId}">✏️</button>
-        <button class="delete-btn" data-id="${docId}">🗑️</button>
+        <button class="edit-btn" data-id="${docId}" title="Редактировать">✏️</button>
+        <button class="reply-btn" data-id="${docId}" title="Ответить">↩️</button>
+        <button class="history-btn" data-id="${docId}" title="История изменений">📜</button>
+        <button class="delete-btn" data-id="${docId}" title="Удалить">🗑️</button>
     `;
     
     messageEl.appendChild(actionsDiv);
     
     // Обработчики для кнопок
     const editBtn = actionsDiv.querySelector('.edit-btn');
+    const replyBtn = actionsDiv.querySelector('.reply-btn');
+    const historyBtn = actionsDiv.querySelector('.history-btn');
     const deleteBtn = actionsDiv.querySelector('.delete-btn');
     
     editBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         this.startEditMessage(docId, messageData);
+    });
+    
+    replyBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.startReplyToMessage(docId, messageData);
+    });
+    
+    historyBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.showEditHistory(docId);
     });
     
     deleteBtn.addEventListener('click', (e) => {
@@ -1851,7 +1865,58 @@ async deleteMessage(docId) {
         showStatus("Ошибка удаления: " + error.message, "error");
     }
 }
+    // ========== ЦИТИРОВАНИЕ ==========
+startReplyToMessage(docId, messageData) {
+    console.log('Цитирование сообщения:', docId);
     
+    // Показываем превью цитаты
+    const quotePreview = document.getElementById('quotePreview');
+    if (quotePreview) {
+        quotePreview.style.display = 'block';
+        document.getElementById('quoteAuthor').textContent = 
+            messageData.userName || 'Электрик';
+        document.getElementById('quoteText').textContent = 
+            messageData.text.length > 50 ? 
+            messageData.text.substring(0, 50) + '...' : 
+            messageData.text;
+        
+        // Сохраняем данные цитаты
+        quotePreview.setAttribute('data-quote-id', docId);
+        quotePreview.setAttribute('data-quote-author', messageData.userName || 'Электрик');
+        quotePreview.setAttribute('data-quote-text', messageData.text);
+    }
+    
+    // Фокус на поле ввода
+    this.messageInput.focus();
+}
+
+cancelQuote() {
+    const quotePreview = document.getElementById('quotePreview');
+    if (quotePreview) {
+        quotePreview.style.display = 'none';
+        quotePreview.removeAttribute('data-quote-id');
+    }
+}
+
+// ========== ИСТОРИЯ ИЗМЕНЕНИЙ ==========
+async showEditHistory(docId) {
+    try {
+        const messageDoc = await db.collection('rooms').doc(this.roomId)
+            .collection('messages').doc(docId).get();
+        
+        const messageData = messageDoc.data();
+        
+        if (!messageData.editHistory || messageData.editHistory.length === 0) {
+            alert("История изменений отсутствует");
+            return;
+        }
+        
+        alert(`История изменений: ${messageData.editHistory.length} версий`);
+        
+    } catch (error) {
+        console.error("❌ Ошибка загрузки истории:", error);
+    }
+}
     // ========== ИНДИКАТОР НАБОРА ТЕКСТА ==========
     async setTypingStatus(isTyping) {
         if (!this.user) return;
