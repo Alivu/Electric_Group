@@ -1771,10 +1771,14 @@ subscribeToMessages() {
                 this.displayMessage(message, doc.id);
             });
             
-            // Прокручиваем вниз если нужно
             setTimeout(() => {
+                this.scrollToBottom();  // ← ДОБАВЬ ЭТО!
+            }, 100);  // ← И ЭТО!
+        }, (error) => {
+            console.error("❌ Ошибка загрузки сообщений:", error);
+            console.error("Детали ошибки:", error.code, error.message);
+            showStatus("Ошибка загрузки сообщений", "error");
         });
-      }      
 }
 async sendMessage() {
     if (!this.user) {
