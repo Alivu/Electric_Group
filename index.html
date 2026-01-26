@@ -1709,14 +1709,12 @@ displayMessage(message, docId) {
         <div class="message-content">${this.escapeHtml(message.text)}</div>
     `;
     
-    this.messagesContainer.appendChild(messageEl);
-    
-    // Добавляем кнопки редактирования/удаления для своих сообщений
-    if (isOwnMessage) {
-        this.addMessageActions(messageEl, message, docId);
-    }
-    
-    return messageEl;
+this.messagesContainer.appendChild(messageEl);
+
+// ⚠️ ИЗМЕНЕНИЕ: Добавляем кнопки на ВСЕ сообщения
+this.addMessageActions(messageEl, message, docId);
+
+return messageEl;
 }
 
 // Добавь этот метод в класс (после displayMessage):
@@ -1728,8 +1726,12 @@ escapeHtml(text) {
 
 // ========== РЕДАКТИРОВАНИЕ И УДАЛЕНИЕ ==========
 addMessageActions(messageEl, messageData, docId) {
+       console.log('=== addMessageActions ВЫЗВАН ===');
+    console.log('Для сообщения:', docId);
+    console.log('Автор сообщения:', messageData.userId);
+    console.log('Текущий пользователь:', this.user?.uid);
     const isOwnMessage = messageData.userId === this.user?.uid;
-    
+    console.log('Это свое сообщение?:', isOwnMessage);
     // Кнопки для ВСЕХ сообщений
     let buttonsHtml = `
         <button class="reply-btn" data-id="${docId}" title="Ответить">↩️</button>
@@ -1755,6 +1757,7 @@ addMessageActions(messageEl, messageData, docId) {
     const replyBtn = actionsDiv.querySelector('.reply-btn');
     replyBtn.addEventListener('click', (e) => {
         e.stopPropagation();
+        console.log('Кнопка Ответить нажата! docId:', docId); 
         this.startReplyToMessage(docId, messageData);
     });
     
