@@ -1149,11 +1149,14 @@ function showStatus(message, type) {
     }
 }
 
-// ========== КЛАСС УПРАВЛЕНИЯ ЧАТОМ ==========
 class ElectricianChat {
     constructor() {
         console.log('🔴 Конструктор ElectricianChat ВЫЗВАН!');
         console.log('Firebase доступен?', {
+            auth: typeof auth,
+            db: typeof db
+        });
+        
         this.user = null;
         this.roomId = 'main-electricians-room';
         this.unsubscribeMessages = null;
@@ -1163,7 +1166,7 @@ class ElectricianChat {
         this.shouldAutoScroll = true;
         this.userScrolledUp = false;
         this.systemMessageRemoved = false;
-        this.isRefreshing = false; // Добавили переменную для pull-to-refresh
+        this.isRefreshing = false;
         
         // Проверяем инициализацию Firebase
         if (!auth || !db) {
