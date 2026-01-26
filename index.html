@@ -1344,11 +1344,11 @@ setupEventListeners() {
     }
     
     // Отправка сообщения
-    this.sendMessageBtn.addEventListener('click', () => this.sendMessage());
+    this.sendMessageBtn.addEventListener('click', () => this.));
     this.messageInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            this.sendMessage();
+            this.);
         }
     });
     
@@ -1822,20 +1822,22 @@ async sendMessage() {
         };
         
         // === ДОБАВЛЯЕМ ЦИТАТУ ЕСЛИ ЕСТЬ ===
+        console.log('========== ОТПРАВКА СООБЩЕНИЯ ==========');
         const quotePreview = document.getElementById('quotePreview');
+        console.log('🔍 Проверяем превью цитаты:');
+        console.log('- Элемент найден?', !!quotePreview);
+        console.log('- Видимость:', quotePreview?.style?.display);
+        
         if (quotePreview && quotePreview.style.display === 'block') {
-            // Получаем данные из data-атрибутов
             const quoteId = quotePreview.getAttribute('data-quote-id');
             const quoteAuthor = quotePreview.getAttribute('data-quote-author');
             const quoteText = quotePreview.getAttribute('data-quote-text');
             
-            console.log('🔍 [DEBUG] Проверка цитаты перед отправкой:');
-            console.log('1. quotePreview найден?:', !!quotePreview);
-            console.log('2. Стиль display:', quotePreview.style.display);
-            console.log('3. data-quote-id:', quoteId);
-            console.log('4. data-quote-author:', quoteAuthor);
-            console.log('5. data-quote-text есть?:', !!quoteText);
-            console.log('6. Длина текста:', quoteText?.length);
+            console.log('📖 Читаем данные цитаты:');
+            console.log('- ID:', quoteId);
+            console.log('- Автор:', quoteAuthor);
+            console.log('- Текст длина:', quoteText?.length);
+            console.log('- Превью текста:', quoteText?.substring(0, 30));
             
             if (quoteId && quoteAuthor && quoteText) {
                 messageData.replyTo = {
@@ -1844,32 +1846,33 @@ async sendMessage() {
                     text: quoteText
                 };
                 
-                console.log('✅ [SUCCESS] Цитата добавлена!');
-                console.log('   ID:', quoteId);
-                console.log('   Автор:', quoteAuthor);
-                console.log('   Текст:', quoteText.substring(0, 50) + (quoteText.length > 50 ? '...' : ''));
+                console.log('✅ Цитата добавлена в messageData!');
+                console.log('   replyTo объект:', messageData.replyTo);
             } else {
-                console.error('❌ [ERROR] Проблема с данными цитаты!');
-                console.log('   quoteId:', quoteId ? '✓' : '✗');
-                console.log('   quoteAuthor:', quoteAuthor ? '✓' : '✗');
-                console.log('   quoteText:', quoteText ? `✓ (${quoteText.length} симв.)` : '✗');
+                console.error('❌ Не удалось добавить цитату - недостаточно данных');
             }
         } else {
-            console.log('ℹ️ [INFO] Цитата не выбрана или превью скрыто');
+            console.log('ℹ️ Превью цитаты не видно, цитата не добавляется');
         }
         
-        // Проверка перед отправкой в Firestore
-        console.log('📤 [SEND] Отправка сообщения в Firestore:');
-        console.log('   Текст сообщения:', messageData.text.substring(0, 50) + (messageData.text.length > 50 ? '...' : ''));
-        console.log('   Есть цитата (replyTo)?:', !!messageData.replyTo);
+        console.log('📨 Отправляем в Firestore:', {
+            text: text.substring(0, 50) + (text.length > 50 ? '...' : ''),
+            hasReplyTo: !!messageData.replyTo
+        });
         
-        if (messageData.replyTo) {
-            console.log('   Данные цитаты:', {
-                messageId: messageData.replyTo.messageId,
-                author: messageData.replyTo.author,
-                textLength: messageData.replyTo.text?.length
-            });
-        }
+        await db.collection('rooms').doc(this.roomId)
+            .collection('messages').add(messageData);
+            
+        console.log('🚀 Сообщение отправлено!');
+        console.log('==========================================');
+        
+        // ... остальной код ...
+        
+    } catch (error) {
+        console.error("❌ Ошибка отправки:", error);
+        showStatus("Ошибка: " + error.message, "error");
+    }
+}
         
         await db.collection('rooms').doc(this.roomId)
             .collection('messages').add(messageData);
@@ -1891,6 +1894,13 @@ async sendMessage() {
 }
     
 displayMessage(message, docId) {
+    console.log('🟢 displayMessage вызван для:', docId);
+    console.log('📊 Данные сообщения:', {
+        text: message.text?.substring(0, 30) + (message.text?.length > 30 ? '...' : ''),
+        hasReplyTo: !!message.replyTo,
+        replyTo: message.replyTo
+    });
+    
     const isOwnMessage = message.userId === this.user?.uid;
     const messageTime = message.timestamp ? 
         new Date(message.timestamp.toDate()).toLocaleTimeString([], { 
@@ -1902,10 +1912,16 @@ displayMessage(message, docId) {
     const editedBadge = message.edited ? 
         `<span class="edited-badge">(ред.)</span>` : '';
     
-    // === ДОБАВЛЯЕМ ЦИТАТУ ЕСЛИ ЕСТЬ ===
+    // === ЦИТАТА ВНУТРИ СООБЩЕНИЯ ===
     let quoteHtml = '';
     if (message.replyTo) {
-        const quoteText = message.replyTo.text;
+        console.log('🔵 Обрабатываем цитату:', {
+            author: message.replyTo.author,
+            textLength: message.replyTo.text?.length,
+            textPreview: message.replyTo.text?.substring(0, 50)
+        });
+        
+        const quoteText = message.replyTo.text || '';
         const shortText = quoteText.length > 100 ? 
             quoteText.substring(0, 100) + '...' : 
             quoteText;
@@ -1916,6 +1932,10 @@ displayMessage(message, docId) {
                 <span class="quote-text">${this.escapeHtml(shortText)}</span>
             </div>
         `;
+        
+        console.log('✅ HTML цитаты создан');
+    } else {
+        console.log('ℹ️ Цитаты нет в сообщении');
     }
     
     const messageEl = document.createElement('div');
@@ -1934,20 +1954,15 @@ displayMessage(message, docId) {
             <span class="message-time">${messageTime} ${editedBadge}</span>
         </div>
         ${quoteHtml}
-        <div class="message-content">${this.escapeHtml(message.text)}</div>
+        <div class="message-content">${this.escapeHtml(message.text || '')}</div>
     `;
+    
+    console.log('📝 HTML сообщения создан');
     
     this.messagesContainer.appendChild(messageEl);
     this.addMessageActions(messageEl, message, docId);
     
     return messageEl;
-}
-
-// Добавь этот метод в класс (после displayMessage):
-escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
 }
 
 // ========== РЕДАКТИРОВАНИЕ И УДАЛЕНИЕ ==========
