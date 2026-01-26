@@ -331,6 +331,7 @@
 
         /* Сообщения */
         .message {
+            position: relative;
             display: flex;
             flex-direction: column;
             max-width: 70%;
@@ -395,8 +396,8 @@
 .message-actions {
     display: none;
     position: absolute;
-    top: -15px;
-    right: 15px;
+    top: 8px;
+    right: 10px;
     background: white;
     border-radius: 15px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -407,8 +408,8 @@
     transition: opacity 0.2s, transform 0.2s;
 }
 
-.message.sent {
-    position: relative;  /* ВАЖНО: делаем сообщение точкой отсчета */
+.message.sent, .message.received {
+    position: relative;  /* ← ЕСЛИ ХОЧЕШЬ ТАК */
 }
 
     .message.sent:hover .message-actions,
