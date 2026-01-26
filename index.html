@@ -1326,51 +1326,71 @@ class ElectricianChat {
         console.log("✅ Чат инициализирован");
     }
     
-    setupEventListeners() {
-        // Кнопка входа через Google
-        this.googleLoginBtn.addEventListener('click', () => this.signInWithGoogle());
-        
-        // Кнопка выхода
-        this.logoutBtn.addEventListener('click', () => this.signOut());
-        
-        // Кнопка "Назад"
-        this.backBtn = document.getElementById('backBtn');
-        if (this.backBtn) {
-            this.backBtn.addEventListener('click', () => {
-                if (confirm('Вернуться на главную страницу?')) {
-                    window.location.href = 'https://alivu.github.io/';
-                }
-            });
-        }
-        
-        // Отправка сообщения
-        this.sendMessageBtn.addEventListener('click', () => this.sendMessage());
-        this.messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                this.sendMessage();
-            }
-        });
-        
-        // Индикатор набора текста
-        this.messageInput.addEventListener('input', () => this.setTypingStatus(true));
-        this.messageInput.addEventListener('blur', () => this.setTypingStatus(false));
-        
-        // Отслеживание прокрутки пользователя
-        this.messagesContainer.addEventListener('scroll', () => {
-            this.handleScroll();
-        });
-        
-        // Для мобильных устройств: предотвращаем всплывающую клавиатуру от изменения размера
-        window.addEventListener('resize', () => {
-            if (this.user) {
-                setTimeout(() => {
-                    this.scrollToBottom();
-                }, 300);
+setupEventListeners() {
+    // Кнопка входа через Google
+    this.googleLoginBtn.addEventListener('click', () => this.signInWithGoogle());
+    
+    // Кнопка выхода
+    this.logoutBtn.addEventListener('click', () => this.signOut());
+    
+    // Кнопка "Назад"
+    this.backBtn = document.getElementById('backBtn');
+    if (this.backBtn) {
+        this.backBtn.addEventListener('click', () => {
+            if (confirm('Вернуться на главную страницу?')) {
+                window.location.href = 'https://alivu.github.io/';
             }
         });
     }
     
+    // Отправка сообщения
+    this.sendMessageBtn.addEventListener('click', () => this.sendMessage());
+    this.messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            this.sendMessage();
+        }
+    });
+    
+    // Индикатор набора текста
+    this.messageInput.addEventListener('input', () => this.setTypingStatus(true));
+    this.messageInput.addEventListener('blur', () => this.setTypingStatus(false));
+    
+    // Отслеживание прокрутки пользователя
+    this.messagesContainer.addEventListener('scroll', () => {
+        this.handleScroll();
+    });
+    
+    // Для мобильных устройств: предотвращаем всплывающую клавиатуру от изменения размера
+    window.addEventListener('resize', () => {
+        if (this.user) {
+            setTimeout(() => {
+                this.scrollToBottom();
+            }, 300);
+        }
+    });
+    
+    // === ДОБАВЛЯЕМ ОБРАБОТЧИК ДЛЯ КНОПКИ ОТМЕНЫ ЦИТАТЫ ===
+    const cancelQuoteBtn = document.getElementById('cancelQuoteBtn');
+    if (cancelQuoteBtn) {
+        cancelQuoteBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.cancelQuote();
+        });
+    }
+    
+    // Отмена цитаты по клавише ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const quotePreview = document.getElementById('quotePreview');
+            if (quotePreview && quotePreview.style.display === 'block') {
+                this.cancelQuote();
+                this.messageInput.focus();
+            }
+        }
+    });
+}
 // ========== PULL-TO-REFRESH ФУНКЦИОНАЛЬНОСТЬ ==========
 setupPullToRefresh() {
     const header = document.querySelector('.chat-header');
@@ -1762,68 +1782,88 @@ subscribeToMessages() {
         });
 }
         // ========== ОТПРАВКА СООБЩЕНИЙ ==========
-    async sendMessage() {
-        if (!this.user) {
-            showStatus("Сначала войдите в систему", "error");
-            return;
-        }
-        
-        const messageInput = document.getElementById('messageInput');
-        if (!messageInput) {
-            console.error('Элемент messageInput не найден!');
-            return;
-        }
-        
-        const text = messageInput.value.trim();
-        if (!text) {
-            // Если есть цитата, но нет текста - очищаем цитату
-            this.cancelQuote();
-            return;
-        }
-        
-        try {
-            // Удаляем системное сообщение после первого отправленного сообщения
-            if (!this.firstMessageSent) {
-                this.firstMessageSent = true;
-                this.systemMessageRemoved = true;
-            }
-            
-            const messageData = {
-                text: text,
-                userId: this.user.uid,
-                userName: this.user.displayName || 'Электрик',
-                userEmail: this.user.email,
-                userPhoto: this.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.user.displayName || 'E')}&background=2c5364&color=fff`,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                isElectrician: true
-            };
-            
-            // Добавляем цитату если есть
-            const quotePreview = document.getElementById('quotePreview');
-            if (quotePreview && quotePreview.style.display === 'block') {
-                messageData.replyTo = {
-                    messageId: quotePreview.getAttribute('data-quote-id'),
-                    author: quotePreview.getAttribute('data-quote-author'),
-                    text: quotePreview.getAttribute('data-quote-text')
-                };
-            }
-            
-            await db.collection('rooms').doc(this.roomId)
-                .collection('messages').add(messageData);
-            
-            // Очищаем поле ввода и цитату
-            messageInput.value = '';
-            this.cancelQuote();
-            this.setTypingStatus(false);
-            
-            // Включаем авто-прокрутку при отправке
-            this.shouldAutoScroll = true;
-            
-        } catch (error) {
-            console.error("❌ Ошибка отправки сообщения:", error);
-            showStatus("Ошибка отправки сообщения: " + error.message, "error");
-        }
+async sendMessage() {
+    if (!this.user) {
+        showStatus("Сначала войдите в систему", "error");
+        return;
     }
+    
+    const messageInput = document.getElementById('messageInput');
+    if (!messageInput) {
+        console.error('Элемент messageInput не найден!');
+        return;
+    }
+    
+    const text = messageInput.value.trim();
+    if (!text) {
+        // Если есть цитата, но нет текста - очищаем цитату
+        if (document.getElementById('quotePreview').style.display === 'block') {
+            this.cancelQuote();
+            showStatus("Введите текст сообщения", "info");
+        }
+        return;
+    }
+    
+    try {
+        // Удаляем системное сообщение после первого отправленного сообщения
+        if (!this.firstMessageSent) {
+            this.firstMessageSent = true;
+            this.systemMessageRemoved = true;
+        }
+        
+        const messageData = {
+            text: text,
+            userId: this.user.uid,
+            userName: this.user.displayName || 'Электрик',
+            userEmail: this.user.email,
+            userPhoto: this.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.user.displayName || 'E')}&background=2c5364&color=fff`,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            isElectrician: true
+        };
+        
+        // === ДОБАВЛЯЕМ ЦИТАТУ ЕСЛИ ЕСТЬ ===
+        const quotePreview = document.getElementById('quotePreview');
+        if (quotePreview && quotePreview.style.display === 'block') {
+            // Получаем данные из data-атрибутов
+            const quoteId = quotePreview.getAttribute('data-quote-id');
+            const quoteAuthor = quotePreview.getAttribute('data-quote-author');
+            const quoteText = quotePreview.getAttribute('data-quote-text');
+            
+            if (quoteId && quoteAuthor && quoteText) {
+                messageData.replyTo = {
+                    messageId: quoteId,
+                    author: quoteAuthor,
+                    text: quoteText
+                };
+                
+                console.log('📨 Отправка сообщения с цитатой:', {
+                    id: quoteId,
+                    author: quoteAuthor,
+                    textPreview: quoteText.length > 30 ? quoteText.substring(0, 30) + '...' : quoteText
+                });
+            }
+        }
+        // === КОНЕЦ ОБРАБОТКИ ЦИТАТЫ ===
+        
+        await db.collection('rooms').doc(this.roomId)
+            .collection('messages').add(messageData);
+        
+        // Очищаем поле ввода и цитату
+        messageInput.value = '';
+        this.cancelQuote();
+        this.setTypingStatus(false);
+        
+        // Включаем авто-прокрутку при отправке
+        this.shouldAutoScroll = true;
+        
+        // Показываем успешную отправку
+        showStatus("✅ Сообщение отправлено" + (messageData.replyTo ? " с цитатой" : ""), "success");
+        
+    } catch (error) {
+        console.error("❌ Ошибка отправки сообщения:", error);
+        showStatus("Ошибка отправки сообщения: " + error.message, "error");
+    }
+}
     
 displayMessage(message, docId) {
     const isOwnMessage = message.userId === this.user?.uid;
@@ -1834,17 +1874,21 @@ displayMessage(message, docId) {
         }) : 
         new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
-    // Проверяем редактировалось ли сообщение
     const editedBadge = message.edited ? 
-        `<span class="edited-badge" title="${message.editedAt?.toDate?.().toLocaleString() || 'Дата редактирования неизвестна'}">(ред.)</span>` : '';
+        `<span class="edited-badge">(ред.)</span>` : '';
     
-    // Добавляем цитату если есть
+    // === ДОБАВЛЯЕМ ЦИТАТУ ЕСЛИ ЕСТЬ ===
     let quoteHtml = '';
     if (message.replyTo) {
+        const quoteText = message.replyTo.text;
+        const shortText = quoteText.length > 100 ? 
+            quoteText.substring(0, 100) + '...' : 
+            quoteText;
+            
         quoteHtml = `
             <div class="quoted-message">
-                <span class="quote-author">${message.replyTo.author}:</span>
-                <span class="quote-text">${this.escapeHtml(message.replyTo.text)}</span>
+                <span class="quote-author">${message.replyTo.author || 'Электрик'}:</span>
+                <span class="quote-text">${this.escapeHtml(shortText)}</span>
             </div>
         `;
     }
@@ -1857,7 +1901,7 @@ displayMessage(message, docId) {
         <div class="message-header">
             <div class="message-avatar">
                 ${message.userPhoto ? 
-                    `<img src="${message.userPhoto}" alt="${message.userName}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(message.userName || 'E')}&background=2c5364&color=fff';">` : 
+                    `<img src="${message.userPhoto}" alt="${message.userName}">` : 
                     `<div style="width:100%;height:100%;background:#2c5364;color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;">${(message.userName || 'E').charAt(0).toUpperCase()}</div>`
                 }
             </div>
@@ -2039,30 +2083,28 @@ async deleteMessage(docId) {
 }
     // ========== ЦИТИРОВАНИЕ ==========
 startReplyToMessage(docId, messageData) {
-    console.log('Цитирование сообщения:', docId);
+    console.log('🔗 Цитируем сообщение:', docId);
     
-    // Показываем превью цитаты
     const quotePreview = document.getElementById('quotePreview');
     if (quotePreview) {
+        // Показываем превью
         quotePreview.style.display = 'block';
+        
+        // Сохраняем данные
+        quotePreview.setAttribute('data-quote-id', docId);
+        quotePreview.setAttribute('data-quote-author', messageData.userName || 'Электрик');
+        quotePreview.setAttribute('data-quote-text', messageData.text);
+        
+        // Обновляем отображение
         document.getElementById('quoteAuthor').textContent = 
             messageData.userName || 'Электрик';
         
-        // ⚠️ ВАЖНО: сохраняем ПОЛНЫЙ текст для отправки
-        // В превью показываем обрезанный, но сохраняем полный
-        const fullText = messageData.text;
-        const previewText = fullText.length > 50 ? 
-            fullText.substring(0, 50) + '...' : 
-            fullText;
+        // Для превью обрезаем длинный текст
+        const previewText = messageData.text.length > 60 ? 
+            messageData.text.substring(0, 60) + '...' : 
+            messageData.text;
             
         document.getElementById('quoteText').textContent = previewText;
-        
-        // Сохраняем данные цитаты
-        quotePreview.setAttribute('data-quote-id', docId);
-        quotePreview.setAttribute('data-quote-author', messageData.userName || 'Электрик');
-        quotePreview.setAttribute('data-quote-text', fullText);  // ⚠️ ПОЛНЫЙ текст!
-        
-        console.log('✅ Цитата сохранена. Полный текст:', fullText);
     }
     
     // Фокус на поле ввода
@@ -2073,7 +2115,17 @@ cancelQuote() {
     const quotePreview = document.getElementById('quotePreview');
     if (quotePreview) {
         quotePreview.style.display = 'none';
+        
+        // Очищаем все data-атрибуты
         quotePreview.removeAttribute('data-quote-id');
+        quotePreview.removeAttribute('data-quote-author');
+        quotePreview.removeAttribute('data-quote-text');
+        
+        // Сбрасываем текст в превью
+        document.getElementById('quoteAuthor').textContent = 'Автор';
+        document.getElementById('quoteText').textContent = 'Текст цитаты...';
+        
+        console.log('❌ Цитата отменена');
     }
 }
 
