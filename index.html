@@ -1325,7 +1325,7 @@ class ElectricianChat {
         
         console.log("✅ Чат инициализирован");
     }
-    
+ 
 setupEventListeners() {
     // Кнопка входа через Google
     this.googleLoginBtn.addEventListener('click', () => this.signInWithGoogle());
@@ -1344,11 +1344,11 @@ setupEventListeners() {
     }
     
     // Отправка сообщения
-    this.sendMessageBtn.addEventListener('click', () => this.));
+    this.sendMessageBtn.addEventListener('click', () => this.sendMessage());
     this.messageInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            this.);
+            this.sendMessage();
         }
     });
     
