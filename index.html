@@ -2113,6 +2113,33 @@ window.addEventListener('load', async function() {
 window.debugChat = () => chat;
 window.debugAuth = () => auth;
 window.debugFirestore = () => db;
+
+    // Добавь в конец файла
+window.testQuoteFunction = function() {
+    console.log('=== ТЕСТ ЦИТИРОВАНИЯ ===');
+    
+    // 1. Создаем тестовую цитату
+    const quotePreview = document.getElementById('quotePreview');
+    if (quotePreview) {
+        quotePreview.style.display = 'block';
+        quotePreview.setAttribute('data-quote-id', 'test-id-123');
+        quotePreview.setAttribute('data-quote-author', 'Тестовый автор');
+        quotePreview.setAttribute('data-quote-text', 'Это тестовый текст цитаты для проверки работы функции.');
+        
+        document.getElementById('quoteAuthor').textContent = 'Тестовый автор';
+        document.getElementById('quoteText').textContent = 'Это тестовый текст...';
+    }
+    
+    // 2. Заполняем поле ввода
+    const input = document.getElementById('messageInput');
+    if (input) {
+        input.value = 'Это мой ответ на цитату';
+    }
+    
+    console.log('Тест готов. Нажмите кнопку отправки или вызовите chat.sendMessage()');
+};
+
+// В консоли выполни: testQuoteFunction()
 </script>
 </body>
 </html>
