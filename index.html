@@ -391,7 +391,100 @@
             line-height: 1.5;
             word-break: break-word;
         }
+/* Стили для редактирования сообщений */
+.message-actions {
+    display: none;
+    position: absolute;
+    top: -10px;
+    right: 10px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    padding: 5px;
+    z-index: 10;
+}
 
+.message.sent:hover .message-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.edit-btn, .delete-btn {
+    background: none;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+}
+
+.edit-btn {
+    color: #2c5364;
+    background: rgba(44, 83, 100, 0.1);
+}
+
+.edit-btn:hover {
+    background: rgba(44, 83, 100, 0.2);
+}
+
+.delete-btn {
+    color: #dc3545;
+    background: rgba(220, 53, 69, 0.1);
+}
+
+.delete-btn:hover {
+    background: rgba(220, 53, 69, 0.2);
+}
+
+/* Редактируемое поле */
+.edit-input {
+    width: 100%;
+    padding: 10px 15px;
+    border: 2px solid #2c5364;
+    border-radius: 15px;
+    font-size: 1rem;
+    font-family: inherit;
+    resize: none;
+    min-height: 60px;
+    margin-bottom: 10px;
+}
+
+.edit-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.save-btn, .cancel-btn {
+    padding: 8px 20px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.save-btn {
+    background: linear-gradient(135deg, #2c5364 0%, #203a43 100%);
+    color: white;
+}
+
+.cancel-btn {
+    background: #f8f9fa;
+    color: #666;
+    border: 1px solid #ddd;
+}
+
+/* Индикатор редактирования */
+.edited-badge {
+    font-size: 0.7rem;
+    color: #888;
+    font-style: italic;
+    margin-left: 5px;
+}
+
+
+        
         .message.sent .message-content {
             background: linear-gradient(135deg, #2c5364 0%, #203a43 100%);
             color: white;
@@ -1423,11 +1516,10 @@ setupPullToRefresh() {
                     `;
                 }
                 
-                // Добавляем все сообщения
-                snapshot.forEach((doc) => {
-                    const message = doc.data();
-                    this.displayMessage(message);
-                });
+snapshot.forEach((doc) => {
+    const message = doc.data();
+    this.displayMessage(message, doc.id);
+});
                 
                 // Прокручиваем вниз если нужно
                 setTimeout(() => {
@@ -1479,33 +1571,173 @@ setupPullToRefresh() {
         }
     }
     
-    displayMessage(message) {
-        const isOwnMessage = message.userId === this.user?.uid;
-        const messageTime = message.timestamp ? 
-            new Date(message.timestamp.toDate()).toLocaleTimeString([], { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            }) : 
-            new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        
-        const messageEl = document.createElement('div');
-        messageEl.className = `message ${isOwnMessage ? 'sent' : 'received'}`;
-        messageEl.innerHTML = `
-            <div class="message-header">
-                <div class="message-avatar">
-                    ${message.userPhoto ? 
-                        `<img src="${message.userPhoto}" alt="${message.userName}">` : 
-                        `<div style="width:100%;height:100%;background:#2c5364;color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;">${(message.userName || 'E').charAt(0).toUpperCase()}</div>`
-                    }
-                </div>
-                <span class="message-author">${message.userName || 'Электрик'}</span>
-                <span class="message-time">${messageTime}</span>
+displayMessage(message, docId) {
+    const isOwnMessage = message.userId === this.user?.uid;
+    const messageTime = message.timestamp ? 
+        new Date(message.timestamp.toDate()).toLocaleTimeString([], { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        }) : 
+        new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    // Проверяем редактировалось ли сообщение
+    const editedBadge = message.edited ? 
+        `<span class="edited-badge">(ред.)</span>` : '';
+    
+    const messageEl = document.createElement('div');
+    messageEl.className = `message ${isOwnMessage ? 'sent' : 'received'}`;
+    messageEl.setAttribute('data-message-id', docId);
+    
+    messageEl.innerHTML = `
+        <div class="message-header">
+            <div class="message-avatar">
+                ${message.userPhoto ? 
+                    `<img src="${message.userPhoto}" alt="${message.userName}">` : 
+                    `<div style="width:100%;height:100%;background:#2c5364;color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;">${(message.userName || 'E').charAt(0).toUpperCase()}</div>`
+                }
             </div>
-            <div class="message-content">${escapeHtml(message.text)}</div>
-        `;
-        
-        this.messagesContainer.appendChild(messageEl);
+            <span class="message-author">${message.userName || 'Электрик'}</span>
+            <span class="message-time">${messageTime} ${editedBadge}</span>
+        </div>
+        <div class="message-content">${this.escapeHtml(message.text)}</div>
+    `;
+    
+    this.messagesContainer.appendChild(messageEl);
+    
+    // Добавляем кнопки редактирования/удаления для своих сообщений
+    if (isOwnMessage) {
+        this.addMessageActions(messageEl, message, docId);
     }
+    
+    return messageEl;
+}
+
+// Добавь этот метод в класс (после displayMessage):
+escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ========== РЕДАКТИРОВАНИЕ И УДАЛЕНИЕ ==========
+addMessageActions(messageEl, messageData, docId) {
+    if (messageData.userId !== this.user?.uid) return;
+    
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'message-actions';
+    actionsDiv.innerHTML = `
+        <button class="edit-btn" data-id="${docId}">✏️</button>
+        <button class="delete-btn" data-id="${docId}">🗑️</button>
+    `;
+    
+    messageEl.appendChild(actionsDiv);
+    
+    // Обработчики для кнопок
+    const editBtn = actionsDiv.querySelector('.edit-btn');
+    const deleteBtn = actionsDiv.querySelector('.delete-btn');
+    
+    editBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.startEditMessage(docId, messageData);
+    });
+    
+    deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.deleteMessage(docId);
+    });
+}
+
+startEditMessage(docId, messageData) {
+    const messageEl = document.querySelector(`[data-message-id="${docId}"]`);
+    if (!messageEl) return;
+    
+    const contentEl = messageEl.querySelector('.message-content');
+    const originalText = messageData.text;
+    
+    // Создаем поле редактирования
+    const editHtml = `
+        <textarea class="edit-input" maxlength="1000">${originalText}</textarea>
+        <div class="edit-buttons">
+            <button class="cancel-btn">Отмена</button>
+            <button class="save-btn">Сохранить</button>
+        </div>
+    `;
+    
+    contentEl.innerHTML = editHtml;
+    
+    // Фокус на поле
+    const textarea = contentEl.querySelector('.edit-input');
+    textarea.focus();
+    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+    
+    // Обработчики кнопок
+    contentEl.querySelector('.cancel-btn').addEventListener('click', () => {
+        this.cancelEdit(docId, originalText);
+    });
+    
+    contentEl.querySelector('.save-btn').addEventListener('click', () => {
+        const newText = textarea.value.trim();
+        if (newText && newText !== originalText) {
+            this.saveEditedMessage(docId, newText);
+        } else {
+            this.cancelEdit(docId, originalText);
+        }
+    });
+    
+    // Enter для сохранения, Esc для отмены
+    textarea.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            contentEl.querySelector('.save-btn').click();
+        }
+        if (e.key === 'Escape') {
+            contentEl.querySelector('.cancel-btn').click();
+        }
+    });
+}
+
+async saveEditedMessage(docId, newText) {
+    if (!newText.trim()) return;
+    
+    try {
+        await db.collection('rooms').doc(this.roomId)
+            .collection('messages').doc(docId).update({
+                text: newText,
+                edited: true,
+                editedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        
+        showStatus("✅ Сообщение обновлено", "success");
+    } catch (error) {
+        console.error("❌ Ошибка редактирования:", error);
+        showStatus("Ошибка редактирования: " + error.message, "error");
+    }
+}
+
+cancelEdit(docId, originalText) {
+    const messageEl = document.querySelector(`[data-message-id="${docId}"]`);
+    if (!messageEl) return;
+    
+    const contentEl = messageEl.querySelector('.message-content');
+    contentEl.innerHTML = this.escapeHtml(originalText);
+    
+    // Восстанавливаем действия
+    this.addMessageActions(messageEl, { userId: this.user.uid }, docId);
+}
+
+async deleteMessage(docId) {
+    if (!confirm("Удалить это сообщение?")) return;
+    
+    try {
+        await db.collection('rooms').doc(this.roomId)
+            .collection('messages').doc(docId).delete();
+        
+        showStatus("✅ Сообщение удалено", "success");
+    } catch (error) {
+        console.error("❌ Ошибка удаления:", error);
+        showStatus("Ошибка удаления: " + error.message, "error");
+    }
+}
     
     // ========== ИНДИКАТОР НАБОРА ТЕКСТА ==========
     async setTypingStatus(isTyping) {
