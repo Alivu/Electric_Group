@@ -1152,6 +1152,8 @@ function showStatus(message, type) {
 // ========== КЛАСС УПРАВЛЕНИЯ ЧАТОМ ==========
 class ElectricianChat {
     constructor() {
+        console.log('🔴 Конструктор ElectricianChat ВЫЗВАН!');
+        console.log('Firebase доступен?', {
         this.user = null;
         this.roomId = 'main-electricians-room';
         this.unsubscribeMessages = null;
