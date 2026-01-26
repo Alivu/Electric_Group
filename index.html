@@ -1728,46 +1728,58 @@ escapeHtml(text) {
 
 // ========== РЕДАКТИРОВАНИЕ И УДАЛЕНИЕ ==========
 addMessageActions(messageEl, messageData, docId) {
-    if (messageData.userId !== this.user?.uid) return;
+    const isOwnMessage = messageData.userId === this.user?.uid;
+    
+    // Кнопки для ВСЕХ сообщений
+    let buttonsHtml = `
+        <button class="reply-btn" data-id="${docId}" title="Ответить">↩️</button>
+    `;
+    
+    // Дополнительные кнопки только для СВОИХ сообщений
+    if (isOwnMessage) {
+        buttonsHtml = `
+            <button class="edit-btn" data-id="${docId}" title="Редактировать">✏️</button>
+            ${buttonsHtml}
+            <button class="history-btn" data-id="${docId}" title="История изменений">📜</button>
+            <button class="delete-btn" data-id="${docId}" title="Удалить">🗑️</button>
+        `;
+    }
     
     const actionsDiv = document.createElement('div');
     actionsDiv.className = 'message-actions';
-    actionsDiv.innerHTML = `
-        <button class="edit-btn" data-id="${docId}" title="Редактировать">✏️</button>
-        <button class="reply-btn" data-id="${docId}" title="Ответить">↩️</button>
-        <button class="history-btn" data-id="${docId}" title="История изменений">📜</button>
-        <button class="delete-btn" data-id="${docId}" title="Удалить">🗑️</button>
-    `;
+    actionsDiv.innerHTML = buttonsHtml;
     
     messageEl.appendChild(actionsDiv);
     
-    // Обработчики для кнопок
-    const editBtn = actionsDiv.querySelector('.edit-btn');
+    // ОБРАБОТЧИК ДЛЯ ВСЕХ сообщений - Ответить
     const replyBtn = actionsDiv.querySelector('.reply-btn');
-    const historyBtn = actionsDiv.querySelector('.history-btn');
-    const deleteBtn = actionsDiv.querySelector('.delete-btn');
-    
-    editBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.startEditMessage(docId, messageData);
-    });
-    
     replyBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         this.startReplyToMessage(docId, messageData);
     });
     
-    historyBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.showEditHistory(docId);
-    });
-    
-    deleteBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.deleteMessage(docId);
-    });
+    // Обработчики только для СВОИХ сообщений
+    if (isOwnMessage) {
+        const editBtn = actionsDiv.querySelector('.edit-btn');
+        const historyBtn = actionsDiv.querySelector('.history-btn');
+        const deleteBtn = actionsDiv.querySelector('.delete-btn');
+        
+        editBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.startEditMessage(docId, messageData);
+        });
+        
+        historyBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.showEditHistory(docId);
+        });
+        
+        deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.deleteMessage(docId);
+        });
+    }
 }
-
 startEditMessage(docId, messageData) {
     const messageEl = document.querySelector(`[data-message-id="${docId}"]`);
     if (!messageEl) return;
