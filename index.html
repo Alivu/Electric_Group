@@ -1821,45 +1821,6 @@ async sendMessage() {
             isElectrician: true
         };
         
-async sendMessage() {
-    if (!this.user) {
-        showStatus("Сначала войдите в систему", "error");
-        return;
-    }
-    
-    const messageInput = document.getElementById('messageInput');
-    if (!messageInput) {
-        console.error('Элемент messageInput не найден!');
-        return;
-    }
-    
-    const text = messageInput.value.trim();
-    if (!text) {
-        // Если есть цитата, но нет текста - очищаем цитату
-        if (document.getElementById('quotePreview').style.display === 'block') {
-            this.cancelQuote();
-            showStatus("Введите текст сообщения", "info");
-        }
-        return;
-    }
-    
-    try {
-        // Удаляем системное сообщение после первого отправленного сообщения
-        if (!this.firstMessageSent) {
-            this.firstMessageSent = true;
-            this.systemMessageRemoved = true;
-        }
-        
-        const messageData = {
-            text: text,
-            userId: this.user.uid,
-            userName: this.user.displayName || 'Электрик',
-            userEmail: this.user.email,
-            userPhoto: this.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.user.displayName || 'E')}&background=2c5364&color=fff`,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            isElectrician: true
-        };
-        
         // === ДОБАВЛЯЕМ ЦИТАТУ ЕСЛИ ЕСТЬ ===
         const quotePreview = document.getElementById('quotePreview');
         if (quotePreview && quotePreview.style.display === 'block') {
@@ -1928,35 +1889,6 @@ async sendMessage() {
         showStatus("Ошибка отправки сообщения: " + error.message, "error");
     }
 }
-    
-displayMessage(message, docId) {
-    const isOwnMessage = message.userId === this.user?.uid;
-    const messageTime = message.timestamp ? 
-        new Date(message.timestamp.toDate()).toLocaleTimeString([], { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        }) : 
-        new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    const editedBadge = message.edited ? 
-        `<span class="edited-badge">(ред.)</span>` : '';
-    
-    // === ДОБАВЛЯЕМ ЦИТАТУ ЕСЛИ ЕСТЬ ===
-    let quoteHtml = '';
-    if (message.replyTo) {
-        const quoteText = message.replyTo.text;
-        const shortText = quoteText.length > 100 ? 
-            quoteText.substring(0, 100) + '...' : 
-            quoteText;
-            
-        quoteHtml = `
-            <div class="quoted-message">
-                <span class="quote-author">${message.replyTo.author || 'Электрик'}:</span>
-                <span class="quote-text">${this.escapeHtml(shortText)}</span>
-            </div>
-        `;
-    }
-    
     const messageEl = document.createElement('div');
     messageEl.className = `message ${isOwnMessage ? 'sent' : 'received'}`;
     messageEl.setAttribute('data-message-id', docId);
