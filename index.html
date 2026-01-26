@@ -1821,45 +1821,6 @@ async sendMessage() {
             isElectrician: true
         };
         
-async sendMessage() {
-    if (!this.user) {
-        showStatus("Сначала войдите в систему", "error");
-        return;
-    }
-    
-    const messageInput = document.getElementById('messageInput');
-    if (!messageInput) {
-        console.error('Элемент messageInput не найден!');
-        return;
-    }
-    
-    const text = messageInput.value.trim();
-    if (!text) {
-        // Если есть цитата, но нет текста - очищаем цитату
-        if (document.getElementById('quotePreview').style.display === 'block') {
-            this.cancelQuote();
-            showStatus("Введите текст сообщения", "info");
-        }
-        return;
-    }
-    
-    try {
-        // Удаляем системное сообщение после первого отправленного сообщения
-        if (!this.firstMessageSent) {
-            this.firstMessageSent = true;
-            this.systemMessageRemoved = true;
-        }
-        
-        const messageData = {
-            text: text,
-            userId: this.user.uid,
-            userName: this.user.displayName || 'Электрик',
-            userEmail: this.user.email,
-            userPhoto: this.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.user.displayName || 'E')}&background=2c5364&color=fff`,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            isElectrician: true
-        };
-        
         // === ДОБАВЛЯЕМ ЦИТАТУ ЕСЛИ ЕСТЬ ===
         const quotePreview = document.getElementById('quotePreview');
         if (quotePreview && quotePreview.style.display === 'block') {
@@ -1868,14 +1829,6 @@ async sendMessage() {
             const quoteAuthor = quotePreview.getAttribute('data-quote-author');
             const quoteText = quotePreview.getAttribute('data-quote-text');
             
-            console.log('🔍 [DEBUG] Проверка цитаты перед отправкой:');
-            console.log('1. quotePreview найден?:', !!quotePreview);
-            console.log('2. Стиль display:', quotePreview.style.display);
-            console.log('3. data-quote-id:', quoteId);
-            console.log('4. data-quote-author:', quoteAuthor);
-            console.log('5. data-quote-text есть?:', !!quoteText);
-            console.log('6. Длина текста:', quoteText?.length);
-            
             if (quoteId && quoteAuthor && quoteText) {
                 messageData.replyTo = {
                     messageId: quoteId,
@@ -1883,37 +1836,17 @@ async sendMessage() {
                     text: quoteText
                 };
                 
-                console.log('✅ [SUCCESS] Цитата добавлена!');
-                console.log('   ID:', quoteId);
-                console.log('   Автор:', quoteAuthor);
-                console.log('   Текст:', quoteText.substring(0, 50) + (quoteText.length > 50 ? '...' : ''));
-            } else {
-                console.error('❌ [ERROR] Проблема с данными цитаты!');
-                console.log('   quoteId:', quoteId ? '✓' : '✗');
-                console.log('   quoteAuthor:', quoteAuthor ? '✓' : '✗');
-                console.log('   quoteText:', quoteText ? `✓ (${quoteText.length} симв.)` : '✗');
+                console.log('📨 Отправка сообщения с цитатой:', {
+                    id: quoteId,
+                    author: quoteAuthor,
+                    textPreview: quoteText.length > 30 ? quoteText.substring(0, 30) + '...' : quoteText
+                });
             }
-        } else {
-            console.log('ℹ️ [INFO] Цитата не выбрана или превью скрыто');
         }
-        
-        // Проверка перед отправкой в Firestore
-        console.log('📤 [SEND] Отправка сообщения в Firestore:');
-        console.log('   Текст сообщения:', messageData.text.substring(0, 50) + (messageData.text.length > 50 ? '...' : ''));
-        console.log('   Есть цитата (replyTo)?:', !!messageData.replyTo);
-        
-        if (messageData.replyTo) {
-            console.log('   Данные цитаты:', {
-                messageId: messageData.replyTo.messageId,
-                author: messageData.replyTo.author,
-                textLength: messageData.replyTo.text?.length
-            });
-        }
+        // === КОНЕЦ ОБРАБОТКИ ЦИТАТЫ ===
         
         await db.collection('rooms').doc(this.roomId)
             .collection('messages').add(messageData);
-            
-        console.log('🚀 [SUCCESS] Сообщение отправлено в Firestore!');
         
         // Очищаем поле ввода и цитату
         messageInput.value = '';
@@ -1922,6 +1855,9 @@ async sendMessage() {
         
         // Включаем авто-прокрутку при отправке
         this.shouldAutoScroll = true;
+        
+        // Показываем успешную отправку
+        showStatus("✅ Сообщение отправлено" + (messageData.replyTo ? " с цитатой" : ""), "success");
         
     } catch (error) {
         console.error("❌ Ошибка отправки сообщения:", error);
@@ -2147,92 +2083,52 @@ async deleteMessage(docId) {
 }
     // ========== ЦИТИРОВАНИЕ ==========
 startReplyToMessage(docId, messageData) {
-    console.log('========== START REPLY TO MESSAGE ==========');
-    console.log('📌 Полученные параметры:');
-    console.log('- docId:', docId);
-    console.log('- messageData:', messageData);
-    console.log('- Тип messageData:', typeof messageData);
+    console.log('🔗 Цитируем сообщение:', docId);
     
-    // Проверяем наличие quotePreview в DOM
     const quotePreview = document.getElementById('quotePreview');
-    console.log('- quotePreview найден?', !!quotePreview);
-    
-    if (!quotePreview) {
-        console.error('❌ БЛОК QUOTE PREVIEW НЕ НАЙДЕН В DOM!');
-        console.log('Проверь что HTML блок добавлен правильно');
-        return;
-    }
-    
-    if (!messageData) {
-        console.error('❌ messageData пустое или undefined');
-        return;
-    }
-    
-    // Показываем ВСЕ доступные поля в messageData
-    console.log('📊 Все поля messageData:');
-    for (let key in messageData) {
-        console.log(`  ${key}:`, messageData[key]);
-    }
-    
-    // Извлекаем данные с разными вариантами имен полей
-    const author = messageData.userName || 
-                  messageData.displayName || 
-                  messageData.author ||
-                  'Электрик';
-    
-    const text = messageData.text || 
-                messageData.message || 
-                messageData.content ||
-                '';
-    
-    console.log('📝 Извлеченные данные для цитаты:');
-    console.log('- Автор:', author);
-    console.log('- Текст (длина):', text.length, 'символов');
-    console.log('- Превью текста:', text.substring(0, 100) + (text.length > 100 ? '...' : ''));
-    
-    if (!text) {
-        console.error('❌ Текст сообщения пустой! Не могу создать цитату');
-        showStatus("Сообщение не содержит текста для цитирования", "error");
-        return;
-    }
-    
-    // Сохраняем данные в dataset (современный способ)
-    quotePreview.dataset.quoteId = docId;
-    quotePreview.dataset.quoteAuthor = author;
-    quotePreview.dataset.quoteText = text;
-    
-    console.log('💾 Данные сохранены в dataset:');
-    console.log('- data-quote-id:', quotePreview.dataset.quoteId);
-    console.log('- data-quote-author:', quotePreview.dataset.quoteAuthor);
-    console.log('- data-quote-text длина:', quotePreview.dataset.quoteText?.length);
-    
-    // Обновляем отображение
-    const quoteAuthorEl = document.getElementById('quoteAuthor');
-    const quoteTextEl = document.getElementById('quoteText');
-    
-    if (!quoteAuthorEl || !quoteTextEl) {
-        console.error('❌ Элементы quoteAuthor или quoteText не найдены!');
-        return;
-    }
-    
-    quoteAuthorEl.textContent = author;
-    
-    // Для превью обрезаем длинный текст
-    const previewText = text.length > 60 ? 
-        text.substring(0, 60) + '...' : 
-        text;
+    if (quotePreview) {
+        // Показываем превью
+        quotePreview.style.display = 'block';
         
-    quoteTextEl.textContent = previewText;
-    
-    // Показываем превью
-    quotePreview.style.display = 'block';
+        // Сохраняем данные
+        quotePreview.setAttribute('data-quote-id', docId);
+        quotePreview.setAttribute('data-quote-author', messageData.userName || 'Электрик');
+        quotePreview.setAttribute('data-quote-text', messageData.text);
+        
+        // Обновляем отображение
+        document.getElementById('quoteAuthor').textContent = 
+            messageData.userName || 'Электрик';
+        
+        // Для превью обрезаем длинный текст
+        const previewText = messageData.text.length > 60 ? 
+            messageData.text.substring(0, 60) + '...' : 
+            messageData.text;
+            
+        document.getElementById('quoteText').textContent = previewText;
+    }
     
     // Фокус на поле ввода
     this.messageInput.focus();
-    
-    console.log('✅ Цитата успешно установлена!');
-    console.log('==========================================');
 }
+
+cancelQuote() {
+    const quotePreview = document.getElementById('quotePreview');
+    if (quotePreview) {
+        quotePreview.style.display = 'none';
+        
+        // Очищаем все data-атрибуты
+        quotePreview.removeAttribute('data-quote-id');
+        quotePreview.removeAttribute('data-quote-author');
+        quotePreview.removeAttribute('data-quote-text');
+        
+        // Сбрасываем текст в превью
+        document.getElementById('quoteAuthor').textContent = 'Автор';
+        document.getElementById('quoteText').textContent = 'Текст цитаты...';
+        
+        console.log('❌ Цитата отменена');
+    }
+}
+
 // ========== ИСТОРИЯ ИЗМЕНЕНИЙ ==========
 async showEditHistory(docId) {
     try {
