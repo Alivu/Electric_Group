@@ -1040,6 +1040,14 @@
         <div class="messages-wrapper">
             <!-- Индикатор "печатает" -->
             <div class="typing-indicator" id="typingIndicator"></div>
+
+                        <div class="quote-preview" id="quotePreview" style="display: none;">
+                <div class="quote-content">
+                    <strong id="quoteAuthor">Автор</strong>
+                    <p id="quoteText">Текст цитаты...</p>
+                    <button class="cancel-quote-btn" id="cancelQuoteBtn">×</button>
+                </div>
+            </div>
             
             <!-- Сообщения -->
             <div class="messages-container" id="messagesContainer">
@@ -1060,6 +1068,23 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="onlineModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>👥 Участники онлайн</h3>
+                <button class="modal-close" id="closeOnlineModal">×</button>
+            </div>
+            <div class="modal-body" id="onlineUsersList">
+                <!-- Список загрузится через JS -->
+                <div class="loading">Загрузка...</div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn" id="closeOnlineModalBtn">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    
 <script>
 // ========== КОНФИГУРАЦИЯ FIREBASE ==========
 const firebaseConfig = {
@@ -1877,6 +1902,7 @@ async deleteMessage(docId) {
         }
     }
 }
+    
 // ========== ЗАПУСК ПРИЛОЖЕНИЯ ==========
 let chat;
 
