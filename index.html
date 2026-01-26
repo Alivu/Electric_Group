@@ -1649,6 +1649,69 @@ subscribeToMessages() {
             showStatus("Ошибка загрузки сообщений", "error");
         });
 }
+        // ========== ОТПРАВКА СООБЩЕНИЙ ==========
+    async sendMessage() {
+        if (!this.user) {
+            showStatus("Сначала войдите в систему", "error");
+            return;
+        }
+        
+        const messageInput = document.getElementById('messageInput');
+        if (!messageInput) {
+            console.error('Элемент messageInput не найден!');
+            return;
+        }
+        
+        const text = messageInput.value.trim();
+        if (!text) {
+            // Если есть цитата, но нет текста - очищаем цитату
+            this.cancelQuote();
+            return;
+        }
+        
+        try {
+            // Удаляем системное сообщение после первого отправленного сообщения
+            if (!this.firstMessageSent) {
+                this.firstMessageSent = true;
+                this.systemMessageRemoved = true;
+            }
+            
+            const messageData = {
+                text: text,
+                userId: this.user.uid,
+                userName: this.user.displayName || 'Электрик',
+                userEmail: this.user.email,
+                userPhoto: this.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.user.displayName || 'E')}&background=2c5364&color=fff`,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                isElectrician: true
+            };
+            
+            // Добавляем цитату если есть
+            const quotePreview = document.getElementById('quotePreview');
+            if (quotePreview && quotePreview.style.display === 'block') {
+                messageData.replyTo = {
+                    messageId: quotePreview.getAttribute('data-quote-id'),
+                    author: quotePreview.getAttribute('data-quote-author'),
+                    text: quotePreview.getAttribute('data-quote-text')
+                };
+            }
+            
+            await db.collection('rooms').doc(this.roomId)
+                .collection('messages').add(messageData);
+            
+            // Очищаем поле ввода и цитату
+            messageInput.value = '';
+            this.cancelQuote();
+            this.setTypingStatus(false);
+            
+            // Включаем авто-прокрутку при отправке
+            this.shouldAutoScroll = true;
+            
+        } catch (error) {
+            console.error("❌ Ошибка отправки сообщения:", error);
+            showStatus("Ошибка отправки сообщения: " + error.message, "error");
+        }
+    }
     
 displayMessage(message, docId) {
     const isOwnMessage = message.userId === this.user?.uid;
