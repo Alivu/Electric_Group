@@ -1602,81 +1602,53 @@ setupPullToRefresh() {
             });
     }
     
-    // ========== СООБЩЕНИЯ ==========
-    subscribeToMessages() {
-        this.unsubscribeMessages = db.collection('rooms').doc(this.roomId)
-            .collection('messages')
-            .orderBy('timestamp', 'asc')
-            .limit(100)
-            .onSnapshot((snapshot) => {
-                // Очищаем контейнер
-                this.messagesContainer.innerHTML = '';
-                
-                // Добавляем системное сообщение только если оно не было удалено
-                if (!this.systemMessageRemoved) {
-                    this.messagesContainer.innerHTML = `
-                        <div class="message system">
-                            <div class="message-content" style="text-align: center; background: #e9ecef; color: #666;">
-                                Добро пожаловать в профессиональный чат электриков! Начните общение.
-                            </div>
-                        </div>
-                    `;
-                }
-                
-snapshot.forEach((doc) => {
-    const message = doc.data();
-    this.displayMessage(message, doc.id);
-});
-                
-                // Прокручиваем вниз если нужно
-                setTimeout(() => {
-                    this.scrollToBottom();
-                }, 100);
-            }, (error) => {
-                console.error("❌ Ошибка загрузки сообщений:", error);
-                showStatus("Ошибка загрузки сообщений", "error");
-            });
-    }
+subscribeToMessages() {
+    console.log('🔵 subscribeToMessages ВЫЗВАН, roomId:', this.roomId);
+    console.log('Пользователь авторизован?', this.user ? 'Да' : 'Нет');
     
-    async sendMessage() {
-        if (!this.user) {
-            showStatus("Сначала войдите в систему", "error");
-            return;
-        }
-        
-        const text = this.messageInput.value.trim();
-        if (!text) return;
-        
-        try {
-            // Удаляем системное сообщение после первого отправленного сообщения
-            if (!this.firstMessageSent) {
-                this.firstMessageSent = true;
-                this.systemMessageRemoved = true;
+    this.unsubscribeMessages = db.collection('rooms').doc(this.roomId)
+        .collection('messages')
+        .orderBy('timestamp', 'asc')
+        .limit(100)
+        .onSnapshot((snapshot) => {
+            console.log('🟢 onSnapshot сработал!', {
+                size: snapshot.size,
+                empty: snapshot.empty,
+                docsCount: snapshot.docs.length,
+                hasData: !snapshot.empty
+            });
+            
+            // Очищаем контейнер
+            this.messagesContainer.innerHTML = '';
+            
+            // Добавляем системное сообщение только если оно не было удалено
+            if (!this.systemMessageRemoved) {
+                console.log('🟡 Добавляем системное сообщение');
+                this.messagesContainer.innerHTML = `
+                    <div class="message system">
+                        <div class="message-content" style="text-align: center; background: #e9ecef; color: #666;">
+                            Добро пожаловать в профессиональный чат электриков! Начните общение.
+                        </div>
+                    </div>
+                `;
             }
             
-            await db.collection('rooms').doc(this.roomId)
-                .collection('messages').add({
-                    text: text,
-                    userId: this.user.uid,
-                    userName: this.user.displayName || 'Электрик',
-                    userEmail: this.user.email,
-                    userPhoto: this.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.user.displayName || 'E')}&background=2c5364&color=fff`,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    isElectrician: true
-                });
+            snapshot.forEach((doc) => {
+                console.log('📄 Обработка документа:', doc.id, doc.data());
+                const message = doc.data();
+                this.displayMessage(message, doc.id);
+            });
             
-            // Очищаем поле ввода
-            this.messageInput.value = '';
-            this.setTypingStatus(false);
-            
-            // Включаем авто-прокрутку при отправке
-            this.shouldAutoScroll = true;
-            
-        } catch (error) {
-            console.error("❌ Ошибка отправки сообщения:", error);
-            showStatus("Ошибка отправки сообщения: " + error.message, "error");
-        }
-    }
+            // Прокручиваем вниз если нужно
+            setTimeout(() => {
+                this.scrollToBottom();
+            }, 100);
+        }, (error) => {
+            console.error("❌ Ошибка загрузки сообщений:", error);
+            console.error("Детали ошибки:", error.code, error.message);
+            showStatus("Ошибка загрузки сообщений", "error");
+        });
+}
     
 displayMessage(message, docId) {
     const isOwnMessage = message.userId === this.user?.uid;
