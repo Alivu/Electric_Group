@@ -1773,15 +1773,6 @@ subscribeToMessages() {
             
             // Прокручиваем вниз если нужно
             setTimeout(() => {
-                this.scrollToBottom();
-            }, 100);
-        }, (error) => {
-            console.error("❌ Ошибка загрузки сообщений:", error);
-            console.error("Детали ошибки:", error.code, error.message);
-            showStatus("Ошибка загрузки сообщений", "error");
-        });
-}
-        // ========== ОТПРАВКА СООБЩЕНИЙ ==========
 async sendMessage() {
     if (!this.user) {
         showStatus("Сначала войдите в систему", "error");
@@ -1866,19 +1857,6 @@ async sendMessage() {
         console.log('🚀 Сообщение отправлено!');
         console.log('==========================================');
         
-        // ... остальной код ...
-        
-    } catch (error) {
-        console.error("❌ Ошибка отправки:", error);
-        showStatus("Ошибка: " + error.message, "error");
-    }
-}
-        
-        await db.collection('rooms').doc(this.roomId)
-            .collection('messages').add(messageData);
-            
-        console.log('🚀 [SUCCESS] Сообщение отправлено в Firestore!');
-        
         // Очищаем поле ввода и цитату
         messageInput.value = '';
         this.cancelQuote();
@@ -1886,6 +1864,9 @@ async sendMessage() {
         
         // Включаем авто-прокрутку при отправке
         this.shouldAutoScroll = true;
+        
+        // Показываем успешную отправку
+        showStatus("✅ Сообщение отправлено" + (messageData.replyTo ? " с цитатой" : ""), "success");
         
     } catch (error) {
         console.error("❌ Ошибка отправки сообщения:", error);
