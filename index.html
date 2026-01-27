@@ -1963,10 +1963,13 @@ addMessageActions(messageEl, messageData, docId) {
     console.log('Текущий пользователь:', this.user?.uid);
     const isOwnMessage = messageData.userId === this.user?.uid;
     console.log('Это свое сообщение?:', isOwnMessage);
-    // Кнопки для ВСЕХ сообщений
-    let buttonsHtml = `
-        <button class="reply-btn" data-id="${docId}" title="Ответить">Ответить</button>
-    `;
+// Кнопки для ВСЕХ сообщений
+let buttonsHtml = `
+    <button class="reply-btn" data-id="${docId}" 
+            style="background: none; border: none; color: #2c5364; cursor: pointer; padding: 4px 8px; font-size: 0.85em; text-decoration: underline;">
+        Ответить
+    </button>
+`;
     
     // Дополнительные кнопки только для СВОИХ сообщений
     if (isOwnMessage) {
