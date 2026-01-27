@@ -1771,6 +1771,7 @@ subscribeToMessages() {
                 this.displayMessage(message, doc.id);
             });
             
+            // Прокручиваем вниз если нужно
             setTimeout(() => {
                 this.scrollToBottom();  // ← ДОБАВЬ ЭТО!
             }, 100);  // ← И ЭТО!
