@@ -2024,13 +2024,13 @@ startEditMessage(docId, messageData) {
     const originalText = messageData.text;
     
     // Создаем поле редактирования
-    const editHtml = `
-        <textarea class="edit-input" maxlength="1000">${originalText}</textarea>
-        <div class="edit-buttons">
-            <button class="cancel-btn">Отмена</button>
-            <button class="save-btn">Сохранить</button>
-        </div>
-    `;
+const editHtml = `
+    <textarea class="edit-input" maxlength="1000">${escapeHtml(originalText)}</textarea>
+    <div class="edit-buttons">
+        <button class="cancel-btn">Отмена</button>
+        <button class="save-btn">Сохранить</button>
+    </div>
+`;
     
     contentEl.innerHTML = editHtml;
     
@@ -2091,7 +2091,7 @@ cancelEdit(docId, originalText) {
     messageEl.classList.remove('editing');
     
     const contentEl = messageEl.querySelector('.message-content');
-    contentEl.innerHTML = this.escapeHtml(originalText);
+    contentEl.innerHTML = escapeHtml(originalText);
     
     // Восстанавливаем действия
     this.addMessageActions(messageEl, { userId: this.user.uid }, docId);
