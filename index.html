@@ -19,15 +19,17 @@
     background: rgba(44, 83, 100, 0.1);
     border-left: 4px solid #2c5364;
     padding: 12px 15px;
-    margin: 0;
-    border-radius: 8px 8px 0 0; /* Скругление только сверху */
-    position: fixed; /* ← ИЗМЕНИ НА fixed */
-    bottom: 70px; /* ← Расположи над полем ввода */
-    left: 25px;
-    right: 25px;
-    z-index: 100; /* ← Поверх других элементов */
+    border-radius: 8px;
+    position: fixed; /* или absolute */
+    bottom: 80px; /* Над полем ввода */
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 50px); /* Ширина минус отступы */
+    max-width: 800px; /* Ограничиваем максимальную ширину */
+    z-index: 100;
     display: none;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1); /* ← Тень сверху */
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    box-sizing: border-box; /* Важно! */
 }
 
 .quote-content {
