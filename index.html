@@ -1918,7 +1918,7 @@ displayMessage(message, docId) {
         quoteHtml = `
             <div class="quoted-message">
                 <span class="quote-author">${message.replyTo.author || 'Электрик'}:</span>
-                <span class="quote-text">${escapeHtml(shortText)}</span>  // ← БЕЗ this.
+                <span class="quote-text">${escapeHtml(shortText)}</span>
             </div>
         `;
         
@@ -1943,7 +1943,7 @@ displayMessage(message, docId) {
             <span class="message-time">${messageTime} ${editedBadge}</span>
         </div>
         ${quoteHtml}
-        <div class="message-content">${escapeHtml(message.text || '')}</div>  // ← БЕЗ this.
+        <div class="message-content">${escapeHtml(message.text || '')}</div>
     `;
     
     console.log('📝 HTML сообщения создан');
