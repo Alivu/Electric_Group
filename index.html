@@ -19,10 +19,15 @@
     background: rgba(44, 83, 100, 0.1);
     border-left: 4px solid #2c5364;
     padding: 12px 15px;
-    margin: 0 25px 15px;
-    border-radius: 8px;
-    position: relative;
-    display: none; /* По умолчанию скрыто */
+    margin: 0;
+    border-radius: 8px 8px 0 0; /* Скругление только сверху */
+    position: fixed; /* ← ИЗМЕНИ НА fixed */
+    bottom: 70px; /* ← Расположи над полем ввода */
+    left: 25px;
+    right: 25px;
+    z-index: 100; /* ← Поверх других элементов */
+    display: none;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1); /* ← Тень сверху */
 }
 
 .quote-content {
@@ -71,8 +76,25 @@
 
 @media (max-width: 768px) {
     .quote-preview {
-        margin: 0 15px 10px;
+        position: fixed; /* ← ФИКСИРУЕМ НАД КЛАВИАТУРОЙ */
+        bottom: 60px; /* ← ВЫШЕ ПОЛЯ ВВОДА */
+        left: 15px;
+        right: 15px;
+        margin: 0 !important; /* ← УБИРАЕМ ВСЕ ОТСТУПЫ */
         padding: 10px 12px;
+        z-index: 1000; /* ← ПОВЫШАЕМ Z-INDEX */
+        border-radius: 8px 8px 0 0; /* ← СКРУГЛЕНИЕ СВЕРХУ */
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1); /* ← ТЕНЬ СВЕРХУ */
+    }
+    
+    /* Увеличиваем отступ для сообщений чтобы не перекрывало */
+    .messages-container {
+        padding-bottom: 120px !important; /* ← БОЛЬШЕ МЕСТА */
+    }
+    
+    /* Поднимаем поле ввода выше если есть клавиатура */
+    .message-input-area {
+        padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
     }
 }
 
@@ -669,6 +691,7 @@
             gap: 15px;
             align-items: center;
             flex-shrink: 0;
+            position: relative;
         }
 
         .message-input {
