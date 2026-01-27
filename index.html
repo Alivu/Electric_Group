@@ -1922,7 +1922,7 @@ displayMessage(message, docId) {
             </div>
         `;
         
-        console.log('✅ HTML цитаты создан');
+        console.log('✅ HTML цитаты создан:', quoteHtml);
     } else {
         console.log('ℹ️ Цитаты нет в сообщении');
     }
@@ -1946,7 +1946,7 @@ displayMessage(message, docId) {
         <div class="message-content">${escapeHtml(message.text || '')}</div>
     `;
     
-    console.log('📝 HTML сообщения создан');
+    console.log('📝 Весь HTML сообщения:', messageEl.innerHTML);
     
     this.messagesContainer.appendChild(messageEl);
     this.addMessageActions(messageEl, message, docId);
