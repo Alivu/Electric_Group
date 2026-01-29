@@ -1335,13 +1335,15 @@ class ElectricianChat {
         this.userScrolledUp = false;
         this.systemMessageRemoved = false;
         this.isRefreshing = false;
-                // ДОБАВЬТЕ ЭТИ СТРОЧКИ ↓
-        this.lastMessageTime = 0; // Время последнего сообщения
-        this.messageCooldown = 3000; // 3 секунды задержки (в миллисекундах)
-        this.isSending = false; // Флаг отправки
-                // ========== ОФФЛАЙН РЕЖИМ ПЕРЕМЕННЫЕ ==========
-        this.isOnline = navigator.onLine; // Статус подключения
-        this.offlineMessages = []; // Сообщения в оффлайне
+        
+        // ========== RATE LIMITING ПЕРЕМЕННЫЕ ==========
+        this.lastMessageTime = 0;
+        this.messageCooldown = 3000;
+        this.isSending = false;
+        
+        // ========== ОФФЛАЙН РЕЖИМ ПЕРЕМЕННЫЕ ==========
+        this.isOnline = navigator.onLine;
+        this.offlineMessages = [];
         
         // Восстанавливаем оффлайн сообщения из localStorage
         try {
@@ -1353,7 +1355,14 @@ class ElectricianChat {
         } catch (e) {
             console.error("Ошибка восстановления оффлайн сообщений:", e);
         }
-        // ========== КОНЕЦ ОФФЛАЙН РЕЖИМА ==========
+        
+        // ========== ПАГИНАЦИЯ ==========
+        this.messagesLimit = 30; // Сообщений на страницу
+        this.lastVisibleMessage = null; // Последнее загруженное сообщение
+        this.hasMoreMessages = true; // Есть ли еще сообщения
+        this.isLoadingMessages = false; // Загружаем ли сейчас
+        // ========== КОНЕЦ ПАГИНАЦИИ ==========
+        
         // Проверяем инициализацию Firebase
         if (!auth || !db) {
             console.warn("⚠️ Firebase еще не инициализирован, ждем...");
@@ -1817,63 +1826,141 @@ setupPullToRefresh() {
         }
     }
     
-    loadOnlineUsers() {
-        this.unsubscribeOnline = db.collection('rooms').doc(this.roomId)
-            .collection('online')
-            .onSnapshot((snapshot) => {
-                const onlineCount = snapshot.size;
-                this.onlineCount.textContent = onlineCount;
-                this.activeOnlineCount.textContent = onlineCount;
-            }, (error) => {
-                console.error("❌ Ошибка загрузки онлайн пользователей:", error);
-            });
+subscribeToMessages() {
+    console.log('🔵 subscribeToMessages ВЫЗВАН');
+    
+    // ... код метода ...
+    
+    // Слушаем новые сообщения в реальном времени
+    this.subscribeToNewMessages();
+}
+
+// ========== ПАГИНАЦИЯ СООБЩЕНИЙ ==========
+async loadMoreMessages() {
+    if (this.isLoadingMessages || !this.hasMoreMessages) {
+        return;
     }
     
-subscribeToMessages() {
-    console.log('🔵 subscribeToMessages ВЫЗВАН, roomId:', this.roomId);
-    console.log('Пользователь авторизован?', this.user ? 'Да' : 'Нет');
+    this.isLoadingMessages = true;
     
-    this.unsubscribeMessages = db.collection('rooms').doc(this.roomId)
-        .collection('messages')
-        .orderBy('timestamp', 'asc')
-        .limit(100)
-        .onSnapshot((snapshot) => {
-            console.log('🟢 onSnapshot сработал!', {
-                size: snapshot.size,
-                empty: snapshot.empty,
-                docsCount: snapshot.docs.length,
-                hasData: !snapshot.empty
-            });
-            
-            // Очищаем контейнер
-            this.messagesContainer.innerHTML = '';
-            
-            // Добавляем системное сообщение только если оно не было удалено
-            if (!this.systemMessageRemoved) {
-                console.log('🟡 Добавляем системное сообщение');
-                this.messagesContainer.innerHTML = `
-                    <div class="message system">
-                        <div class="message-content" style="text-align: center; background: #e9ecef; color: #666;">
-                            Добро пожаловать в профессиональный чат электриков! Начните общение.
-                        </div>
+    try {
+        let query = db.collection('rooms').doc(this.roomId)
+            .collection('messages')
+            .orderBy('timestamp', 'desc')
+            .limit(this.messagesLimit);
+        
+        // Если есть последнее сообщение, начинаем с него
+        if (this.lastVisibleMessage) {
+            query = query.startAfter(this.lastVisibleMessage);
+        }
+        
+        const snapshot = await query.get();
+        
+        if (snapshot.empty) {
+            this.hasMoreMessages = false;
+            console.log("📭 Нет больше сообщений");
+            return;
+        }
+        
+        // Сохраняем последнее сообщение для следующей страницы
+        this.lastVisibleMessage = snapshot.docs[snapshot.docs.length - 1];
+        
+        // Добавляем сообщения в обратном порядке (новые вниз)
+        const messages = [];
+        snapshot.forEach(doc => {
+            messages.unshift({ id: doc.id, data: doc.data() });
+        });
+        
+        // Отображаем сообщения
+        this.displayMessages(messages);
+        
+        // Если загрузили меньше чем лимит, значит больше нет
+        if (snapshot.size < this.messagesLimit) {
+            this.hasMoreMessages = false;
+        }
+        
+    } catch (error) {
+        console.error("❌ Ошибка загрузки сообщений:", error);
+        showStatus("Ошибка загрузки сообщений", "error");
+    } finally {
+        this.isLoadingMessages = false;
+    }
+}
+
+// ========== ОТОБРАЖЕНИЕ СООБЩЕНИЙ ==========
+displayMessages(messages) {
+    // Если это первая загрузка, очищаем контейнер
+    if (!this.lastVisibleMessage) {
+        this.messagesContainer.innerHTML = '';
+        
+        // Добавляем системное сообщение только если оно не было удалено
+        if (!this.systemMessageRemoved) {
+            this.messagesContainer.innerHTML = `
+                <div class="message system">
+                    <div class="message-content" style="text-align: center; background: #e9ecef; color: #666;">
+                        Добро пожаловать в профессиональный чат электриков! Начните общение.
                     </div>
-                `;
-            }
-            
-            snapshot.forEach((doc) => {
-                console.log('📄 Обработка документа:', doc.id, doc.data());
-                const message = doc.data();
-                this.displayMessage(message, doc.id);
+                </div>
+            `;
+        }
+    }
+    
+    // Добавляем каждое сообщение
+    messages.forEach(msg => {
+        this.displayMessage(msg.data, msg.id);
+    });
+    
+    // Прокручиваем вниз если нужно
+    if (!this.lastVisibleMessage || this.shouldAutoScroll) {
+        setTimeout(() => {
+            this.scrollToBottom();
+        }, 100);
+    }
+}
+
+// ========== БЕСКОНЕЧНАЯ ПРОКРУТКА ==========
+setupInfiniteScroll() {
+    this.messagesContainer.addEventListener('scroll', () => {
+        const container = this.messagesContainer;
+        const scrollTop = container.scrollTop;
+        
+        // Если прокрутили вверх и близко к верху, загружаем еще
+        if (scrollTop < 100 && !this.isLoadingMessages && this.hasMoreMessages) {
+            console.log("⬆️ Загружаем предыдущие сообщения...");
+            this.loadMoreMessages();
+        }
+        
+        // Вызываем handleScroll для авто-прокрутки
+        this.handleScroll();
+    });
+}
+
+// ========== СЛУШАТЕЛЬ НОВЫХ СООБЩЕНИЙ ==========
+subscribeToNewMessages() {
+    // Отписываемся от предыдущего слушателя
+    if (this.unsubscribeNewMessages) {
+        this.unsubscribeNewMessages();
+    }
+    
+    // Слушаем только новые сообщения
+    this.unsubscribeNewMessages = db.collection('rooms').doc(this.roomId)
+        .collection('messages')
+        .orderBy('timestamp', 'desc')
+        .limit(10) // Только последние 10 сообщений
+        .onSnapshot((snapshot) => {
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === 'added') {
+                    const message = change.doc.data();
+                    const docId = change.doc.id;
+                    
+                    // Проверяем, не отображается ли уже
+                    if (!document.querySelector(`[data-message-id="${docId}"]`)) {
+                        this.displayMessage(message, docId);
+                    }
+                }
             });
-            
-            // Прокручиваем вниз если нужно
-            setTimeout(() => {
-                this.scrollToBottom();  // ← ДОБАВЬ ЭТО!
-            }, 100);  // ← И ЭТО!
         }, (error) => {
-            console.error("❌ Ошибка загрузки сообщений:", error);
-            console.error("Детали ошибки:", error.code, error.message);
-            showStatus("Ошибка загрузки сообщений", "error");
+            console.error("❌ Ошибка подписки на новые сообщения:", error);
         });
 }
 async sendMessage() {
