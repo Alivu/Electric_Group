@@ -1585,7 +1585,8 @@ setupEventListeners() {
         modalOverlay.addEventListener('click', (e) => {
             if (e.target === modalOverlay) {
                 modalOverlay.style.display = 'none';
-            }
+             });
+         }
     
         // Отмена цитаты по клавише ESC
         document.addEventListener('keydown', (e) => {
@@ -1598,7 +1599,7 @@ setupEventListeners() {
                 }
             }
         });
-
+    }
 // ========== PULL-TO-REFRESH ФУНКЦИОНАЛЬНОСТЬ ==========
 setupPullToRefresh() {
     const header = document.querySelector('.chat-header');
