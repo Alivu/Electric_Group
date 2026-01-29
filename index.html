@@ -1242,6 +1242,20 @@ function initializeFirebase() {
 
         try {
             const app = firebase.initializeApp(firebaseConfig);
+            
+            // ========== НАЧАЛО APP CHECK ==========
+            // Инициализируем App Check с reCAPTCHA v3
+            const appCheck = firebase.appCheck();
+            
+            // ВСТАВЬТЕ ВАШ КЛЮЧ 6LcVcVosAAAAAIHbEnVRp4TZ8vEk22NkZoELUmQ2
+            appCheck.activate(
+                '6LcVcVosAAAAAIHbEnVRp4TZ8vEk22NkZoELUmQ2', // ← ВАШ КЛЮЧ
+                true
+            );
+            
+            console.log("✅ App Check активирован");
+            // ========== КОНЕЦ APP CHECK ==========
+            
             auth = firebase.auth();
             db = firebase.firestore();
             
@@ -1254,7 +1268,7 @@ function initializeFirebase() {
             });
             
             console.log("✅ Firebase инициализирован");
-            resolve({ auth, db, googleProvider });
+            resolve({ auth, db, googleProvider, appCheck });
         } catch (error) {
             console.error("❌ Ошибка Firebase:", error);
             reject(error);
