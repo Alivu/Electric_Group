@@ -1594,11 +1594,13 @@ setupEventListeners() {
                 if (quotePreview && quotePreview.style.display === 'block') {
                     this.cancelQuote();
                     this.messageInput.focus();
-                    )
+                    
                 }
             }
         });
     }
+}
+
 // ========== PULL-TO-REFRESH ФУНКЦИОНАЛЬНОСТЬ ==========
 setupPullToRefresh() {
     const header = document.querySelector('.chat-header');
