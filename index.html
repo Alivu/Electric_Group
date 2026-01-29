@@ -16,6 +16,320 @@
 <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin">
 <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp">
     <style>
+
+/* ====== СТИЛИ ДЛЯ АУДИОЗАПИСИ ====== */
+
+/* Кнопка записи */
+.audio-btn {
+    background: linear-gradient(135deg, #FF9800 0%, #FF5722 100%);
+    color: white;
+    border: none;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-right: 5px;
+}
+
+.audio-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
+}
+
+.audio-btn.recording {
+    background: #dc3545;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* Оверлей записи */
+.audio-recording-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.audio-recording-modal {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.recording-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.recording-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.recording-dot {
+    width: 12px;
+    height: 12px;
+    background: #dc3545;
+    border-radius: 50%;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
+}
+
+.recording-timer {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #2c5364;
+    font-family: monospace;
+}
+
+/* Визуализатор аудио */
+.audio-visualizer {
+    height: 100px;
+    margin: 25px 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 3px;
+}
+
+.visualizer-bar {
+    width: 8px;
+    background: linear-gradient(to top, #2c5364, #4CAF50);
+    border-radius: 4px 4px 0 0;
+    min-height: 5px;
+}
+
+/* Контролы записи */
+.recording-controls {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 25px;
+}
+
+.cancel-recording-btn, .stop-recording-btn {
+    padding: 12px 25px;
+    border-radius: 25px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 1rem;
+}
+
+.cancel-recording-btn {
+    background: #f8f9fa;
+    color: #666;
+    border: 2px solid #ddd;
+}
+
+.cancel-recording-btn:hover {
+    background: #e9ecef;
+    transform: translateY(-2px);
+}
+
+.stop-recording-btn {
+    background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+    color: white;
+    border: 2px solid #4CAF50;
+}
+
+.stop-recording-btn:hover {
+    background: linear-gradient(135deg, #45a049 0%, #1B5E20 100%);
+    transform: translateY(-2px);
+}
+
+.recording-tip {
+    margin-top: 20px;
+    color: #666;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+/* Превью аудио */
+.audio-preview-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.audio-preview-modal {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
+}
+
+.audio-preview-modal h3 {
+    color: #2c5364;
+    margin-bottom: 25px;
+}
+
+.audio-player {
+    margin: 25px 0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    justify-content: center;
+}
+
+.audio-player audio {
+    flex: 1;
+    max-width: 300px;
+}
+
+.audio-duration {
+    font-weight: bold;
+    color: #2c5364;
+    min-width: 50px;
+}
+
+.preview-controls {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin: 25px 0;
+}
+
+.delete-audio-btn, .send-audio-btn {
+    padding: 12px 30px;
+    border-radius: 25px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 1rem;
+}
+
+.delete-audio-btn {
+    background: #f8f9fa;
+    color: #dc3545;
+    border: 2px solid #dc3545;
+}
+
+.delete-audio-btn:hover {
+    background: #dc3545;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.send-audio-btn {
+    background: linear-gradient(135deg, #2c5364 0%, #203a43 100%);
+    color: white;
+    border: 2px solid #2c5364;
+}
+
+.send-audio-btn:hover {
+    background: linear-gradient(135deg, #203a43 0%, #0f2027 100%);
+    transform: translateY(-2px);
+}
+
+.audio-info {
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+/* Стиль для аудиосообщений в чате */
+.audio-message {
+    margin-top: 10px;
+    background: #f8f9fa;
+    border-radius: 15px;
+    padding: 15px;
+    border: 1px solid #e9ecef;
+}
+
+.audio-message audio {
+    width: 100%;
+    max-width: 300px;
+}
+
+.audio-message-info {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 8px;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 768px) {
+    .audio-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+        margin-right: 8px;
+    }
+    
+    .audio-recording-modal {
+        padding: 20px;
+        margin: 15px;
+        width: calc(100% - 30px);
+    }
+    
+    .recording-controls {
+        flex-direction: column;
+    }
+    
+    .cancel-recording-btn, .stop-recording-btn {
+        width: 100%;
+    }
+    
+    .audio-player {
+        flex-direction: column;
+    }
+    
+    .preview-controls {
+        flex-direction: column;
+    }
+    
+    .delete-audio-btn, .send-audio-btn {
+        width: 100%;
+    }
+}
+
+        
 /* ====== СТИЛИ ДЛЯ ПРЕВЬЮ ЦИТАТЫ НАД ПОЛЕМ ВВОДА ====== */
 .quote-preview {
     background: rgba(44, 83, 100, 0.1);
@@ -1193,6 +1507,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app-check.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 </head>
 <body>
     <!-- Экран входа -->
@@ -1274,14 +1589,75 @@
             </div>
             
             <!-- Поле ввода -->
-            <div class="message-input-area">
-                <input type="text" class="message-input" id="messageInput" 
-                       placeholder="Напишите сообщение..." maxlength="1000">
-                <button class="send-btn" id="sendMessageBtn">➤</button>
+<div class="message-input-area">
+    <!-- Кнопка записи аудио -->
+    <button class="audio-btn" id="audioRecordBtn" title="Записать аудиосообщение">
+        🎤
+    </button>
+    
+    <input type="text" class="message-input" id="messageInput" 
+           placeholder="Напишите сообщение..." maxlength="1000">
+    
+    <button class="send-btn" id="sendMessageBtn">➤</button>
+</div>
+
+<!-- Индикатор записи аудио -->
+<div class="audio-recording-overlay" id="audioRecordingOverlay" style="display: none;">
+    <div class="audio-recording-modal">
+        <div class="recording-header">
+            <div class="recording-indicator">
+                <span class="recording-dot"></span>
+                <span>Запись...</span>
             </div>
+            <div class="recording-timer" id="recordingTimer">00:00</div>
+        </div>
+        
+        <div class="audio-visualizer" id="audioVisualizer">
+            <!-- Визуализатор будет здесь -->
+        </div>
+        
+        <div class="recording-controls">
+            <button class="cancel-recording-btn" id="cancelRecordingBtn">
+                ❌ Отмена
+            </button>
+            <button class="stop-recording-btn" id="stopRecordingBtn">
+                ⏹️ Завершить (0:30)
+            </button>
+        </div>
+        
+        <div class="recording-tip">
+            🎤 Говорите четко. Максимум 60 секунд.
         </div>
     </div>
+</div>
 
+<!-- Превью аудио перед отправкой -->
+<div class="audio-preview-overlay" id="audioPreviewOverlay" style="display: none;">
+    <div class="audio-preview-modal">
+        <h3>🎧 Прослушать аудиосообщение</h3>
+        
+        <div class="audio-player">
+            <audio controls id="audioPreviewPlayer">
+                Ваш браузер не поддерживает аудио.
+            </audio>
+            <div class="audio-duration" id="audioDuration">0:00</div>
+        </div>
+        
+        <div class="preview-controls">
+            <button class="delete-audio-btn" id="deleteAudioBtn">
+                ❌ Удалить
+            </button>
+            <button class="send-audio-btn" id="sendAudioBtn">
+                ✅ Отправить
+            </button>
+        </div>
+        
+        <div class="audio-info">
+            Размер: <span id="audioSize">0 KB</span>
+            | Длина: <span id="audioLength">0 сек</span>
+        </div>
+    </div>
+</div>
     <div class="modal-overlay" id="onlineModal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
@@ -1339,6 +1715,7 @@ function initializeFirebase() {
             
             auth = firebase.auth();
             db = firebase.firestore();
+            const storage = firebase.storage();
                         // ========== ВКЛЮЧАЕМ ОФФЛАЙН РЕЖИМ ==========
             // Включаем кэширование данных для оффлайн работы
             db.enablePersistence()
@@ -1413,6 +1790,18 @@ class ElectricianChat {
         this.lastMessageTime = 0;
         this.messageCooldown = 3000;
         this.isSending = false;
+
+        // ========== ПЕРЕМЕННЫЕ ДЛЯ АУДИО ==========
+        this.mediaRecorder = null;
+        this.audioChunks = [];
+        this.isRecording = false;
+        this.recordingStartTime = null;
+        this.recordingTimer = null;
+        this.maxRecordingTime = 60000; // 60 секунд максимально
+        this.currentAudioBlob = null;
+        this.audioContext = null;
+        this.analyser = null;
+        this.visualizerInterval = null;
         
         // ========== ОФФЛАЙН РЕЖИМ ПЕРЕМЕННЫЕ ==========
         this.isOnline = navigator.onLine;
@@ -1486,23 +1875,365 @@ class ElectricianChat {
         
         console.log("✅ Чат инициализирован");
     }
-     // ========== ОБНОВЛЕНИЕ КНОПКИ ОТПРАВКИ ==========
-    updateSendButton(isSending) {
-        const sendBtn = document.getElementById('sendMessageBtn');
-        if (!sendBtn) return;
+
+            // ========== ОБРАБОТЧИКИ АУДИО ==========
+        const audioRecordBtn = document.getElementById('audioRecordBtn');
+        const cancelRecordingBtn = document.getElementById('cancelRecordingBtn');
+        const stopRecordingBtn = document.getElementById('stopRecordingBtn');
+        const deleteAudioBtn = document.getElementById('deleteAudioBtn');
+        const sendAudioBtn = document.getElementById('sendAudioBtn');
         
-        if (isSending) {
-            sendBtn.innerHTML = "⏳";
-            sendBtn.style.opacity = "0.7";
-            sendBtn.style.cursor = "not-allowed";
-            sendBtn.disabled = true;
-        } else {
-            sendBtn.innerHTML = "➤";
-            sendBtn.style.opacity = "1";
-            sendBtn.style.cursor = "pointer";
-            sendBtn.disabled = false;
+        if (audioRecordBtn) {
+            audioRecordBtn.addEventListener('click', () => this.toggleAudioRecording());
+        }
+        
+        if (cancelRecordingBtn) {
+            cancelRecordingBtn.addEventListener('click', () => this.cancelAudioRecording());
+        }
+        
+        if (stopRecordingBtn) {
+            stopRecordingBtn.addEventListener('click', () => this.stopAudioRecording());
+        }
+        
+        if (deleteAudioBtn) {
+            deleteAudioBtn.addEventListener('click', () => this.deleteAudioPreview());
+        }
+        
+        if (sendAudioBtn) {
+            sendAudioBtn.addEventListener('click', () => this.sendAudioMessage());
+        }
+        
+        // Завершаем запись при достижении лимита
+        setTimeout(() => {
+            if (this.isRecording) {
+                this.stopAudioRecording();
+            }
+        }, this.maxRecordingTime);
+    }
+    
+    // ========== ЗАПИСЬ АУДИО ==========
+    async toggleAudioRecording() {
+        if (this.isRecording) {
+            this.stopAudioRecording();
+            return;
+        }
+        
+        try {
+            // Запрашиваем доступ к микрофону
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                } 
+            });
+            
+            this.startAudioRecording(stream);
+            
+        } catch (error) {
+            console.error("❌ Ошибка доступа к микрофону:", error);
+            this.showAudioError(error);
         }
     }
+    
+    startAudioRecording(stream) {
+        this.audioChunks = [];
+        this.isRecording = true;
+        
+        // Обновляем UI
+        const audioBtn = document.getElementById('audioRecordBtn');
+        if (audioBtn) audioBtn.classList.add('recording');
+        
+        // Показываем оверлей записи
+        document.getElementById('audioRecordingOverlay').style.display = 'flex';
+        
+        // Создаем MediaRecorder
+        this.mediaRecorder = new MediaRecorder(stream, {
+            mimeType: 'audio/webm;codecs=opus'
+        });
+        
+        // Обработчик данных
+        this.mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                this.audioChunks.push(event.data);
+            }
+        };
+        
+        // Запускаем запись
+        this.mediaRecorder.start(100); // Собираем данные каждые 100ms
+        
+        // Запускаем таймер
+        this.startRecordingTimer();
+        
+        // Запускаем визуализатор
+        this.startAudioVisualizer(stream);
+        
+        // Ограничиваем максимальное время записи
+        setTimeout(() => {
+            if (this.isRecording) {
+                this.stopAudioRecording();
+            }
+        }, this.maxRecordingTime);
+    }
+    
+    startRecordingTimer() {
+        this.recordingStartTime = Date.now();
+        const timerElement = document.getElementById('recordingTimer');
+        const stopButton = document.getElementById('stopRecordingBtn');
+        
+        this.recordingTimer = setInterval(() => {
+            const elapsed = Date.now() - this.recordingStartTime;
+            const seconds = Math.floor(elapsed / 1000);
+            const remaining = Math.max(0, 60 - seconds);
+            
+            // Обновляем таймер
+            if (timerElement) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                timerElement.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+            
+            // Обновляем кнопку
+            if (stopButton) {
+                stopButton.textContent = `⏹️ Завершить (${remaining})`;
+                
+                // Меняем цвет когда осталось мало времени
+                if (remaining <= 10) {
+                    stopButton.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
+                }
+            }
+            
+            // Автоматически останавливаем при достижении лимита
+            if (seconds >= 60) {
+                this.stopAudioRecording();
+            }
+            
+        }, 1000);
+    }
+    
+    startAudioVisualizer(stream) {
+        // Создаем контекст для визуализации
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        this.analyser = this.audioContext.createAnalyser();
+        const source = this.audioContext.createMediaStreamSource(stream);
+        
+        source.connect(this.analyser);
+        this.analyser.fftSize = 256;
+        
+        // Создаем визуализатор
+        const bufferLength = this.analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        const visualizer = document.getElementById('audioVisualizer');
+        
+        if (visualizer) {
+            visualizer.innerHTML = '';
+            
+            // Создаем бары
+            for (let i = 0; i < 32; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'visualizer-bar';
+                bar.style.height = '5px';
+                visualizer.appendChild(bar);
+            }
+            
+            // Обновляем анимацию
+            this.visualizerInterval = setInterval(() => {
+                if (!this.isRecording) return;
+                
+                this.analyser.getByteFrequencyData(dataArray);
+                const bars = visualizer.querySelectorAll('.visualizer-bar');
+                
+                bars.forEach((bar, i) => {
+                    const value = dataArray[i * 2] || 0;
+                    const height = 5 + (value / 255) * 95;
+                    bar.style.height = `${height}px`;
+                    bar.style.opacity = 0.5 + (value / 255) * 0.5;
+                });
+            }, 100);
+        }
+    }
+    
+    stopAudioRecording() {
+        if (!this.isRecording || !this.mediaRecorder) return;
+        
+        this.isRecording = false;
+        
+        // Останавливаем запись
+        this.mediaRecorder.stop();
+        
+        // Останавливаем таймер и визуализатор
+        clearInterval(this.recordingTimer);
+        clearInterval(this.visualizerInterval);
+        
+        // Останавливаем поток
+        this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        
+        // Обновляем UI
+        const audioBtn = document.getElementById('audioRecordBtn');
+        if (audioBtn) audioBtn.classList.remove('recording');
+        
+        // Скрываем оверлей записи
+        document.getElementById('audioRecordingOverlay').style.display = 'none';
+        
+        // Когда запись завершена
+        this.mediaRecorder.onstop = () => {
+            // Создаем Blob из записанных чанков
+            this.currentAudioBlob = new Blob(this.audioChunks, { 
+                type: 'audio/webm' 
+            });
+            
+            // Показываем превью
+            this.showAudioPreview();
+        };
+    }
+    
+    cancelAudioRecording() {
+        if (!this.isRecording) return;
+        
+        // Останавливаем всё
+        this.isRecording = false;
+        clearInterval(this.recordingTimer);
+        clearInterval(this.visualizerInterval);
+        
+        if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+            this.mediaRecorder.stop();
+        }
+        
+        // Останавливаем поток
+        if (this.mediaRecorder && this.mediaRecorder.stream) {
+            this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        }
+        
+        // Очищаем данные
+        this.audioChunks = [];
+        this.currentAudioBlob = null;
+        
+        // Обновляем UI
+        const audioBtn = document.getElementById('audioRecordBtn');
+        if (audioBtn) audioBtn.classList.remove('recording');
+        
+        document.getElementById('audioRecordingOverlay').style.display = 'none';
+    }
+    
+    // ========== ПРЕВЬЮ АУДИО ==========
+    showAudioPreview() {
+        if (!this.currentAudioBlob) return;
+        
+        // Создаем URL для проигрывания
+        const audioURL = URL.createObjectURL(this.currentAudioBlob);
+        const audioPlayer = document.getElementById('audioPreviewPlayer');
+        
+        if (audioPlayer) {
+            audioPlayer.src = audioURL;
+            
+            // Когда метаданные загружены, показываем длину
+            audioPlayer.onloadedmetadata = () => {
+                const duration = Math.floor(audioPlayer.duration);
+                document.getElementById('audioLength').textContent = `${duration} сек`;
+                document.getElementById('audioDuration').textContent = this.formatTime(duration);
+            };
+        }
+        
+        // Показываем размер
+        const sizeKB = Math.round(this.currentAudioBlob.size / 1024);
+        document.getElementById('audioSize').textContent = `${sizeKB} KB`;
+        
+        // Показываем оверлей
+        document.getElementById('audioPreviewOverlay').style.display = 'flex';
+    }
+    
+    deleteAudioPreview() {
+        // Очищаем аудио
+        if (this.currentAudioBlob) {
+            const audioPlayer = document.getElementById('audioPreviewPlayer');
+            if (audioPlayer) {
+                URL.revokeObjectURL(audioPlayer.src);
+                audioPlayer.src = '';
+            }
+        }
+        
+        this.currentAudioBlob = null;
+        document.getElementById('audioPreviewOverlay').style.display = 'none';
+        
+        // Фокус на поле ввода
+        this.messageInput.focus();
+    }
+    
+    // ========== ОТПРАВКА АУДИО ==========
+async sendAudioMessage() {
+    if (!this.currentAudioBlob || !this.user) return;
+    
+    try {
+        this.updateSendButton(true);
+        
+        const timestamp = Date.now();
+        const fileName = `audio_${this.user.uid}_${timestamp}.webm`;
+        const storageRef = firebase.storage().ref(`chat_audio/${this.user.uid}/${fileName}`);
+        
+        // Загружаем в Storage
+        const uploadTask = storageRef.put(this.currentAudioBlob);
+        
+        uploadTask.on('state_changed',
+            (snapshot) => {
+                // Прогресс загрузки
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                console.log(`Загрузка: ${progress}%`);
+            },
+            (error) => {
+                console.error("Ошибка загрузки:", error);
+                showStatus("Ошибка загрузки аудио", "error");
+                this.updateSendButton(false);
+            },
+            async () => {
+                // Загрузка завершена
+                const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                const duration = document.getElementById('audioDuration').textContent;
+                
+                const messageData = {
+                    type: 'audio',
+                    audioURL: downloadURL,
+                    audioDuration: duration,
+                    audioSize: this.currentAudioBlob.size,
+                    // ... остальные поля ...
+                };
+                
+                await db.collection('rooms').doc(this.roomId)
+                    .collection('messages').add(messageData);
+                
+                showStatus("✅ Аудиосообщение отправлено!", "success");
+                this.deleteAudioPreview();
+                this.updateSendButton(false);
+            }
+        );
+        
+    } catch (error) {
+        console.error("❌ Ошибка отправки аудио:", error);
+        this.updateSendButton(false);
+    }
+}
+    // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ АУДИО ==========
+    formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+    
+    showAudioError(error) {
+        let message = "Ошибка записи аудио: ";
+        
+        if (error.name === 'NotAllowedError') {
+            message = "❌ Доступ к микрофону запрещен. Разрешите доступ в настройках браузера.";
+        } else if (error.name === 'NotFoundError') {
+            message = "❌ Микрофон не найден. Подключите микрофон.";
+        } else if (error.name === 'NotReadableError') {
+            message = "❌ Микрофон занят другим приложением.";
+        } else {
+            message += error.message;
+        }
+        
+        showStatus(message, "error");
+    }
+    
 setupEventListeners() {
     // Кнопка входа через Google
     this.googleLoginBtn.addEventListener('click', () => this.signInWithGoogle());
@@ -2266,7 +2997,7 @@ async sendMessage() {
     }
 }
     
-displayMessage(message, docId) {
+displayMessage(message, docId) { 1
     console.log('🟢 displayMessage вызван для:', docId);
     console.log('📊 Данные сообщения:', {
         text: message.text?.substring(0, 30) + (message.text?.length > 30 ? '...' : ''),
