@@ -13,6 +13,8 @@
 <meta name="twitter:title" content="Чат Электротехнического Сообщества «Electric Group»">
 <meta name="twitter:description" content="Профессиональное сообщество электриков. Обсуждение, помощь, решения.">
 <meta name="twitter:image" content="https://alivu.github.io/Icon/icon-512x512.png">
+<meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin">
+<meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp">
     <style>
 /* ====== СТИЛИ ДЛЯ ПРЕВЬЮ ЦИТАТЫ НАД ПОЛЕМ ВВОДА ====== */
 .quote-preview {
@@ -1112,7 +1114,78 @@
     outline: none;
     box-shadow: 0 0 0 3px rgba(44, 83, 100, 0.2);
 }
-        
+    /* Добавь эти стили в конец <style> блока */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 400px;
+    max-height: 70vh;
+    overflow: hidden;
+}
+
+.modal-header {
+    background: #2c5364;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+}
+
+.modal-body {
+    padding: 20px;
+    max-height: 50vh;
+    overflow-y: auto;
+}
+
+.modal-footer {
+    padding: 15px 20px;
+    text-align: center;
+    border-top: 1px solid #eee;
+}
+
+.modal-btn {
+    background: #2c5364;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.loading {
+    text-align: center;
+    color: #666;
+    padding: 20px;
+}    
     </style>
     
     <!-- Firebase SDK -->
@@ -1167,9 +1240,9 @@
             </div>
             
             <div class="chat-stats">
-                <div class="online-badge">
-                    <span class="online-dot"></span>
-                    <span id="activeOnlineCount">0</span> онлайн
+                <div class="online-badge" id="onlineBadge" style="cursor: pointer;">
+                <span class="online-dot"></span>
+                <span id="activeOnlineCount">0</span> онлайн
                 </div>
                 <button class="back-btn" id="backBtn">Назад</button>
                 <button class="logout-btn" id="logoutBtn">Выйти</button>
@@ -1483,6 +1556,36 @@ setupEventListeners() {
             this.cancelQuote();
         });
     }
+        // Открытие модального окна с онлайн пользователями
+    const onlineBadge = document.getElementById('onlineBadge');
+    if (onlineBadge) {
+        onlineBadge.addEventListener('click', () => {
+            console.log("Клик по онлайн бейджу");
+            document.getElementById('onlineModal').style.display = 'flex';
+        });
+    }
+    
+    // Закрытие модального окна
+    const closeBtn1 = document.getElementById('closeOnlineModal');
+    const closeBtn2 = document.getElementById('closeOnlineModalBtn');
+    if (closeBtn1) {
+        closeBtn1.addEventListener('click', () => {
+            document.getElementById('onlineModal').style.display = 'none';
+        });
+    }
+    if (closeBtn2) {
+        closeBtn2.addEventListener('click', () => {
+            document.getElementById('onlineModal').style.display = 'none';
+        });
+    }
+    
+    // Закрытие по клику вне окна
+    const modalOverlay = document.getElementById('onlineModal');
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                modalOverlay.style.display = 'none';
+            }
     
         // Отмена цитаты по клавише ESC
         document.addEventListener('keydown', (e) => {
@@ -1620,6 +1723,46 @@ setupPullToRefresh() {
             e.preventDefault();
         }
     });
+}
+
+    // ========== ЗАГРУЗКА ОНЛАЙН ПОЛЬЗОВАТЕЛЕЙ ==========
+async loadOnlineUsers() {
+    try {
+        console.log("🔍 Загружаем онлайн пользователей...");
+        
+        const onlineRef = db.collection('rooms').doc(this.roomId).collection('online');
+        
+        // Подписываемся на изменения онлайн пользователей
+        this.unsubscribeOnline = onlineRef.onSnapshot((snapshot) => {
+            let onlineCount = 0;
+            
+            snapshot.forEach((doc) => {
+                const user = doc.data();
+                // Проверяем, был ли пользователь онлайн в последние 2 минуты
+                const lastSeen = user.lastSeen ? user.lastSeen.toDate() : new Date();
+                const isActive = (new Date() - lastSeen) < 120000; // 2 минуты
+                
+                if (isActive) {
+                    onlineCount++;
+                }
+            });
+            
+            // Обновляем счетчики
+            console.log("👥 Онлайн пользователей:", onlineCount);
+            if (this.onlineCount) {
+                this.onlineCount.textContent = onlineCount;
+            }
+            if (this.activeOnlineCount) {
+                this.activeOnlineCount.textContent = onlineCount;
+            }
+            
+        }, (error) => {
+            console.error("❌ Ошибка подписки на онлайн пользователей:", error);
+        });
+        
+    } catch (error) {
+        console.error("❌ Ошибка загрузки онлайн пользователей:", error);
+    }
 }
     // ========== ОБРАБОТКА ПРОКРУТКИ ==========
     handleScroll() {
@@ -2559,5 +2702,19 @@ window.testQuoteFunction = function() {
 
 // В консоли выполни: testQuoteFunction()
 </script>
+    <div class="modal-overlay" id="onlineModal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>👥 Участники онлайн</h3>
+            <button class="modal-close" id="closeOnlineModal">×</button>
+        </div>
+        <div class="modal-body" id="onlineUsersList">
+            <div class="loading">Загрузка...</div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn" id="closeOnlineModalBtn">Закрыть</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
