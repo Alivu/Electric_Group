@@ -1903,8 +1903,26 @@ async sendMessage() {
         showStatus("✅ Сообщение отправлено" + (messageData.replyTo ? " с цитатой" : ""), "success");
         
     } catch (error) {
-        console.error("❌ Ошибка отправки сообщения:", error);
-        showStatus("Ошибка отправки сообщения: " + error.message, "error");
+        console.error("❌ Ошибка отправки сообщения:", error.code, error.message);
+        
+        let errorMessage = "Ошибка отправки: ";
+        
+        // Обработка ошибок безопасности Firestore
+        if (error.code === 'permission-denied') {
+            errorMessage = "❌ Нет прав на отправку сообщения. Проверьте правила безопасности.";
+        } else if (error.code === 'unauthenticated') {
+            errorMessage = "❌ Сессия устарела. Пожалуйста, войдите снова.";
+            // Предлагаем перелогиниться
+            setTimeout(() => this.signOut(), 2000);
+        } else if (error.code === 'failed-precondition') {
+            errorMessage = "❌ Нарушены правила валидации сообщения.";
+        } else if (error.code === 'invalid-argument') {
+            errorMessage = "❌ Неверный формат сообщения.";
+        } else {
+            errorMessage += error.message;
+        }
+        
+        showStatus(errorMessage, "error");
     }
 }
     
@@ -2135,8 +2153,19 @@ async deleteMessage(docId) {
         
         showStatus("✅ Сообщение удалено", "success");
     } catch (error) {
-        console.error("❌ Ошибка удаления:", error);
-        showStatus("Ошибка удаления: " + error.message, "error");
+        console.error("❌ Ошибка удаления:", error.code, error.message);
+        
+        let errorMessage = "Ошибка удаления: ";
+        
+        if (error.code === 'permission-denied') {
+            errorMessage = "❌ Нет прав на удаление этого сообщения.";
+        } else if (error.code === 'not-found') {
+            errorMessage = "❌ Сообщение уже было удалено.";
+        } else {
+            errorMessage += error.message;
+        }
+        
+        showStatus(errorMessage, "error");
     }
 }
     // ========== ЦИТИРОВАНИЕ ==========
