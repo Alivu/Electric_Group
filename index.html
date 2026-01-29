@@ -1876,364 +1876,6 @@ class ElectricianChat {
         console.log("✅ Чат инициализирован");
     }
 
-            // ========== ОБРАБОТЧИКИ АУДИО ==========
-        const audioRecordBtn = document.getElementById('audioRecordBtn');
-        const cancelRecordingBtn = document.getElementById('cancelRecordingBtn');
-        const stopRecordingBtn = document.getElementById('stopRecordingBtn');
-        const deleteAudioBtn = document.getElementById('deleteAudioBtn');
-        const sendAudioBtn = document.getElementById('sendAudioBtn');
-        
-        if (audioRecordBtn) {
-            audioRecordBtn.addEventListener('click', () => this.toggleAudioRecording());
-        }
-        
-        if (cancelRecordingBtn) {
-            cancelRecordingBtn.addEventListener('click', () => this.cancelAudioRecording());
-        }
-        
-        if (stopRecordingBtn) {
-            stopRecordingBtn.addEventListener('click', () => this.stopAudioRecording());
-        }
-        
-        if (deleteAudioBtn) {
-            deleteAudioBtn.addEventListener('click', () => this.deleteAudioPreview());
-        }
-        
-        if (sendAudioBtn) {
-            sendAudioBtn.addEventListener('click', () => this.sendAudioMessage());
-        }
-        
-        // Завершаем запись при достижении лимита
-        setTimeout(() => {
-            if (this.isRecording) {
-                this.stopAudioRecording();
-            }
-        }, this.maxRecordingTime);
-    }
-    
-    // ========== ЗАПИСЬ АУДИО ==========
-    async toggleAudioRecording() {
-        if (this.isRecording) {
-            this.stopAudioRecording();
-            return;
-        }
-        
-        try {
-            // Запрашиваем доступ к микрофону
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                audio: {
-                    echoCancellation: true,
-                    noiseSuppression: true,
-                    autoGainControl: true
-                } 
-            });
-            
-            this.startAudioRecording(stream);
-            
-        } catch (error) {
-            console.error("❌ Ошибка доступа к микрофону:", error);
-            this.showAudioError(error);
-        }
-    }
-    
-    startAudioRecording(stream) {
-        this.audioChunks = [];
-        this.isRecording = true;
-        
-        // Обновляем UI
-        const audioBtn = document.getElementById('audioRecordBtn');
-        if (audioBtn) audioBtn.classList.add('recording');
-        
-        // Показываем оверлей записи
-        document.getElementById('audioRecordingOverlay').style.display = 'flex';
-        
-        // Создаем MediaRecorder
-        this.mediaRecorder = new MediaRecorder(stream, {
-            mimeType: 'audio/webm;codecs=opus'
-        });
-        
-        // Обработчик данных
-        this.mediaRecorder.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-                this.audioChunks.push(event.data);
-            }
-        };
-        
-        // Запускаем запись
-        this.mediaRecorder.start(100); // Собираем данные каждые 100ms
-        
-        // Запускаем таймер
-        this.startRecordingTimer();
-        
-        // Запускаем визуализатор
-        this.startAudioVisualizer(stream);
-        
-        // Ограничиваем максимальное время записи
-        setTimeout(() => {
-            if (this.isRecording) {
-                this.stopAudioRecording();
-            }
-        }, this.maxRecordingTime);
-    }
-    
-    startRecordingTimer() {
-        this.recordingStartTime = Date.now();
-        const timerElement = document.getElementById('recordingTimer');
-        const stopButton = document.getElementById('stopRecordingBtn');
-        
-        this.recordingTimer = setInterval(() => {
-            const elapsed = Date.now() - this.recordingStartTime;
-            const seconds = Math.floor(elapsed / 1000);
-            const remaining = Math.max(0, 60 - seconds);
-            
-            // Обновляем таймер
-            if (timerElement) {
-                const mins = Math.floor(seconds / 60);
-                const secs = seconds % 60;
-                timerElement.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-            }
-            
-            // Обновляем кнопку
-            if (stopButton) {
-                stopButton.textContent = `⏹️ Завершить (${remaining})`;
-                
-                // Меняем цвет когда осталось мало времени
-                if (remaining <= 10) {
-                    stopButton.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
-                }
-            }
-            
-            // Автоматически останавливаем при достижении лимита
-            if (seconds >= 60) {
-                this.stopAudioRecording();
-            }
-            
-        }, 1000);
-    }
-    
-    startAudioVisualizer(stream) {
-        // Создаем контекст для визуализации
-        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        this.analyser = this.audioContext.createAnalyser();
-        const source = this.audioContext.createMediaStreamSource(stream);
-        
-        source.connect(this.analyser);
-        this.analyser.fftSize = 256;
-        
-        // Создаем визуализатор
-        const bufferLength = this.analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-        const visualizer = document.getElementById('audioVisualizer');
-        
-        if (visualizer) {
-            visualizer.innerHTML = '';
-            
-            // Создаем бары
-            for (let i = 0; i < 32; i++) {
-                const bar = document.createElement('div');
-                bar.className = 'visualizer-bar';
-                bar.style.height = '5px';
-                visualizer.appendChild(bar);
-            }
-            
-            // Обновляем анимацию
-            this.visualizerInterval = setInterval(() => {
-                if (!this.isRecording) return;
-                
-                this.analyser.getByteFrequencyData(dataArray);
-                const bars = visualizer.querySelectorAll('.visualizer-bar');
-                
-                bars.forEach((bar, i) => {
-                    const value = dataArray[i * 2] || 0;
-                    const height = 5 + (value / 255) * 95;
-                    bar.style.height = `${height}px`;
-                    bar.style.opacity = 0.5 + (value / 255) * 0.5;
-                });
-            }, 100);
-        }
-    }
-    
-    stopAudioRecording() {
-        if (!this.isRecording || !this.mediaRecorder) return;
-        
-        this.isRecording = false;
-        
-        // Останавливаем запись
-        this.mediaRecorder.stop();
-        
-        // Останавливаем таймер и визуализатор
-        clearInterval(this.recordingTimer);
-        clearInterval(this.visualizerInterval);
-        
-        // Останавливаем поток
-        this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
-        
-        // Обновляем UI
-        const audioBtn = document.getElementById('audioRecordBtn');
-        if (audioBtn) audioBtn.classList.remove('recording');
-        
-        // Скрываем оверлей записи
-        document.getElementById('audioRecordingOverlay').style.display = 'none';
-        
-        // Когда запись завершена
-        this.mediaRecorder.onstop = () => {
-            // Создаем Blob из записанных чанков
-            this.currentAudioBlob = new Blob(this.audioChunks, { 
-                type: 'audio/webm' 
-            });
-            
-            // Показываем превью
-            this.showAudioPreview();
-        };
-    }
-    
-    cancelAudioRecording() {
-        if (!this.isRecording) return;
-        
-        // Останавливаем всё
-        this.isRecording = false;
-        clearInterval(this.recordingTimer);
-        clearInterval(this.visualizerInterval);
-        
-        if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
-            this.mediaRecorder.stop();
-        }
-        
-        // Останавливаем поток
-        if (this.mediaRecorder && this.mediaRecorder.stream) {
-            this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
-        }
-        
-        // Очищаем данные
-        this.audioChunks = [];
-        this.currentAudioBlob = null;
-        
-        // Обновляем UI
-        const audioBtn = document.getElementById('audioRecordBtn');
-        if (audioBtn) audioBtn.classList.remove('recording');
-        
-        document.getElementById('audioRecordingOverlay').style.display = 'none';
-    }
-    
-    // ========== ПРЕВЬЮ АУДИО ==========
-    showAudioPreview() {
-        if (!this.currentAudioBlob) return;
-        
-        // Создаем URL для проигрывания
-        const audioURL = URL.createObjectURL(this.currentAudioBlob);
-        const audioPlayer = document.getElementById('audioPreviewPlayer');
-        
-        if (audioPlayer) {
-            audioPlayer.src = audioURL;
-            
-            // Когда метаданные загружены, показываем длину
-            audioPlayer.onloadedmetadata = () => {
-                const duration = Math.floor(audioPlayer.duration);
-                document.getElementById('audioLength').textContent = `${duration} сек`;
-                document.getElementById('audioDuration').textContent = this.formatTime(duration);
-            };
-        }
-        
-        // Показываем размер
-        const sizeKB = Math.round(this.currentAudioBlob.size / 1024);
-        document.getElementById('audioSize').textContent = `${sizeKB} KB`;
-        
-        // Показываем оверлей
-        document.getElementById('audioPreviewOverlay').style.display = 'flex';
-    }
-    
-    deleteAudioPreview() {
-        // Очищаем аудио
-        if (this.currentAudioBlob) {
-            const audioPlayer = document.getElementById('audioPreviewPlayer');
-            if (audioPlayer) {
-                URL.revokeObjectURL(audioPlayer.src);
-                audioPlayer.src = '';
-            }
-        }
-        
-        this.currentAudioBlob = null;
-        document.getElementById('audioPreviewOverlay').style.display = 'none';
-        
-        // Фокус на поле ввода
-        this.messageInput.focus();
-    }
-    
-    // ========== ОТПРАВКА АУДИО ==========
-async sendAudioMessage() {
-    if (!this.currentAudioBlob || !this.user) return;
-    
-    try {
-        this.updateSendButton(true);
-        
-        const timestamp = Date.now();
-        const fileName = `audio_${this.user.uid}_${timestamp}.webm`;
-        const storageRef = firebase.storage().ref(`chat_audio/${this.user.uid}/${fileName}`);
-        
-        // Загружаем в Storage
-        const uploadTask = storageRef.put(this.currentAudioBlob);
-        
-        uploadTask.on('state_changed',
-            (snapshot) => {
-                // Прогресс загрузки
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                console.log(`Загрузка: ${progress}%`);
-            },
-            (error) => {
-                console.error("Ошибка загрузки:", error);
-                showStatus("Ошибка загрузки аудио", "error");
-                this.updateSendButton(false);
-            },
-            async () => {
-                // Загрузка завершена
-                const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                const duration = document.getElementById('audioDuration').textContent;
-                
-                const messageData = {
-                    type: 'audio',
-                    audioURL: downloadURL,
-                    audioDuration: duration,
-                    audioSize: this.currentAudioBlob.size,
-                    // ... остальные поля ...
-                };
-                
-                await db.collection('rooms').doc(this.roomId)
-                    .collection('messages').add(messageData);
-                
-                showStatus("✅ Аудиосообщение отправлено!", "success");
-                this.deleteAudioPreview();
-                this.updateSendButton(false);
-            }
-        );
-        
-    } catch (error) {
-        console.error("❌ Ошибка отправки аудио:", error);
-        this.updateSendButton(false);
-    }
-}
-    // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ АУДИО ==========
-    formatTime(seconds) {
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    }
-    
-    showAudioError(error) {
-        let message = "Ошибка записи аудио: ";
-        
-        if (error.name === 'NotAllowedError') {
-            message = "❌ Доступ к микрофону запрещен. Разрешите доступ в настройках браузера.";
-        } else if (error.name === 'NotFoundError') {
-            message = "❌ Микрофон не найден. Подключите микрофон.";
-        } else if (error.name === 'NotReadableError') {
-            message = "❌ Микрофон занят другим приложением.";
-        } else {
-            message += error.message;
-        }
-        
-        showStatus(message, "error");
-    }
-    
 setupEventListeners() {
     // Кнопка входа через Google
     this.googleLoginBtn.addEventListener('click', () => this.signInWithGoogle());
@@ -2287,7 +1929,42 @@ setupEventListeners() {
             this.cancelQuote();
         });
     }
-        // Открытие модального окна с онлайн пользователями
+    
+    // ========== ОБРАБОТЧИКИ АУДИО ==========
+    const audioRecordBtn = document.getElementById('audioRecordBtn');
+    const cancelRecordingBtn = document.getElementById('cancelRecordingBtn');
+    const stopRecordingBtn = document.getElementById('stopRecordingBtn');
+    const deleteAudioBtn = document.getElementById('deleteAudioBtn');
+    const sendAudioBtn = document.getElementById('sendAudioBtn');
+    
+    if (audioRecordBtn) {
+        audioRecordBtn.addEventListener('click', () => this.toggleAudioRecording());
+    }
+    
+    if (cancelRecordingBtn) {
+        cancelRecordingBtn.addEventListener('click', () => this.cancelAudioRecording());
+    }
+    
+    if (stopRecordingBtn) {
+        stopRecordingBtn.addEventListener('click', () => this.stopAudioRecording());
+    }
+    
+    if (deleteAudioBtn) {
+        deleteAudioBtn.addEventListener('click', () => this.deleteAudioPreview());
+    }
+    
+    if (sendAudioBtn) {
+        sendAudioBtn.addEventListener('click', () => this.sendAudioMessage());
+    }
+    
+    // Завершаем запись при достижении лимита
+    setTimeout(() => {
+        if (this.isRecording) {
+            this.stopAudioRecording();
+        }
+    }, this.maxRecordingTime);
+    
+    // Открытие модального окна с онлайн пользователями
     const onlineBadge = document.getElementById('onlineBadge');
     if (onlineBadge) {
         onlineBadge.addEventListener('click', () => {
@@ -2318,20 +1995,370 @@ setupEventListeners() {
                 modalOverlay.style.display = 'none';
             }
         });
-     }
+    }
     
-        // Отмена цитаты по клавише ESC
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
+    // Отмена цитаты по клавише ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const quotePreview = document.getElementById('quotePreview');
+            if (quotePreview && quotePreview.style.display === 'block') {
+                this.cancelQuote();
+                this.messageInput.focus();
+            }
+        }
+    });
+}
+
+// ========== ЗАПИСЬ АУДИО ==========
+async toggleAudioRecording() {
+    if (this.isRecording) {
+        this.stopAudioRecording();
+        return;
+    }
+    
+    try {
+        // Запрашиваем доступ к микрофону
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+            } 
+        });
+        
+        this.startAudioRecording(stream);
+        
+    } catch (error) {
+        console.error("❌ Ошибка доступа к микрофону:", error);
+        this.showAudioError(error);
+    }
+}
+
+startAudioRecording(stream) {
+    this.audioChunks = [];
+    this.isRecording = true;
+    
+    // Обновляем UI
+    const audioBtn = document.getElementById('audioRecordBtn');
+    if (audioBtn) audioBtn.classList.add('recording');
+    
+    // Показываем оверлей записи
+    document.getElementById('audioRecordingOverlay').style.display = 'flex';
+    
+    // Создаем MediaRecorder
+    this.mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+    });
+    
+    // Обработчик данных
+    this.mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+            this.audioChunks.push(event.data);
+        }
+    };
+    
+    // Запускаем запись
+    this.mediaRecorder.start(100); // Собираем данные каждые 100ms
+    
+    // Запускаем таймер
+    this.startRecordingTimer();
+    
+    // Запускаем визуализатор
+    this.startAudioVisualizer(stream);
+    
+    // Ограничиваем максимальное время записи
+    setTimeout(() => {
+        if (this.isRecording) {
+            this.stopAudioRecording();
+        }
+    }, this.maxRecordingTime);
+}
+
+startRecordingTimer() {
+    this.recordingStartTime = Date.now();
+    const timerElement = document.getElementById('recordingTimer');
+    const stopButton = document.getElementById('stopRecordingBtn');
+    
+    this.recordingTimer = setInterval(() => {
+        const elapsed = Date.now() - this.recordingStartTime;
+        const seconds = Math.floor(elapsed / 1000);
+        const remaining = Math.max(0, 60 - seconds);
+        
+        // Обновляем таймер
+        if (timerElement) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            timerElement.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        // Обновляем кнопку
+        if (stopButton) {
+            stopButton.textContent = `⏹️ Завершить (${remaining})`;
+            
+            // Меняем цвет когда осталось мало времени
+            if (remaining <= 10) {
+                stopButton.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
+            }
+        }
+        
+        // Автоматически останавливаем при достижении лимита
+        if (seconds >= 60) {
+            this.stopAudioRecording();
+        }
+        
+    }, 1000);
+}
+
+startAudioVisualizer(stream) {
+    // Создаем контекст для визуализации
+    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    this.analyser = this.audioContext.createAnalyser();
+    const source = this.audioContext.createMediaStreamSource(stream);
+    
+    source.connect(this.analyser);
+    this.analyser.fftSize = 256;
+    
+    // Создаем визуализатор
+    const bufferLength = this.analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    const visualizer = document.getElementById('audioVisualizer');
+    
+    if (visualizer) {
+        visualizer.innerHTML = '';
+        
+        // Создаем бары
+        for (let i = 0; i < 32; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'visualizer-bar';
+            bar.style.height = '5px';
+            visualizer.appendChild(bar);
+        }
+        
+        // Обновляем анимацию
+        this.visualizerInterval = setInterval(() => {
+            if (!this.isRecording) return;
+            
+            this.analyser.getByteFrequencyData(dataArray);
+            const bars = visualizer.querySelectorAll('.visualizer-bar');
+            
+            bars.forEach((bar, i) => {
+                const value = dataArray[i * 2] || 0;
+                const height = 5 + (value / 255) * 95;
+                bar.style.height = `${height}px`;
+                bar.style.opacity = 0.5 + (value / 255) * 0.5;
+            });
+        }, 100);
+    }
+}
+
+stopAudioRecording() {
+    if (!this.isRecording || !this.mediaRecorder) return;
+    
+    this.isRecording = false;
+    
+    // Останавливаем запись
+    this.mediaRecorder.stop();
+    
+    // Останавливаем таймер и визуализатор
+    clearInterval(this.recordingTimer);
+    clearInterval(this.visualizerInterval);
+    
+    // Останавливаем поток
+    this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
+    
+    // Обновляем UI
+    const audioBtn = document.getElementById('audioRecordBtn');
+    if (audioBtn) audioBtn.classList.remove('recording');
+    
+    // Скрываем оверлей записи
+    document.getElementById('audioRecordingOverlay').style.display = 'none';
+    
+    // Когда запись завершена
+    this.mediaRecorder.onstop = () => {
+        // Создаем Blob из записанных чанков
+        this.currentAudioBlob = new Blob(this.audioChunks, { 
+            type: 'audio/webm' 
+        });
+        
+        // Показываем превью
+        this.showAudioPreview();
+    };
+}
+
+cancelAudioRecording() {
+    if (!this.isRecording) return;
+    
+    // Останавливаем всё
+    this.isRecording = false;
+    clearInterval(this.recordingTimer);
+    clearInterval(this.visualizerInterval);
+    
+    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+        this.mediaRecorder.stop();
+    }
+    
+    // Останавливаем поток
+    if (this.mediaRecorder && this.mediaRecorder.stream) {
+        this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
+    }
+    
+    // Очищаем данные
+    this.audioChunks = [];
+    this.currentAudioBlob = null;
+    
+    // Обновляем UI
+    const audioBtn = document.getElementById('audioRecordBtn');
+    if (audioBtn) audioBtn.classList.remove('recording');
+    
+    document.getElementById('audioRecordingOverlay').style.display = 'none';
+}
+
+// ========== ПРЕВЬЮ АУДИО ==========
+showAudioPreview() {
+    if (!this.currentAudioBlob) return;
+    
+    // Создаем URL для проигрывания
+    const audioURL = URL.createObjectURL(this.currentAudioBlob);
+    const audioPlayer = document.getElementById('audioPreviewPlayer');
+    
+    if (audioPlayer) {
+        audioPlayer.src = audioURL;
+        
+        // Когда метаданные загружены, показываем длину
+        audioPlayer.onloadedmetadata = () => {
+            const duration = Math.floor(audioPlayer.duration);
+            document.getElementById('audioLength').textContent = `${duration} сек`;
+            document.getElementById('audioDuration').textContent = this.formatTime(duration);
+        };
+    }
+    
+    // Показываем размер
+    const sizeKB = Math.round(this.currentAudioBlob.size / 1024);
+    document.getElementById('audioSize').textContent = `${sizeKB} KB`;
+    
+    // Показываем оверлей
+    document.getElementById('audioPreviewOverlay').style.display = 'flex';
+}
+
+deleteAudioPreview() {
+    // Очищаем аудио
+    if (this.currentAudioBlob) {
+        const audioPlayer = document.getElementById('audioPreviewPlayer');
+        if (audioPlayer) {
+            URL.revokeObjectURL(audioPlayer.src);
+            audioPlayer.src = '';
+        }
+    }
+    
+    this.currentAudioBlob = null;
+    document.getElementById('audioPreviewOverlay').style.display = 'none';
+    
+    // Фокус на поле ввода
+    this.messageInput.focus();
+}
+
+// ========== ОТПРАВКА АУДИО ==========
+async sendAudioMessage() {
+    if (!this.currentAudioBlob || !this.user) return;
+    
+    try {
+        this.updateSendButton(true);
+        
+        const timestamp = Date.now();
+        const fileName = `audio_${this.user.uid}_${timestamp}.webm`;
+        const storageRef = firebase.storage().ref(`chat_audio/${this.user.uid}/${fileName}`);
+        
+        // Загружаем в Storage
+        const uploadTask = storageRef.put(this.currentAudioBlob);
+        
+        uploadTask.on('state_changed',
+            (snapshot) => {
+                // Прогресс загрузки
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                console.log(`Загрузка: ${progress}%`);
+            },
+            (error) => {
+                console.error("Ошибка загрузки:", error);
+                showStatus("Ошибка загрузки аудио", "error");
+                this.updateSendButton(false);
+            },
+            async () => {
+                // Загрузка завершена
+                const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                const duration = document.getElementById('audioDuration').textContent;
+                const sizeKB = Math.round(this.currentAudioBlob.size / 1024);
+                
+                const messageData = {
+                    type: 'audio',
+                    audioURL: downloadURL,
+                    audioFileName: fileName,
+                    audioDuration: duration,
+                    audioSize: sizeKB,
+                    userId: this.user.uid,
+                    userName: this.user.displayName || 'Электрик',
+                    userEmail: this.user.email,
+                    userPhoto: this.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.user.displayName || 'E')}&background=2c5364&color=fff`,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    isElectrician: true,
+                    storagePath: `chat_audio/${this.user.uid}/${fileName}`
+                };
+                
+                // Добавляем текст если есть
+                const text = document.getElementById('messageInput').value.trim();
+                if (text) {
+                    messageData.text = text;
+                }
+                
+                // Добавляем цитату если есть
                 const quotePreview = document.getElementById('quotePreview');
                 if (quotePreview && quotePreview.style.display === 'block') {
-                    this.cancelQuote();
-                    this.messageInput.focus();
-                    
+                    messageData.replyTo = {
+                        messageId: quotePreview.getAttribute('data-quote-id'),
+                        author: quotePreview.getAttribute('data-quote-author'),
+                        text: quotePreview.getAttribute('data-quote-text')
+                    };
                 }
+                
+                await db.collection('rooms').doc(this.roomId)
+                    .collection('messages').add(messageData);
+                
+                showStatus("✅ Аудиосообщение отправлено!", "success");
+                this.deleteAudioPreview();
+                document.getElementById('messageInput').value = '';
+                this.cancelQuote();
+                this.updateSendButton(false);
             }
-        });
+        );
+        
+    } catch (error) {
+        console.error("❌ Ошибка отправки аудио:", error);
+        showStatus("Ошибка отправки аудио: " + error.message, "error");
+        this.updateSendButton(false);
     }
+}
+
+// ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ АУДИО ==========
+formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+showAudioError(error) {
+    let message = "Ошибка записи аудио: ";
+    
+    if (error.name === 'NotAllowedError') {
+        message = "❌ Доступ к микрофону запрещен. Разрешите доступ в настройках браузера.";
+    } else if (error.name === 'NotFoundError') {
+        message = "❌ Микрофон не найден. Подключите микрофон.";
+    } else if (error.name === 'NotReadableError') {
+        message = "❌ Микрофон занят другим приложением.";
+    } else {
+        message += error.message;
+    }
+    
+    showStatus(message, "error");
+}
 // ========== PULL-TO-REFRESH ФУНКЦИОНАЛЬНОСТЬ ==========
 setupPullToRefresh() {
     const header = document.querySelector('.chat-header');
