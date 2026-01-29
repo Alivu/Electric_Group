@@ -1421,7 +1421,6 @@ class ElectricianChat {
             sendBtn.disabled = false;
         }
     }
-}
 // конец класса ElectricianChat
 setupEventListeners() {
     // Кнопка входа через Google
@@ -1477,16 +1476,17 @@ setupEventListeners() {
         });
     }
     
-    // Отмена цитаты по клавише ESC
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            const quotePreview = document.getElementById('quotePreview');
-            if (quotePreview && quotePreview.style.display === 'block') {
-                this.cancelQuote();
-                this.messageInput.focus();
+        // Отмена цитаты по клавише ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const quotePreview = document.getElementById('quotePreview');
+                if (quotePreview && quotePreview.style.display === 'block') {
+                    this.cancelQuote();
+                    this.messageInput.focus();
+                }
             }
-        }
-    });
+        });
+    }
 }
 // ========== PULL-TO-REFRESH ФУНКЦИОНАЛЬНОСТЬ ==========
 setupPullToRefresh() {
