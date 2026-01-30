@@ -371,24 +371,55 @@
 }
 
 .quoted-message {
-    background: linear-gradient(135deg, rgba(76, 175, 80, 0.18) 0%, rgba(56, 142, 60, 0.12) 100%);
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.12) 0%, rgba(56, 142, 60, 0.08) 100%);
     border-left: 3px solid #4CAF50; /* Ярко-зеленая рамка */
-    padding: 8px 12px;
-    margin-bottom: 10px;
-    border-radius: 8px;
-    font-size: 0.9em;
+    padding: 12px 15px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    font-size: 0.85em;
     max-width: 100%;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(76, 175, 80, 0.1);
+    box-shadow: 0 2px 5px rgba(102, 187, 106, 0.1);
+    position: relative;
+}
+ /* Специальный стиль для аудио цитат */
+.quoted-message.audio-quote {
+    padding: 15px;
+    border-left: 4px solid #FF9800; /* Оранжевая рамка для аудио */
 }
 
-.quote-author {
+.quoted-message.audio-quote .quote-author {
     font-weight: 600;
-    color: #22150F; /* Темно-зеленый для имени в цитате */
-    font-size: 0.85em;
-    margin-bottom: 4px;
-    display: block;
+    font-size: 0.95em;
+}       
+.quote-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(76, 175, 80, 0.2);
 }
+.quote-title {
+    font-size: 0.8em;
+    color: #444444;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.quote-title::before {
+    content: "↪️";
+    font-size: 0.9em;
+    opacity: 0.7;
+}
+ .quote-author {
+    font-weight: 600;
+    color: #22150F; /* тёмный красно-коричневый */
+    font-size: 0.9em;
+    margin-bottom: 5px;
+    display: block;
+}       
 
 .quote-text {
     color: #444444; /* более тёмно-серое: */
@@ -399,6 +430,50 @@
     opacity: 0.9;
 }
 
+.quote-audio-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 8px;
+}
+
+.audio-waveform {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 30px;
+    flex: 1;
+}
+
+.wave-bar {
+    width: 4px;
+    background: linear-gradient(to top, #FF9800, #FF5722);
+    border-radius: 2px;
+    min-height: 5px;
+}
+
+.audio-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 0.8em;
+    color: #666;
+    margin-top: 5px;
+}
+
+.audio-duration {
+    color: #FF9800;
+    font-weight: bold;
+    font-size: 0.85em;
+}
+
+.audio-time {
+    color: #888;
+    font-size: 0.8em;
+}
         /* ОСНОВНЫЕ СТИЛИ */
         .back-btn {
             background: rgba(255,255,255,0.1);
@@ -1953,48 +2028,47 @@ subscribeToMessages() {
         });
         }
         
-displayMessage(message, docId) {
-        // Проверяем, не существует ли уже это сообщение
-    const existingMessage = document.querySelector(`[data-message-id="${docId}"]`);
-    if (existingMessage) {
-        console.log(`⚠️ Сообщение ${docId} уже существует, пропускаем`);
-        return existingMessage;
-    }
-    const isOwnMessage = message.userId === this.user?.uid;
-    const messageTime = message.timestamp ? 
-        new Date(message.timestamp.toDate()).toLocaleTimeString([], { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        }) : 
-        new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    const editedBadge = message.edited ? 
-        `<span class="edited-badge">(ред.)</span>` : '';
-    
-    // Начинаем формировать содержимое
-    let contentHtml = '';
-    
-    // 1. Добавляем цитату если есть
 if (message.replyTo) {
     let quoteContent = '';
     
     if (message.replyTo.type === 'audio') {
-        quoteContent = '🎤 Аудиосообщение';
-        if (message.replyTo.audioDuration) {
-            quoteContent += ` (${message.replyTo.audioDuration})`;
-        }
+        // Аудио цитата
+        quoteContent = `
+            <div class="quote-title">процитировал</div>
+            <span class="quote-author">${message.replyTo.author || 'Электрик'}</span>
+            <div class="quote-audio-content">
+                <div style="color: #FF9800; font-size: 1.2em; margin-right: 5px;">▶</div>
+                <div class="audio-waveform" id="wave-${message.replyTo.messageId || 'audio'}">
+                    ${this.generateWaveform()}
+                </div>
+            </div>
+            <div class="audio-info">
+                <span class="audio-duration">${message.replyTo.audioDuration || '0:00'}</span>
+                <span class="audio-time">${this.formatTime(new Date())}</span>
+            </div>
+        `;
     } else {
-        quoteContent = message.replyTo.text || '';
+        // Текстовая цитата
+        const quoteText = message.replyTo.text || '';
+        const shortContent = quoteText.length > 100 ? 
+            quoteText.substring(0, 100) + '...' : 
+            quoteText;
+        
+        quoteContent = `
+            <div class="quote-title">процитировал</div>
+            <span class="quote-author">${message.replyTo.author || 'Электрик'}</span>
+            <span class="quote-text">${escapeHtml(shortContent)}</span>
+        `;
     }
     
-    const shortContent = quoteContent.length > 100 ? 
-        quoteContent.substring(0, 100) + '...' : 
-        quoteContent;
+    const quoteClass = message.replyTo.type === 'audio' ? 'audio-quote' : '';
     
     contentHtml += `
-        <div class="quoted-message">
-            <span class="quote-author">${message.replyTo.author || 'Электрик'}:</span>
-            <span class="quote-text">${escapeHtml(shortContent)}</span>
+        <div class="quoted-message ${quoteClass}">
+            <div class="quote-header">
+                <div class="quote-title">↪️ процитировал</div>
+            </div>
+            ${quoteContent}
         </div>
     `;
 }
@@ -2883,6 +2957,38 @@ saveCurrentQuoteState() {
         this.pendingQuote = null;
     }
 };
+
+
+        
+// ========== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ==========
+generateWaveform(waveCount = 20) {
+    let waveHtml = '';
+    for (let i = 0; i < waveCount; i++) {
+        const randomHeight = Math.floor(Math.random() * 20) + 8;
+        waveHtml += `<div class="wave-bar" style="height:${randomHeight}px"></div>`;
+    }
+    return waveHtml;
+}
+
+formatTime(date) {
+    if (!date) {
+        date = new Date();
+    }
+    
+    // Проверяем, является ли date объектом Date
+    const dateObj = date instanceof Date ? date : new Date(date);
+    
+    if (isNaN(dateObj.getTime())) {
+        return '--:--';
+    }
+    
+    return dateObj.toLocaleTimeString([], { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+}
+// ========== КОНЕЦ ВСПОМОГАТЕЛЬНЫХ МЕТОДОВ ==========
+
 
         
         // ========== КОНЕЦ: АУДИО ФУНКЦИИ ==========
