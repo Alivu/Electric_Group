@@ -2244,26 +2244,46 @@ class ElectricianChat {
         document.getElementById('audioRecordingOverlay').style.display = 'none';
     }
     
-    showAudioPreview() {
-        if (!this.currentAudioBlob) return;
+showAudioPreview() {
+    if (!this.currentAudioBlob) return;
+    
+    const audioURL = URL.createObjectURL(this.currentAudioBlob);
+    const audioPlayer = document.getElementById('audioPreviewPlayer');
+    
+    if (audioPlayer) {
+        audioPlayer.src = audioURL;
         
-        const audioURL = URL.createObjectURL(this.currentAudioBlob);
-        const audioPlayer = document.getElementById('audioPreviewPlayer');
+        // Устанавливаем значения по умолчанию
+        document.getElementById('audioLength').textContent = `Загрузка...`;
+        document.getElementById('audioDuration').textContent = "0:00";
         
-        if (audioPlayer) {
-            audioPlayer.src = audioURL;
-            audioPlayer.onloadedmetadata = () => {
-                const duration = Math.floor(audioPlayer.duration);
-                document.getElementById('audioLength').textContent = `${duration} сек`;
-                document.getElementById('audioDuration').textContent = this.formatTime(duration);
-            };
-        }
+        audioPlayer.onloadedmetadata = () => {
+            const duration = audioPlayer.duration;
+            
+            // ПРОВЕРКА НА Infinity и NaN
+            if (isNaN(duration) || duration === Infinity) {
+                console.warn("Некорректная длительность аудио:", duration);
+                document.getElementById('audioLength').textContent = `Длительность не определена`;
+                document.getElementById('audioDuration').textContent = "0:00";
+            } else {
+                const roundedDuration = Math.floor(duration);
+                document.getElementById('audioLength').textContent = `${roundedDuration} сек`;
+                document.getElementById('audioDuration').textContent = this.formatTime(roundedDuration);
+            }
+        };
         
-        const sizeKB = Math.round(this.currentAudioBlob.size / 1024);
-        document.getElementById('audioSize').textContent = `${sizeKB} KB`;
-        document.getElementById('audioPreviewOverlay').style.display = 'flex';
+        // Обработка ошибок
+        audioPlayer.onerror = () => {
+            console.error("Ошибка загрузки аудио");
+            document.getElementById('audioLength').textContent = `Ошибка загрузки`;
+            document.getElementById('audioDuration').textContent = "0:00";
+        };
     }
     
+    const sizeKB = Math.round(this.currentAudioBlob.size / 1024);
+    document.getElementById('audioSize').textContent = `${sizeKB} KB`;
+    document.getElementById('audioPreviewOverlay').style.display = 'flex';
+}
     deleteAudioPreview() {
         if (this.currentAudioBlob) {
             const audioPlayer = document.getElementById('audioPreviewPlayer');
@@ -2417,11 +2437,14 @@ uploadTask.on('state_changed',
     }
     
     // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ АУДИО ==========
-    formatTime(seconds) {
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
+formatTime(seconds) {
+    if (isNaN(seconds) || seconds === Infinity) {
+        return "0:00";
     }
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
     
     showAudioError(error) {
         let message = "Ошибка записи аудио: ";
