@@ -2709,6 +2709,23 @@ if (quoteData) {
         }
 
 
+        
+        
+        // Добавьте эту функцию в класс (после sendAudioMessage):
+blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            // Извлекаем только base64 часть (без data:audio/webm;base64,)
+            const base64 = reader.result.split(',')[1];
+            resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
+
+
 
     // ↓↓↓ ВСТАВЬ ЭТОТ МЕТОД ПРЯМО ЗДЕСЬ:
     saveCurrentQuoteState() {
@@ -2726,22 +2743,10 @@ if (quoteData) {
         } else {
             this.pendingQuote = null;
         }
+};
+
 
         
-        
-        // Добавьте эту функцию в класс (после sendAudioMessage):
-blobToBase64(blob) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            // Извлекаем только base64 часть (без data:audio/webm;base64,)
-            const base64 = reader.result.split(',')[1];
-            resolve(base64);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-    });
-}
         // ========== КОНЕЦ: АУДИО ФУНКЦИИ ==========
     }
 
