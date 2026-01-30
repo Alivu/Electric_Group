@@ -1889,42 +1889,41 @@
                 });
         }
         
-        displayMessage(message, docId) {
-            const isOwnMessage = message.userId === this.user?.uid;
-            const messageTime = message.timestamp ? 
-                new Date(message.timestamp.toDate()).toLocaleTimeString([], { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                }) : 
-                new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
-            const editedBadge = message.edited ? 
-                `<span class="edited-badge">(ред.)</span>` : '';
-            
-            // Цитата внутри сообщения
-            let quoteHtml = '';
-            if (message.replyTo) {
-                const quoteText = message.replyTo.text || '';
-                const shortText = quoteText.length > 100 ? 
-                    quoteText.substring(0, 100) + '...' : 
-                    quoteText;
-                    
-                quoteHtml = `
-                    <div class="quoted-message">
-                        <span class="quote-author">${message.replyTo.author || 'Электрик'}:</span>
-                        <span class="quote-text">${escapeHtml(shortText)}</span>
-                    </div>
-                `;
-            }
-            
-            // Содержимое сообщения
-            let contentHtml = '';
-            
-if (message.type === 'audio') {
-    if (message.audioData) {
+displayMessage(message, docId) {
+    const isOwnMessage = message.userId === this.user?.uid;
+    const messageTime = message.timestamp ? 
+        new Date(message.timestamp.toDate()).toLocaleTimeString([], { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        }) : 
+        new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    const editedBadge = message.edited ? 
+        `<span class="edited-badge">(ред.)</span>` : '';
+    
+    // Начинаем формировать содержимое
+    let contentHtml = '';
+    
+    // 1. Добавляем цитату если есть
+    if (message.replyTo) {
+        const quoteText = message.replyTo.text || '';
+        const shortText = quoteText.length > 100 ? 
+            quoteText.substring(0, 100) + '...' : 
+            quoteText;
+        
+        contentHtml += `
+            <div class="quoted-message">
+                <span class="quote-author">${message.replyTo.author || 'Электрик'}:</span>
+                <span class="quote-text">${escapeHtml(shortText)}</span>
+            </div>
+        `;
+    }
+    
+    // 2. Добавляем основной контент
+    if (message.type === 'audio' && message.audioData) {
         // Base64 аудио
         const audioSrc = `data:audio/webm;base64,${message.audioData}`;
-        contentHtml = `
+        contentHtml += `
             ${message.text ? `<p>${escapeHtml(message.text)}</p>` : ''}
             <div class="audio-message">
                 <audio controls>
@@ -1938,42 +1937,39 @@ if (message.type === 'audio') {
                 </div>
             </div>
         `;
+    } else {
+        // Текстовое сообщение
+        contentHtml += escapeHtml(message.text || '');
     }
-}else {
-                // Текстовое сообщение
-                contentHtml = escapeHtml(message.text || '');
-            }
-            
-            // Создаем элемент сообщения
-            const messageEl = document.createElement('div');
-            messageEl.className = `message ${isOwnMessage ? 'sent' : 'received'}`;
-            messageEl.setAttribute('data-message-id', docId);
-            
-            messageEl.innerHTML = `
-                <div class="message-header">
-                    <div class="message-avatar">
-                        ${message.userPhoto ? 
-                            `<img src="${message.userPhoto}" alt="${message.userName}">` : 
-                            `<div style="width:100%;height:100%;background:#2c5364;color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;">${(message.userName || 'E').charAt(0).toUpperCase()}</div>`
-                        }
-                    </div>
-                    <span class="message-author">${message.userName || 'Электрик'}</span>
-                    <span class="message-time">${messageTime} ${editedBadge}</span>
-                </div>
-                ${quoteHtml}
-                <div class="message-content">${contentHtml}</div>
-            `;
-            
-            this.messagesContainer.appendChild(messageEl);
-            this.addMessageActions(messageEl, message, docId);
-            
-            // Автопрокрутка к новому сообщению
-            if (this.shouldAutoScroll) {
-                setTimeout(() => this.scrollToBottom(), 100);
-            }
-            
-            return messageEl;
-        }
+    
+    // Создаем элемент сообщения
+    const messageEl = document.createElement('div');
+    messageEl.className = `message ${isOwnMessage ? 'sent' : 'received'}`;
+    messageEl.setAttribute('data-message-id', docId);
+    
+    messageEl.innerHTML = `
+        <div class="message-header">
+            <div class="message-avatar">
+                ${message.userPhoto ? 
+                    `<img src="${message.userPhoto}" alt="${message.userName}">` : 
+                    `<div style="width:100%;height:100%;background:#2c5364;color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;">${(message.userName || 'E').charAt(0).toUpperCase()}</div>`
+                }
+            </div>
+            <span class="message-author">${message.userName || 'Электрик'}</span>
+            <span class="message-time">${messageTime} ${editedBadge}</span>
+        </div>
+        <div class="message-content">${contentHtml}</div>
+    `;
+    
+    this.messagesContainer.appendChild(messageEl);
+    this.addMessageActions(messageEl, message, docId);
+    
+    if (this.shouldAutoScroll) {
+        setTimeout(() => this.scrollToBottom(), 100);
+    }
+    
+    return messageEl;
+}
         // ========== КОНЕЦ: ПРОСЛУШИВАНИЕ СООБЩЕНИЙ ==========
         
         // ========== НАЧАЛО: РЕДАКТИРОВАНИЕ И УДАЛЕНИЕ ==========
