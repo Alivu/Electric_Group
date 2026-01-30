@@ -382,10 +382,13 @@
     box-shadow: 0 2px 5px rgba(102, 187, 106, 0.1);
     position: relative;
 }
- /* Специальный стиль для аудио цитат */
+/* Стили для цитаты аудио */
 .quoted-message.audio-quote {
-    padding: 15px;
-    border-left: 4px solid #FF9800; /* Оранжевая рамка для аудио */
+    background: rgba(255, 255, 255, 0.7);
+    border-left: 3px solid #4CAF50;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    border-radius: 8px;
 }
 
 .quoted-message.audio-quote .quote-author {
@@ -433,26 +436,60 @@
 .quote-audio-content {
     display: flex;
     align-items: center;
-    gap: 15px;
-    margin-top: 10px;
-    padding: 10px;
-    background: rgba(255, 255, 255, 0.6);
-    border-radius: 8px;
+    gap: 10px;
+    margin-top: 8px;
+    padding: 8px 10px;
+    background: rgba(76, 175, 80, 0.1);
+    border-radius: 6px;
 }
 
+.audio-icon {
+    font-size: 1.2em;
+}
+.audio-duration-quote {
+    color: #666;
+    font-size: 0.9em;
+    font-weight: bold;
+}
+/* Стили для основного аудио сообщения */
+.audio-message-main {
+    background: linear-gradient(135deg, rgba(44, 83, 100, 0.1) 0%, rgba(32, 58, 67, 0.05) 100%);
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 8px;
+}
+.audio-waveform-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+.play-icon {
+    color: #2c5364;
+    font-size: 1.5em;
+    font-weight: bold;
+    min-width: 30px;
+}
 .audio-waveform {
     display: flex;
     align-items: center;
     gap: 3px;
-    height: 30px;
+    height: 40px;
     flex: 1;
 }
 
 .wave-bar {
-    width: 4px;
-    background: linear-gradient(to top, #FF9800, #FF5722);
-    border-radius: 2px;
+    width: 5px;
+    background: linear-gradient(to top, #2c5364, #4CAF50);
+    border-radius: 3px;
     min-height: 5px;
+}
+.audio-info-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 10px;
+    border-top: 1px solid rgba(44, 83, 100, 0.1);
 }
 
 .audio-info {
@@ -463,13 +500,24 @@
     color: #666;
     margin-top: 5px;
 }
-
+.audio-duration-main {
+    color: #2c5364;
+    font-weight: bold;
+    font-size: 1em;
+}
 .audio-duration {
     color: #FF9800;
     font-weight: bold;
     font-size: 0.85em;
 }
+.audio-time-sent {
+    color: #888;
+    font-size: 0.9em;
+}
 
+.audio-player-hidden {
+    display: none;
+}
 .audio-time {
     color: #888;
     font-size: 0.8em;
@@ -2064,14 +2112,8 @@ displayMessage(message, docId) {
                 </div>
                 <span class="quote-author">${message.replyTo.author || 'Электрик'}</span>
                 <div class="quote-audio-content">
-                    <div style="color: #FF9800; font-size: 1.2em; margin-right: 5px;">▶</div>
-                    <div class="audio-waveform">
-                        ${this.generateWaveform()}
-                    </div>
-                </div>
-                <div class="audio-info">
-                    <span class="audio-duration">${message.replyTo.audioDuration || '0:00'}</span>
-                    <span class="audio-time">${this.formatTime(message.timestamp?.toDate?.() || new Date())}</span>
+                    <div class="audio-icon">🎤</div>
+                    <div class="audio-duration-quote">${message.replyTo.audioDuration || '0:00'}</div>
                 </div>
             `;
         } else {
@@ -2103,15 +2145,21 @@ displayMessage(message, docId) {
         const audioSrc = `data:audio/webm;base64,${message.audioData}`;
         contentHtml += `
             ${message.text ? `<p>${escapeHtml(message.text)}</p>` : ''}
-            <div class="audio-message">
-                <audio controls>
-                    <source src="${audioSrc}" type="audio/webm">
-                    Ваш браузер не поддерживает аудио.
-                </audio>
-                <div class="audio-message-info">
-                    <span>🎤 Аудиосообщение</span>
-                    <span>${message.audioDuration || '0:00'}</span>
-                    <span>${message.audioSize ? message.audioSize + ' KB' : ''}</span>
+            <div class="audio-message-main">
+                <div class="audio-waveform-container">
+                    <div class="play-icon">▶</div>
+                    <div class="audio-waveform">
+                        ${this.generateWaveform()}
+                    </div>
+                </div>
+                <div class="audio-info-main">
+                    <div class="audio-duration-main">${message.audioDuration || '0:00'}</div>
+                    <div class="audio-time-sent">${messageTime}</div>
+                </div>
+                <div class="audio-player-hidden">
+                    <audio>
+                        <source src="${audioSrc}" type="audio/webm">
+                    </audio>
                 </div>
             </div>
         `;
@@ -2134,7 +2182,7 @@ displayMessage(message, docId) {
                 }
             </div>
             <span class="message-author">${message.userName || 'Электрик'}</span>
-            <span class="message-time">${messageTime} ${editedBadge}</span>
+            <span class="message-time">${editedBadge}</span>
         </div>
         <div class="message-content">${contentHtml}</div>
     `;
@@ -2985,10 +3033,10 @@ saveCurrentQuoteState() {
 
         
 // ========== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ==========
-generateWaveform(waveCount = 20) {
+generateWaveform(waveCount = 25) {
     let waveHtml = '';
     for (let i = 0; i < waveCount; i++) {
-        const randomHeight = Math.floor(Math.random() * 20) + 8;
+        const randomHeight = Math.floor(Math.random() * 25) + 10;
         waveHtml += `<div class="wave-bar" style="height:${randomHeight}px"></div>`;
     }
     return waveHtml;
