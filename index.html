@@ -458,11 +458,42 @@
     padding: 15px;
     margin-top: 8px;
 }
-.audio-waveform-container {
+        /* Аудиоплеер */
+.audio-player-controls {
     display: flex;
     align-items: center;
     gap: 15px;
     margin-bottom: 10px;
+}
+
+.play-pause-btn {
+    background: #2c5364;
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2em;
+    transition: all 0.3s;
+    flex-shrink: 0;
+}
+
+.play-pause-btn:hover {
+    background: #203a43;
+    transform: scale(1.05);
+}
+.audio-waveform-container {
+    position: relative;
+    flex: 1;
+    height: 40px;
+    background: rgba(44, 83, 100, 0.1);
+    border-radius: 20px;
+    cursor: pointer;
+    overflow: hidden;
 }
 .play-icon {
     color: #2c5364;
@@ -474,8 +505,10 @@
     display: flex;
     align-items: center;
     gap: 3px;
-    height: 40px;
-    flex: 1;
+    height: 100%;
+    padding: 0 15px;
+    position: relative;
+    z-index: 1;
 }
 
 .wave-bar {
@@ -483,15 +516,35 @@
     background: linear-gradient(to top, #2c5364, #4CAF50);
     border-radius: 3px;
     min-height: 5px;
+    transition: height 0.2s, opacity 0.2s;
 }
+.audio-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: rgba(76, 175, 80, 0.2);
+    width: 0%;
+    border-radius: 20px;
+    z-index: 0;
+    transition: width 0.1s;
+}
+        
 .audio-info-main {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding-top: 10px;
+    gap: 15px;
+    padding-top: 8px;
     border-top: 1px solid rgba(44, 83, 100, 0.1);
+    font-size: 0.9em;
+}
+.audio-current-time {
+    color: #2c5364;
+    font-weight: bold;
+    min-width: 40px;
 }
 
+        
 .audio-info {
     display: flex;
     align-items: center;
@@ -501,10 +554,10 @@
     margin-top: 5px;
 }
 .audio-duration-main {
-    color: #2c5364;
-    font-weight: bold;
-    font-size: 1em;
+    color: #666;
+    min-width: 40px;
 }
+
 .audio-duration {
     color: #FF9800;
     font-weight: bold;
@@ -512,9 +565,8 @@
 }
 .audio-time-sent {
     color: #888;
-    font-size: 0.9em;
+    margin-left: auto;
 }
-
 .audio-player-hidden {
     display: none;
 }
@@ -2140,30 +2192,37 @@ displayMessage(message, docId) {
     }
     
     // 2. Добавляем основной контент
-    if (message.type === 'audio' && message.audioData) {
-        // Base64 аудио
-        const audioSrc = `data:audio/webm;base64,${message.audioData}`;
-        contentHtml += `
-            ${message.text ? `<p>${escapeHtml(message.text)}</p>` : ''}
-            <div class="audio-message-main">
-                <div class="audio-waveform-container">
-                    <div class="play-icon">▶</div>
-                    <div class="audio-waveform">
+if (message.type === 'audio' && message.audioData) {
+    // Base64 аудио
+    const audioSrc = `data:audio/webm;base64,${message.audioData}`;
+    const audioId = `audio-${docId}`;
+    
+    contentHtml += `
+        ${message.text ? `<p>${escapeHtml(message.text)}</p>` : ''}
+        <div class="audio-message-main" data-audio-id="${audioId}">
+            <div class="audio-player-controls">
+                <button class="play-pause-btn" id="play-btn-${audioId}">
+                    <span class="play-icon">▶</span>
+                    <span class="pause-icon" style="display:none;">⏸</span>
+                </button>
+                <div class="audio-waveform-container" id="wave-container-${audioId}">
+                    <div class="audio-waveform" id="wave-${audioId}">
                         ${this.generateWaveform()}
                     </div>
-                </div>
-                <div class="audio-info-main">
-                    <div class="audio-duration-main">${message.audioDuration || '0:00'}</div>
-                    <div class="audio-time-sent">${messageTime}</div>
-                </div>
-                <div class="audio-player-hidden">
-                    <audio>
-                        <source src="${audioSrc}" type="audio/webm">
-                    </audio>
+                    <div class="audio-progress" id="progress-${audioId}"></div>
                 </div>
             </div>
-        `;
-    } else {
+            <div class="audio-info-main">
+                <div class="audio-current-time" id="current-time-${audioId}">0:00</div>
+                <div class="audio-duration-main" id="duration-${audioId}">${message.audioDuration || '0:00'}</div>
+                <div class="audio-time-sent">${messageTime}</div>
+            </div>
+            <audio id="${audioId}" preload="metadata">
+                <source src="${audioSrc}" type="audio/webm">
+            </audio>
+        </div>
+    `;
+} else {
         // Текстовое сообщение
         contentHtml += escapeHtml(message.text || '');
     }
@@ -2222,6 +2281,20 @@ displayMessage(message, docId) {
             actionsDiv.innerHTML = buttonsHtml;
             
             messageEl.appendChild(actionsDiv);
+
+
+
+
+
+                // Обработчик для аудио сообщений
+    if (messageData.type === 'audio') {
+        const audioId = `audio-${docId}`;
+        setTimeout(() => {
+            this.setupAudioPlayer(audioId, messageData.audioDuration);
+        }, 100);
+    }
+            
+
             
             const replyBtn = actionsDiv.querySelector('.reply-btn');
             replyBtn.addEventListener('click', (e) => {
@@ -2289,6 +2362,128 @@ displayMessage(message, docId) {
                 }
             });
         }
+
+
+setupAudioPlayer(audioId, duration) {
+    const audioElement = document.getElementById(audioId);
+    const playBtn = document.getElementById(`play-btn-${audioId}`);
+    const waveContainer = document.getElementById(`wave-container-${audioId}`);
+    const currentTimeEl = document.getElementById(`current-time-${audioId}`);
+    const durationEl = document.getElementById(`duration-${audioId}`);
+    const waveEl = document.getElementById(`wave-${audioId}`);
+    const progressEl = document.getElementById(`progress-${audioId}`);
+    
+    if (!audioElement || !playBtn) return;
+    
+    // Форматирование времени
+    const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+    
+    // Установка длительности
+    audioElement.onloadedmetadata = () => {
+        if (durationEl) {
+            durationEl.textContent = formatTime(audioElement.duration);
+        }
+    };
+    
+    // Воспроизведение/пауза
+    playBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        
+        if (audioElement.paused) {
+            audioElement.play();
+            playBtn.querySelector('.play-icon').style.display = 'none';
+            playBtn.querySelector('.pause-icon').style.display = 'inline';
+            this.animateWaveform(waveEl, true);
+        } else {
+            audioElement.pause();
+            playBtn.querySelector('.play-icon').style.display = 'inline';
+            playBtn.querySelector('.pause-icon').style.display = 'none';
+            this.animateWaveform(waveEl, false);
+        }
+    });
+    
+    // Обновление времени
+    audioElement.addEventListener('timeupdate', () => {
+        if (currentTimeEl) {
+            currentTimeEl.textContent = formatTime(audioElement.currentTime);
+        }
+        
+        // Обновление прогресса
+        if (progressEl && waveContainer && audioElement.duration > 0) {
+            const progress = (audioElement.currentTime / audioElement.duration) * 100;
+            progressEl.style.width = `${progress}%`;
+        }
+    });
+    
+    // Завершение воспроизведения
+    audioElement.addEventListener('ended', () => {
+        playBtn.querySelector('.play-icon').style.display = 'inline';
+        playBtn.querySelector('.pause-icon').style.display = 'none';
+        this.animateWaveform(waveEl, false);
+        if (progressEl) progressEl.style.width = '0%';
+        if (currentTimeEl) currentTimeEl.textContent = '0:00';
+    });
+    
+    // Клик по волне для перемотки
+    if (waveContainer) {
+        waveContainer.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const rect = waveContainer.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const percentage = clickX / rect.width;
+            
+            if (audioElement.duration > 0) {
+                audioElement.currentTime = percentage * audioElement.duration;
+                if (audioElement.paused) {
+                    audioElement.play();
+                    playBtn.querySelector('.play-icon').style.display = 'none';
+                    playBtn.querySelector('.pause-icon').style.display = 'inline';
+                    this.animateWaveform(waveEl, true);
+                }
+            }
+        });
+    }
+}
+
+animateWaveform(waveEl, isPlaying) {
+    if (!waveEl) return;
+    
+    const bars = waveEl.querySelectorAll('.wave-bar');
+    
+    if (isPlaying) {
+        // Анимация при воспроизведении
+        bars.forEach((bar, index) => {
+            const randomHeight = Math.floor(Math.random() * 25) + 10;
+            bar.style.height = `${randomHeight}px`;
+            bar.style.opacity = 0.5 + Math.random() * 0.5;
+        });
+        
+        waveEl.animationInterval = setInterval(() => {
+            bars.forEach((bar, index) => {
+                if (Math.random() > 0.3) {
+                    const randomHeight = Math.floor(Math.random() * 25) + 10;
+                    bar.style.height = `${randomHeight}px`;
+                    bar.style.opacity = 0.5 + Math.random() * 0.5;
+                }
+            });
+        }, 200);
+    } else {
+        // Остановка анимации
+        if (waveEl.animationInterval) {
+            clearInterval(waveEl.animationInterval);
+        }
+        bars.forEach(bar => {
+            bar.style.opacity = 0.6;
+        });
+    }
+}
+
+
+
         
         async saveEditedMessage(docId, newText) {
             if (!newText.trim()) return;
