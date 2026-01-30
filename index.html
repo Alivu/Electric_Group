@@ -2026,52 +2026,76 @@ subscribeToMessages() {
         }, (error) => {
             console.error("❌ Ошибка подписки на сообщения:", error);
         });
-        }
-        
-if (message.replyTo) {
-    let quoteContent = '';
-    
-    if (message.replyTo.type === 'audio') {
-        // Аудио цитата
-        quoteContent = `
-            <div class="quote-title">процитировал</div>
-            <span class="quote-author">${message.replyTo.author || 'Электрик'}</span>
-            <div class="quote-audio-content">
-                <div style="color: #FF9800; font-size: 1.2em; margin-right: 5px;">▶</div>
-                <div class="audio-waveform" id="wave-${message.replyTo.messageId || 'audio'}">
-                    ${this.generateWaveform()}
-                </div>
-            </div>
-            <div class="audio-info">
-                <span class="audio-duration">${message.replyTo.audioDuration || '0:00'}</span>
-                <span class="audio-time">${this.formatTime(new Date())}</span>
-            </div>
-        `;
-    } else {
-        // Текстовая цитата
-        const quoteText = message.replyTo.text || '';
-        const shortContent = quoteText.length > 100 ? 
-            quoteText.substring(0, 100) + '...' : 
-            quoteText;
-        
-        quoteContent = `
-            <div class="quote-title">процитировал</div>
-            <span class="quote-author">${message.replyTo.author || 'Электрик'}</span>
-            <span class="quote-text">${escapeHtml(shortContent)}</span>
-        `;
+} // ← Закрывающая скобка метода subscribeToMessages()
+
+displayMessage(message, docId) {
+    // Проверяем, не существует ли уже это сообщение
+    const existingMessage = document.querySelector(`[data-message-id="${docId}"]`);
+    if (existingMessage) {
+        console.log(`⚠️ Сообщение ${docId} уже существует, пропускаем`);
+        return existingMessage;
     }
     
-    const quoteClass = message.replyTo.type === 'audio' ? 'audio-quote' : '';
+    const isOwnMessage = message.userId === this.user?.uid;
+    const messageTime = message.timestamp ? 
+        new Date(message.timestamp.toDate()).toLocaleTimeString([], { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        }) : 
+        new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
-    contentHtml += `
-        <div class="quoted-message ${quoteClass}">
-            <div class="quote-header">
-                <div class="quote-title">↪️ процитировал</div>
+    const editedBadge = message.edited ? 
+        `<span class="edited-badge">(ред.)</span>` : '';
+    
+    // Начинаем формировать содержимое
+    let contentHtml = '';
+    
+    // 1. Добавляем цитату если есть
+    if (message.replyTo) {
+        let quoteContent = '';
+        let quoteClass = '';
+        
+        if (message.replyTo.type === 'audio') {
+            // Аудио цитата
+            quoteClass = 'audio-quote';
+            quoteContent = `
+                <div class="quote-header">
+                    <div class="quote-title">↪️ процитировал</div>
+                </div>
+                <span class="quote-author">${message.replyTo.author || 'Электрик'}</span>
+                <div class="quote-audio-content">
+                    <div style="color: #FF9800; font-size: 1.2em; margin-right: 5px;">▶</div>
+                    <div class="audio-waveform">
+                        ${this.generateWaveform()}
+                    </div>
+                </div>
+                <div class="audio-info">
+                    <span class="audio-duration">${message.replyTo.audioDuration || '0:00'}</span>
+                    <span class="audio-time">${this.formatTime(message.timestamp?.toDate?.() || new Date())}</span>
+                </div>
+            `;
+        } else {
+            // Текстовая цитата
+            const quoteText = message.replyTo.text || '';
+            const shortContent = quoteText.length > 100 ? 
+                quoteText.substring(0, 100) + '...' : 
+                quoteText;
+            
+            quoteContent = `
+                <div class="quote-header">
+                    <div class="quote-title">↪️ процитировал</div>
+                </div>
+                <span class="quote-author">${message.replyTo.author || 'Электрик'}</span>
+                <span class="quote-text">${escapeHtml(shortContent)}</span>
+            `;
+        }
+        
+        contentHtml += `
+            <div class="quoted-message ${quoteClass}">
+                ${quoteContent}
             </div>
-            ${quoteContent}
-        </div>
-    `;
-}
+        `;
+    }
     
     // 2. Добавляем основной контент
     if (message.type === 'audio' && message.audioData) {
