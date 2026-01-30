@@ -32,32 +32,7 @@
             padding: 20px;
             overflow: hidden;
         }
-.quoted-message-simple {
-    /* ШИРИНА ЦИТАТЫ */
-    width: 280px;                 /* Фиксированная ширина */
-    max-width: 280px;             /* Не больше чем */
-    min-width: 280px;             /* Не меньше чем */
-    
-    /* ВЫСОТА ЦИТАТЫ */
-    min-height: 40px;             /* Минимальная высота */
-    max-height: 60px;             /* Максимальная высота */
-    overflow: hidden;             /* Обрезать если не помещается */
-    
-    /* ОСТАЛЬНЫЕ СВОЙСТВА */
-    padding: 8px 12px;
-    margin-bottom: 10px;
-    background: rgba(76, 175, 80, 0.08);
-    border-radius: 8px;
-    font-size: 0.85em;
-}
 
-
-
-
-
-
-
-        
         /* СТИЛИ ДЛЯ АУДИОЗАПИСИ */
         .audio-btn {
             background: linear-gradient(135deg, #FF9800 0%, #FF5722 100%);
@@ -441,14 +416,13 @@
     font-size: 0.9em;
     opacity: 0.7;
 }
-
-
-.quote-author {
+ .quote-author {
     font-weight: 600;
-   color: #22150F; /* тёмный красно-коричневый */
-    margin-bottom: 4px;
-}
-        
+    color: #22150F; /* тёмный красно-коричневый */
+    font-size: 0.9em;
+    margin-bottom: 5px;
+    display: block;
+}       
 
 .quote-text {
     color: #444444; /* более тёмно-серое: */
@@ -462,60 +436,13 @@
 .quote-audio-content {
     display: flex;
     align-items: center;
-    gap: 8px;
-}
-.audio-icon-small {
-    font-size: 0.9em;
-}
-
-.quote-audio-duration {
-    color: #666;
-    font-size: 0.85em;
-}
-
-/* УПРОЩЕННОЕ АУДИО СООБЩЕНИЕ */
-.audio-message-simple {
-    /* ШИРИНА АУДИО ОКНА */
-    width: 320px;                 /* Фиксированная ширина аудио */
-    max-width: 320px;
-    min-width: 320px;
-    
-    /* ВЫСОТА АУДИО ОКНА */
-    min-height: 70px;             /* Минимальная высота (иконка + волна + время) */
-    max-height: 80px;             /* Максимальная высота */
-    
-    /* ОСТАЛЬНЫЕ СВОЙСТВА */
+    gap: 10px;
     margin-top: 8px;
+    padding: 8px 10px;
+    background: rgba(76, 175, 80, 0.1);
+    border-radius: 6px;
 }
 
-.audio-waveform-simple {
-    cursor: pointer;
-    user-select: none;
-}
-
-.play-icon-small {
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-/* КОНТЕЙНЕР ДЛЯ ВСЕЙ ВОЛНЫ (горизонтальный ряд) */
-.waveform-bars {
-    display: flex;
-    flex-direction: row;           /* ← КЛЮЧЕВОЕ: ГОРИЗОНТАЛЬНОЕ направление */
-    align-items: flex-end;         /* Бары "растут" снизу вверх */
-    justify-content: flex-start;   /* Выравнивание по левому краю */
-    gap: 2px;                      /* Расстояние между барами */
-    height: 30px;                  /* Высота контейнера */
-    width: 100%;                   /* Ширина на весь доступный размер */
-    flex-wrap: nowrap;             /* Запретить перенос на новую строку */
-    overflow: hidden;              /* Скрыть выходящие за границы бары */
-}
-.play-icon-small:hover {
-    transform: scale(1.1);
-}
-.waveform-bars:hover {
-    opacity: 0.9;
-}
-        
 .audio-icon {
     font-size: 1.2em;
 }
@@ -610,27 +537,11 @@
 }
 
 .wave-bar {
-    width: 3px;
+    width: 5px;
     background: linear-gradient(to top, #2c5364, #4CAF50);
-    border-radius: 1.5px;
+    border-radius: 3px;
     min-height: 5px;
-}
-
-        .audio-info-simple {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.8em;
-    color: #666;
-    padding: 0 5px;
-}
-
-.audio-duration-simple {
-    color: #2c5364;
-    font-weight: bold;
-}
-
-.audio-time-simple {
-    color: #888;
+    transition: height 0.2s, opacity 0.2s;
 }
 .audio-progress {
     position: absolute;
@@ -2265,59 +2176,74 @@ displayMessage(message, docId) {
     let contentHtml = '';
     
     // 1. Добавляем цитату если есть
-if (message.replyTo) {
-    let quoteContent = '';
-    
-    if (message.replyTo.type === 'audio') {
-        // Аудио цитата - ПРОСТОЙ ВАРИАНТ
-        quoteContent = `
-            <div class="quote-author">${message.replyTo.author || 'Электрик'}</div>
-            <div class="quote-audio-content">
-                <span class="audio-icon-small">🎤</span>
-                <span class="quote-audio-duration">${message.replyTo.audioDuration || '0:00'}</span>
-            </div>
-        `;
-    } else {
-        // Текстовая цитата
-        const quoteText = message.replyTo.text || '';
-        const shortContent = quoteText.length > 60 ? 
-            quoteText.substring(0, 60) + '...' : 
-            quoteText;
+    if (message.replyTo) {
+        let quoteContent = '';
+        let quoteClass = '';
         
-        quoteContent = `
-            <div class="quote-author">${message.replyTo.author || 'Электрик'}</div>
-            <div class="quote-text">${escapeHtml(shortContent)}</div>
+        if (message.replyTo.type === 'audio') {
+            // Аудио цитата
+            quoteClass = 'audio-quote';
+            quoteContent = `
+                <div class="quote-header">
+                    <div class="quote-title">↪️ процитировал</div>
+                </div>
+                <span class="quote-author">${message.replyTo.author || 'Электрик'}</span>
+                <div class="quote-audio-content">
+                    <div class="audio-icon">🎤</div>
+                    <div class="audio-duration-quote">${message.replyTo.audioDuration || '0:00'}</div>
+                </div>
+            `;
+        } else {
+            // Текстовая цитата
+            const quoteText = message.replyTo.text || '';
+            const shortContent = quoteText.length > 100 ? 
+                quoteText.substring(0, 100) + '...' : 
+                quoteText;
+            
+            quoteContent = `
+                <div class="quote-header">
+                    <div class="quote-title">↪️ процитировал</div>
+                </div>
+                <span class="quote-author">${message.replyTo.author || 'Электрик'}</span>
+                <span class="quote-text">${escapeHtml(shortContent)}</span>
+            `;
+        }
+        
+        contentHtml += `
+            <div class="quoted-message ${quoteClass}">
+                ${quoteContent}
+            </div>
         `;
     }
     
-    contentHtml += `
-        <div class="quoted-message-simple">
-            ${quoteContent}
-        </div>
-    `;
-}
-    
     // 2. Добавляем основной контент
 if (message.type === 'audio' && message.audioData) {
+    // Base64 аудио
     const audioSrc = `data:audio/webm;base64,${message.audioData}`;
     const audioId = `audio-${docId}`;
     
     contentHtml += `
         ${message.text ? `<p>${escapeHtml(message.text)}</p>` : ''}
-        <div class="audio-message-simple" data-audio-id="${audioId}">
-            <div class="audio-waveform-simple">
-                <span class="play-icon-small">▶</span>
-                <div class="waveform-bars" style="cursor: pointer;">
-                    ${this.generateWaveform(15)}
+        <div class="audio-message-main" data-audio-id="${audioId}">
+            <div class="audio-player-controls">
+                <button class="play-pause-btn" id="play-btn-${audioId}">
+                    <span class="play-icon">▶</span>
+                    <span class="pause-icon" style="display:none;">⏸</span>
+                </button>
+                <div class="audio-waveform-container" id="wave-container-${audioId}">
+                    <div class="audio-waveform" id="wave-${audioId}">
+                        ${this.generateWaveform()}
+                    </div>
+                    <div class="audio-progress" id="progress-${audioId}"></div>
                 </div>
             </div>
-            <div class="audio-info-simple">
-                <span class="audio-duration-simple">${message.audioDuration || '0:00'}</span>
-                <span class="audio-time-simple">${messageTime}</span>
+            <div class="audio-info-main">
+                <div class="audio-current-time" id="current-time-${audioId}">0:00</div>
+                <div class="audio-duration-main" id="duration-${audioId}">${message.audioDuration || '0:00'}</div>
+                <div class="audio-time-sent">${messageTime}</div>
             </div>
-            <audio id="${audioId}" preload="metadata" style="display: none;">
+            <audio id="${audioId}" preload="metadata">
                 <source src="${audioSrc}" type="audio/webm">
-                Ваш браузер не поддерживает аудио.
             </audio>
         </div>
     `;
@@ -2357,60 +2283,65 @@ if (message.type === 'audio' && message.audioData) {
         // ========== КОНЕЦ: ПРОСЛУШИВАНИЕ СООБЩЕНИЙ ==========
         
         // ========== НАЧАЛО: РЕДАКТИРОВАНИЕ И УДАЛЕНИЕ ==========
-addMessageActions(messageEl, messageData, docId) {
-    const isOwnMessage = messageData.userId === this.user?.uid;
-    
-    let buttonsHtml = `
-        <button class="reply-btn" data-id="${docId}" 
-                style="background: none; border: none; color: #2c5364; cursor: pointer; padding: 4px 8px; font-size: 0.85em; text-decoration: underline;">
-            Ответить
-        </button>
-    `;
-    
-    if (isOwnMessage) {
-        buttonsHtml = `
-            <button class="edit-btn" data-id="${docId}" title="Редактировать">✏️</button>
-            ${buttonsHtml}
-            <button class="delete-btn" data-id="${docId}" title="Удалить">🗑️</button>
-        `;
-    }
-    
-    const actionsDiv = document.createElement('div');
-    actionsDiv.className = 'message-actions';
-    actionsDiv.innerHTML = buttonsHtml;
-    
-    messageEl.appendChild(actionsDiv);
-    
-    // Обработчик для аудио сообщений (УПРОЩЕННАЯ ВЕРСИЯ)
+        addMessageActions(messageEl, messageData, docId) {
+            const isOwnMessage = messageData.userId === this.user?.uid;
+            
+            let buttonsHtml = `
+                <button class="reply-btn" data-id="${docId}" 
+                        style="background: none; border: none; color: #2c5364; cursor: pointer; padding: 4px 8px; font-size: 0.85em; text-decoration: underline;">
+                    Ответить
+                </button>
+            `;
+            
+            if (isOwnMessage) {
+                buttonsHtml = `
+                    <button class="edit-btn" data-id="${docId}" title="Редактировать">✏️</button>
+                    ${buttonsHtml}
+                    <button class="delete-btn" data-id="${docId}" title="Удалить">🗑️</button>
+                `;
+            }
+            
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'message-actions';
+            actionsDiv.innerHTML = buttonsHtml;
+            
+            messageEl.appendChild(actionsDiv);
+
+
+
+
+
+                // Обработчик для аудио сообщений
     if (messageData.type === 'audio') {
         const audioId = `audio-${docId}`;
         setTimeout(() => {
             this.setupAudioPlayer(audioId, messageData.audioDuration);
-        }, 300); // Увеличил задержку для гарантированной загрузки DOM
+        }, 100);
     }
-    
-    // Остальные обработчики...
-    const replyBtn = actionsDiv.querySelector('.reply-btn');
-    replyBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.startReplyToMessage(docId, messageData);
-    });
-    
-    if (isOwnMessage) {
-        const editBtn = actionsDiv.querySelector('.edit-btn');
-        const deleteBtn = actionsDiv.querySelector('.delete-btn');
-        
-        editBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.startEditMessage(docId, messageData);
-        });
-        
-        deleteBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.deleteMessage(docId);
-        });
-    }
-}
+            
+
+            
+            const replyBtn = actionsDiv.querySelector('.reply-btn');
+            replyBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.startReplyToMessage(docId, messageData);
+            });
+            
+            if (isOwnMessage) {
+                const editBtn = actionsDiv.querySelector('.edit-btn');
+                const deleteBtn = actionsDiv.querySelector('.delete-btn');
+                
+                editBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.startEditMessage(docId, messageData);
+                });
+                
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.deleteMessage(docId);
+                });
+            }
+        }
         
         startEditMessage(docId, messageData) {
             const messageEl = document.querySelector(`[data-message-id="${docId}"]`);
@@ -2460,195 +2391,124 @@ addMessageActions(messageEl, messageData, docId) {
 
 setupAudioPlayer(audioId, duration) {
     const audioElement = document.getElementById(audioId);
-    const audioContainer = document.querySelector(`[data-audio-id="${audioId}"]`);
+    const playBtn = document.getElementById(`play-btn-${audioId}`);
+    const waveContainer = document.getElementById(`wave-container-${audioId}`);
+    const currentTimeEl = document.getElementById(`current-time-${audioId}`);
+    const durationEl = document.getElementById(`duration-${audioId}`);
+    const waveEl = document.getElementById(`wave-${audioId}`);
+    const progressEl = document.getElementById(`progress-${audioId}`);
     
-    if (!audioElement || !audioContainer) {
-        console.log(`Аудио элемент ${audioId} не найден`);
-        return;
-    }
+    if (!audioElement || !playBtn) return;
     
-    // Находим элементы
-    const playIcon = audioContainer.querySelector('.play-icon-small');
-    const waveformBars = audioContainer.querySelector('.waveform-bars');
-    const waveContainer = audioContainer.querySelector('.audio-waveform-simple');
-    const durationEl = audioContainer.querySelector('.audio-duration-simple');
-    
-    // Проверяем что все элементы найдены
-    if (!playIcon || !waveformBars || !waveContainer) {
-        console.log('Не все элементы аудиоплеера найдены');
-        return;
-    }
-    
-    let isPlaying = false;
-    
-    // Функция форматирования времени
+    // Форматирование времени
     const formatTime = (seconds) => {
-        if (!seconds || isNaN(seconds) || !isFinite(seconds)) return "0:00";
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
     
-    // Установка длительности при загрузке
-    const updateDuration = () => {
-        if (durationEl && audioElement.duration && isFinite(audioElement.duration)) {
+    // Установка длительности
+    audioElement.onloadedmetadata = () => {
+        if (durationEl) {
             durationEl.textContent = formatTime(audioElement.duration);
-        } else if (duration) {
-            durationEl.textContent = duration;
         }
     };
     
-    // Загружаем метаданные
-    if (audioElement.readyState >= 1) { // HAVE_METADATA или выше
-        updateDuration();
-    } else {
-        audioElement.addEventListener('loadedmetadata', updateDuration, { once: true });
-    }
-    
-    // Также пробуем установить через 1 секунду на всякий случай
-    setTimeout(updateDuration, 1000);
-    
-    // ВОСПРОИЗВЕДЕНИЕ/ПАУЗА
-    const togglePlayback = () => {
+    // Воспроизведение/пауза
+    playBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        
         if (audioElement.paused) {
-            audioElement.play()
-                .then(() => {
-                    playIcon.textContent = '⏸';
-                    isPlaying = true;
-                    this.animateSimpleWaveform(waveformBars, true);
-                })
-                .catch(err => {
-                    console.error('Ошибка воспроизведения:', err);
-                    playIcon.textContent = '▶';
-                });
+            audioElement.play();
+            playBtn.querySelector('.play-icon').style.display = 'none';
+            playBtn.querySelector('.pause-icon').style.display = 'inline';
+            this.animateWaveform(waveEl, true);
         } else {
             audioElement.pause();
-            playIcon.textContent = '▶';
-            isPlaying = false;
-            this.animateSimpleWaveform(waveformBars, false);
-        }
-    };
-    
-    // Клик на иконку или волну - воспроизведение/пауза
-    playIcon.addEventListener('click', (e) => {
-        e.stopPropagation();
-        togglePlayback();
-    });
-    
-    // Клик на область волны - воспроизведение/пауза
-    waveContainer.addEventListener('click', (e) => {
-        e.stopPropagation();
-        togglePlayback();
-    });
-    
-    // ПЕРЕМОТКА ПО КЛИКУ НА ВОЛНУ
-    waveformBars.addEventListener('click', (e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        
-        // Проверяем что аудио загружено
-        if (!audioElement.duration || !isFinite(audioElement.duration) || audioElement.duration <= 0) {
-            console.log('Длительность аудио не определена, перемотка невозможна');
-            return;
-        }
-        
-        const rect = waveformBars.getBoundingClientRect();
-        const clickX = e.clientX - rect.left;
-        const percentage = Math.max(0, Math.min(1, clickX / rect.width));
-        
-        const newTime = percentage * audioElement.duration;
-        
-        if (isFinite(newTime) && newTime >= 0) {
-            audioElement.currentTime = newTime;
-            
-            // Если аудио было на паузе, запускаем
-            if (audioElement.paused) {
-                audioElement.play()
-                    .then(() => {
-                        playIcon.textContent = '⏸';
-                        isPlaying = true;
-                        this.animateSimpleWaveform(waveformBars, true);
-                    })
-                    .catch(err => {
-                        console.error('Ошибка воспроизведения после перемотки:', err);
-                    });
-            }
+            playBtn.querySelector('.play-icon').style.display = 'inline';
+            playBtn.querySelector('.pause-icon').style.display = 'none';
+            this.animateWaveform(waveEl, false);
         }
     });
     
-    // ОБНОВЛЕНИЕ ПРОГРЕССА ВОСПРОИЗВЕДЕНИЯ
+    // Обновление времени
     audioElement.addEventListener('timeupdate', () => {
-        if (audioElement.duration > 0) {
+        if (currentTimeEl) {
+            currentTimeEl.textContent = formatTime(audioElement.currentTime);
+        }
+        
+        // Обновление прогресса
+        if (progressEl && waveContainer && audioElement.duration > 0) {
             const progress = (audioElement.currentTime / audioElement.duration) * 100;
-            // Здесь можно добавить визуализацию прогресса если нужно
+            progressEl.style.width = `${progress}%`;
         }
     });
     
-    // ЗАВЕРШЕНИЕ ВОСПРОИЗВЕДЕНИЯ
+    // Завершение воспроизведения
     audioElement.addEventListener('ended', () => {
-        playIcon.textContent = '▶';
-        isPlaying = false;
-        this.animateSimpleWaveform(waveformBars, false);
+        playBtn.querySelector('.play-icon').style.display = 'inline';
+        playBtn.querySelector('.pause-icon').style.display = 'none';
+        this.animateWaveform(waveEl, false);
+        if (progressEl) progressEl.style.width = '0%';
+        if (currentTimeEl) currentTimeEl.textContent = '0:00';
     });
     
-    // ОБРАБОТКА ОШИБОК
-    audioElement.addEventListener('error', (e) => {
-        console.error('Ошибка аудио:', audioElement.error);
-        playIcon.textContent = '▶';
-        isPlaying = false;
-        this.animateSimpleWaveform(waveformBars, false);
-    });
-    
-    // Запускаем проверку готовности
-    setTimeout(() => {
-        if (audioElement.readyState >= 2) { // HAVE_CURRENT_DATA
-            updateDuration();
-        }
-    }, 500);
-}
-
-animateSimpleWaveform(waveformContainer, isPlaying) {
-    if (!waveformContainer) return;
-    
-    const bars = waveformContainer.querySelectorAll('.wave-bar');
-    if (!bars || bars.length === 0) return;
-    
-    // Останавливаем предыдущую анимацию
-    if (waveformContainer.animationInterval) {
-        clearInterval(waveformContainer.animationInterval);
-        waveformContainer.animationInterval = null;
-    }
-    
-    if (isPlaying) {
-        // Анимация при воспроизведении
-        waveformContainer.animationInterval = setInterval(() => {
-            bars.forEach((bar, index) => {
-                // Анимируем каждый бар с разной вероятностью для естественного вида
-                if (Math.random() > 0.6) {
-                    try {
-                        const currentHeight = parseInt(bar.style.height) || 10;
-                        const baseHeight = 10;
-                        const variation = Math.sin(Date.now() / 200 + index) * 8;
-                        const newHeight = Math.max(5, Math.min(25, baseHeight + variation));
-                        bar.style.height = `${newHeight}px`;
-                        bar.style.opacity = 0.7 + Math.random() * 0.3;
-                    } catch (e) {
-                        // Игнорируем ошибки анимации
-                    }
+    // Клик по волне для перемотки
+    if (waveContainer) {
+        waveContainer.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const rect = waveContainer.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const percentage = clickX / rect.width;
+            
+            if (audioElement.duration > 0) {
+                audioElement.currentTime = percentage * audioElement.duration;
+                if (audioElement.paused) {
+                    audioElement.play();
+                    playBtn.querySelector('.play-icon').style.display = 'none';
+                    playBtn.querySelector('.pause-icon').style.display = 'inline';
+                    this.animateWaveform(waveEl, true);
                 }
-            });
-        }, 150);
-    } else {
-        // Возвращаем к спокойному состоянию
-        bars.forEach((bar, index) => {
-            const baseHeight = 10;
-            const sineWave = Math.sin(index * 0.5) * 0.5 + 0.5;
-            const height = Math.floor(5 + (sineWave * 15));
-            bar.style.height = `${height}px`;
-            bar.style.opacity = 0.7;
+            }
         });
     }
 }
+
+animateWaveform(waveEl, isPlaying) {
+    if (!waveEl) return;
+    
+    const bars = waveEl.querySelectorAll('.wave-bar');
+    
+    if (isPlaying) {
+        // Анимация при воспроизведении
+        bars.forEach((bar, index) => {
+            const randomHeight = Math.floor(Math.random() * 25) + 10;
+            bar.style.height = `${randomHeight}px`;
+            bar.style.opacity = 0.5 + Math.random() * 0.5;
+        });
+        
+        waveEl.animationInterval = setInterval(() => {
+            bars.forEach((bar, index) => {
+                if (Math.random() > 0.3) {
+                    const randomHeight = Math.floor(Math.random() * 25) + 10;
+                    bar.style.height = `${randomHeight}px`;
+                    bar.style.opacity = 0.5 + Math.random() * 0.5;
+                }
+            });
+        }, 200);
+    } else {
+        // Остановка анимации
+        if (waveEl.animationInterval) {
+            clearInterval(waveEl.animationInterval);
+        }
+        bars.forEach(bar => {
+            bar.style.opacity = 0.6;
+        });
+    }
+}
+
+
+
         
         async saveEditedMessage(docId, newText) {
             if (!newText.trim()) return;
@@ -3393,21 +3253,15 @@ saveCurrentQuoteState() {
 
         
 // ========== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ==========
-generateWaveform(waveCount = 15) {
+generateWaveform(waveCount = 25) {
     let waveHtml = '';
-    const maxHeight = 20;
-    const minHeight = 5;
-    
     for (let i = 0; i < waveCount; i++) {
-        // Создаем волнообразную форму
-        const sineWave = Math.sin(i * 0.5) * 0.5 + 0.5; // от 0 до 1
-        const randomFactor = 0.3 + Math.random() * 0.4; // немного случайности
-        const height = Math.floor(minHeight + (sineWave * randomFactor * (maxHeight - minHeight)));
-        
-        waveHtml += `<div class="wave-bar" style="height:${height}px"></div>`;
+        const randomHeight = Math.floor(Math.random() * 25) + 10;
+        waveHtml += `<div class="wave-bar" style="height:${randomHeight}px"></div>`;
     }
     return waveHtml;
 }
+
 formatTime(date) {
     if (!date) {
         date = new Date();
