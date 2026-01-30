@@ -2500,7 +2500,7 @@ if (message.type === 'audio') {
         }
         
 async sendAudioMessage() {
-    console.log("🔍 DEBUG sendAudioMessage:");
+console.log("🔍 DEBUG sendAudioMessage:");
 console.log("1. currentAudioBlob существует?", !!this.currentAudioBlob);
 console.log("2. Размер Blob:", this.currentAudioBlob?.size);
 console.log("3. Пользователь:", this.user?.uid);
@@ -2584,6 +2584,7 @@ console.log("5. Метод blobToBase64 существует?", typeof this.blob
                     messageId: quoteId,
                     author: quoteAuthor,
                     text: quoteText
+                    
                 };
             }
         }
@@ -2639,19 +2640,7 @@ console.log("5. Метод blobToBase64 существует?", typeof this.blob
     }
 }
 
-// Добавьте эту функцию в класс (после sendAudioMessage):
-blobToBase64(blob) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            // Извлекаем только base64 часть (без data:audio/webm;base64,)
-            const base64 = reader.result.split(',')[1];
-            resolve(base64);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-    });
-}
+
         
         formatTime(seconds) {
             if (isNaN(seconds) || seconds === Infinity || seconds < 0) {
@@ -2700,6 +2689,19 @@ blobToBase64(blob) {
             this.currentAudioBlob = null;
             this.audioChunks = [];
         }
+        // Добавьте эту функцию в класс (после sendAudioMessage):
+blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            // Извлекаем только base64 часть (без data:audio/webm;base64,)
+            const base64 = reader.result.split(',')[1];
+            resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
         // ========== КОНЕЦ: АУДИО ФУНКЦИИ ==========
     }
 
