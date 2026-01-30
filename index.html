@@ -1196,14 +1196,6 @@
         flex-shrink: 0;
         margin-right: 2px; /* Добавили небольшой отступ справа */
     }
-                <div class="chat-stats">
-                <div class="online-badge">
-                    <span class="online-dot"></span>
-                    <span id="activeOnlineCount">0</span> онлайн
-                </div>
-                <button class="back-btn" id="backBtn">Назад</button>
-                <button class="logout-btn" id="logoutBtn">Выйти</button>
-            </div>
     .online-dot {
         width: 8px;
         height: 8px;
@@ -1658,22 +1650,6 @@
         </div>
     </div>
 </div>
-    <div class="modal-overlay" id="onlineModal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>👥 Участники онлайн</h3>
-                <button class="modal-close" id="closeOnlineModal">×</button>
-            </div>
-            <div class="modal-body" id="onlineUsersList">
-                <!-- Список загрузится через JS -->
-                <div class="loading">Загрузка...</div>
-            </div>
-            <div class="modal-footer">
-                <button class="modal-btn" id="closeOnlineModalBtn">Закрыть</button>
-            </div>
-        </div>
-    </div>
-
     
 <script>
 // ========== КОНФИГУРАЦИЯ FIREBASE ==========
