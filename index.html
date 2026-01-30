@@ -1723,18 +1723,52 @@ function escapeHtml(text) {
 }
 
 function showStatus(message, type) {
+    // Всегда логируем в консоль
+    console.log(`STATUS [${type}]: ${message}`);
+    
     const statusEl = document.getElementById('statusMessage');
+    
+    // Проверяем существует ли элемент
+    if (!statusEl) {
+        console.error('Элемент statusMessage не найден!');
+        
+        // Создаем временный элемент для показа ошибки
+        const tempDiv = document.createElement('div');
+        tempDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: ${type === 'error' ? '#dc3545' : type === 'success' ? '#28a745' : '#007bff'};
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 9999;
+        `;
+        tempDiv.textContent = message;
+        document.body.appendChild(tempDiv);
+        
+        setTimeout(() => {
+            if (tempDiv.parentNode) {
+                tempDiv.parentNode.removeChild(tempDiv);
+            }
+        }, 5000);
+        return;
+    }
+    
+    // Если элемент найден - показываем
     statusEl.textContent = message;
     statusEl.className = 'status ' + type;
     statusEl.style.display = 'block';
     
     if (type === 'success' || type === 'error') {
         setTimeout(() => {
-            statusEl.style.display = 'none';
+            if (statusEl) {
+                statusEl.style.display = 'none';
+            }
         }, 5000);
     }
 }
-
 class ElectricianChat {
     constructor() {
         console.log('🔴 Конструктор ElectricianChat ВЫЗВАН!');
