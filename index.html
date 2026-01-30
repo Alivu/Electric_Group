@@ -1410,6 +1410,7 @@
             this.audioContext = null;
             this.analyser = null;
             this.visualizerInterval = null;
+            this.pendingQuote = null;
             
             // ПРОКРУТКА
             this.shouldAutoScroll = true;
@@ -2233,6 +2234,8 @@ displayMessage(message, docId) {
             }
             
             try {
+                        // СОХРАНИ ЦИТАТУ перед началом записи
+        this.saveCurrentQuoteState();
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     audio: { 
                         echoCancellation: true, 
@@ -2421,6 +2424,7 @@ displayMessage(message, docId) {
             
             if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
                 this.mediaRecorder.stop();
+                this.pendingQuote = null; // Очищаем сохраненную цитату при отмене
             }
             
             if (this.mediaRecorder && this.mediaRecorder.stream) {
@@ -2493,6 +2497,7 @@ displayMessage(message, docId) {
             this.currentAudioBlob = null;
             document.getElementById('audioPreviewOverlay').style.display = 'none';
             this.messageInput.focus();
+            this.pendingQuote = null; // Очищаем при удалении превью
         }
         
 async sendAudioMessage() {
@@ -2569,21 +2574,38 @@ console.log("5. Метод blobToBase64 существует?", typeof this.blob
         }
         
         // Добавляем цитату если есть
-        const quotePreview = document.getElementById('quotePreview');
-        if (quotePreview && quotePreview.style.display === 'block') {
-            const quoteId = quotePreview.getAttribute('data-quote-id');
-            const quoteAuthor = quotePreview.getAttribute('data-quote-author');
-            const quoteText = quotePreview.getAttribute('data-quote-text');
-            
-            if (quoteId && quoteAuthor && quoteText) {
-                messageData.replyTo = {
-                    messageId: quoteId,
-                    author: quoteAuthor,
-                    text: quoteText
-                    
-                };
-            }
-        }
+let quoteData = null;
+
+const quotePreview = document.getElementById('quotePreview');
+if (quotePreview && quotePreview.style.display === 'block') {
+    // Цитата из видимого превью
+    const quoteId = quotePreview.getAttribute('data-quote-id');
+    const quoteAuthor = quotePreview.getAttribute('data-quote-author');
+    const quoteText = quotePreview.getAttribute('data-quote-text');
+    
+    if (quoteId && quoteAuthor && quoteText) {
+        quoteData = {
+            messageId: quoteId,
+            author: quoteAuthor,
+            text: quoteText
+        };
+    }
+} else if (this.pendingQuote) {
+    // Цитата из сохраненного состояния (когда записывали аудио)
+    quoteData = {
+        messageId: this.pendingQuote.id,
+        author: this.pendingQuote.author,
+        text: this.pendingQuote.text
+    };
+    console.log("🔄 Восстанавливаем сохраненную цитату:", quoteData);
+    
+    // Очищаем сохраненную цитату после использования
+    this.pendingQuote = null;
+}
+
+if (quoteData) {
+    messageData.replyTo = quoteData;
+}
         
         // Сохраняем в Firestore
         showStatus("💾 Сохранение в чат...", "info");
@@ -2685,6 +2707,28 @@ console.log("5. Метод blobToBase64 существует?", typeof this.blob
             this.currentAudioBlob = null;
             this.audioChunks = [];
         }
+
+
+
+    // ↓↓↓ ВСТАВЬ ЭТОТ МЕТОД ПРЯМО ЗДЕСЬ:
+    saveCurrentQuoteState() {
+        const quotePreview = document.getElementById('quotePreview');
+        if (!quotePreview) return;
+        
+        // Если есть видимая цитата, сохраняем её данные
+        if (quotePreview.style.display === 'block') {
+            this.pendingQuote = {
+                id: quotePreview.getAttribute('data-quote-id'),
+                author: quotePreview.getAttribute('data-quote-author'),
+                text: quotePreview.getAttribute('data-quote-text')
+            };
+            console.log("💾 Цитата сохранена:", this.pendingQuote);
+        } else {
+            this.pendingQuote = null;
+        }
+
+        
+        
         // Добавьте эту функцию в класс (после sendAudioMessage):
 blobToBase64(blob) {
     return new Promise((resolve, reject) => {
