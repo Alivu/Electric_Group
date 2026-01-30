@@ -1906,19 +1906,29 @@ displayMessage(message, docId) {
     let contentHtml = '';
     
     // 1. Добавляем цитату если есть
-    if (message.replyTo) {
-        const quoteText = message.replyTo.text || '';
-        const shortText = quoteText.length > 100 ? 
-            quoteText.substring(0, 100) + '...' : 
-            quoteText;
-        
-        contentHtml += `
-            <div class="quoted-message">
-                <span class="quote-author">${message.replyTo.author || 'Электрик'}:</span>
-                <span class="quote-text">${escapeHtml(shortText)}</span>
-            </div>
-        `;
+if (message.replyTo) {
+    let quoteContent = '';
+    
+    if (message.replyTo.type === 'audio') {
+        quoteContent = '🎤 Аудиосообщение';
+        if (message.replyTo.audioDuration) {
+            quoteContent += ` (${message.replyTo.audioDuration})`;
+        }
+    } else {
+        quoteContent = message.replyTo.text || '';
     }
+    
+    const shortContent = quoteContent.length > 100 ? 
+        quoteContent.substring(0, 100) + '...' : 
+        quoteContent;
+    
+    contentHtml += `
+        <div class="quoted-message">
+            <span class="quote-author">${message.replyTo.author || 'Электрик'}:</span>
+            <span class="quote-text">${escapeHtml(shortContent)}</span>
+        </div>
+    `;
+}
     
     // 2. Добавляем основной контент
     if (message.type === 'audio' && message.audioData) {
@@ -2119,22 +2129,48 @@ displayMessage(message, docId) {
         // ========== КОНЕЦ: РЕДАКТИРОВАНИЕ И УДАЛЕНИЕ ==========
         
         // ========== НАЧАЛО: ЦИТИРОВАНИЕ ==========
-        startReplyToMessage(docId, messageData) {
-            const quotePreview = document.getElementById('quotePreview');
-            if (!quotePreview) return;
-            
-            quotePreview.style.display = 'block';
-            quotePreview.setAttribute('data-quote-id', docId);
-            quotePreview.setAttribute('data-quote-author', messageData.userName || 'Электрик');
-            quotePreview.setAttribute('data-quote-text', messageData.text || '');
-            
-            document.getElementById('quoteAuthor').textContent = messageData.userName || 'Электрик';
-            const previewText = messageData.text && messageData.text.length > 60 ? 
-                messageData.text.substring(0, 60) + '...' : (messageData.text || '');
-            document.getElementById('quoteText').textContent = previewText;
-            
-            this.messageInput.focus();
+startReplyToMessage(docId, messageData) {
+    const quotePreview = document.getElementById('quotePreview');
+    if (!quotePreview) return;
+    
+    quotePreview.style.display = 'block';
+    quotePreview.setAttribute('data-quote-id', docId);
+    quotePreview.setAttribute('data-quote-author', messageData.userName || 'Электрик');
+    
+    // Сохраняем ВСЕ данные о сообщении как JSON
+    const quoteData = {
+        messageId: docId,
+        author: messageData.userName || 'Электрик',
+        userId: messageData.userId,
+        type: messageData.type || 'text',
+        text: messageData.text || '',
+        audioData: messageData.audioData,
+        audioDuration: messageData.audioDuration,
+        audioSize: messageData.audioSize
+    };
+    
+    quotePreview.setAttribute('data-quote-full', JSON.stringify(quoteData));
+    
+    // Отображаем превью с учетом типа сообщения
+    document.getElementById('quoteAuthor').textContent = messageData.userName || 'Электрик';
+    
+    let previewText = '';
+    if (messageData.type === 'audio') {
+        previewText = '🎤 Аудиосообщение';
+        if (messageData.audioDuration) {
+            previewText += ` (${messageData.audioDuration})`;
         }
+    } else {
+        previewText = messageData.text || '';
+        if (previewText.length > 60) {
+            previewText = previewText.substring(0, 60) + '...';
+        }
+    }
+    
+    document.getElementById('quoteText').textContent = previewText;
+    
+    this.messageInput.focus();
+}
         
         cancelQuote() {
             const quotePreview = document.getElementById('quotePreview');
@@ -2578,28 +2614,26 @@ let quoteData = null;
 
 const quotePreview = document.getElementById('quotePreview');
 if (quotePreview && quotePreview.style.display === 'block') {
-    // Цитата из видимого превью
-    const quoteId = quotePreview.getAttribute('data-quote-id');
-    const quoteAuthor = quotePreview.getAttribute('data-quote-author');
-    const quoteText = quotePreview.getAttribute('data-quote-text');
-    
-    if (quoteId && quoteAuthor && quoteText) {
-        quoteData = {
-            messageId: quoteId,
-            author: quoteAuthor,
-            text: quoteText
-        };
+    const quoteFull = quotePreview.getAttribute('data-quote-full');
+    if (quoteFull) {
+        try {
+            const parsedQuote = JSON.parse(quoteFull);
+            quoteData = {
+                messageId: parsedQuote.messageId,
+                author: parsedQuote.author,
+                userId: parsedQuote.userId,
+                type: parsedQuote.type || 'text',
+                text: parsedQuote.type === 'audio' ? '🎤 Аудиосообщение' : parsedQuote.text,
+                audioDuration: parsedQuote.audioDuration,
+                audioSize: parsedQuote.audioSize
+            };
+        } catch (e) {
+            console.error("Ошибка парсинга цитаты для аудио:", e);
+        }
     }
 } else if (this.pendingQuote) {
-    // Цитата из сохраненного состояния (когда записывали аудио)
-    quoteData = {
-        messageId: this.pendingQuote.id,
-        author: this.pendingQuote.author,
-        text: this.pendingQuote.text
-    };
-    console.log("🔄 Восстанавливаем сохраненную цитату:", quoteData);
-    
-    // Очищаем сохраненную цитату после использования
+    // Используем сохраненную цитату
+    quoteData = this.pendingQuote;
     this.pendingQuote = null;
 }
 
@@ -2728,23 +2762,26 @@ blobToBase64(blob) {
 
 
     // ↓↓↓ ВСТАВЬ ЭТОТ МЕТОД ПРЯМО ЗДЕСЬ:
-    saveCurrentQuoteState() {
-        const quotePreview = document.getElementById('quotePreview');
-        if (!quotePreview) return;
-        
-        // Если есть видимая цитата, сохраняем её данные
-        if (quotePreview.style.display === 'block') {
-            this.pendingQuote = {
-                id: quotePreview.getAttribute('data-quote-id'),
-                author: quotePreview.getAttribute('data-quote-author'),
-                text: quotePreview.getAttribute('data-quote-text')
-            };
-            console.log("💾 Цитата сохранена:", this.pendingQuote);
-        } else {
-            this.pendingQuote = null;
+saveCurrentQuoteState() {
+    const quotePreview = document.getElementById('quotePreview');
+    if (!quotePreview) return;
+    
+    // Если есть видимая цитата, сохраняем её данные
+    if (quotePreview.style.display === 'block') {
+        const quoteFull = quotePreview.getAttribute('data-quote-full');
+        if (quoteFull) {
+            try {
+                this.pendingQuote = JSON.parse(quoteFull);
+                console.log("💾 Цитата сохранена:", this.pendingQuote);
+            } catch (e) {
+                console.error("Ошибка сохранения цитаты:", e);
+                this.pendingQuote = null;
+            }
         }
+    } else {
+        this.pendingQuote = null;
+    }
 };
-
 
         
         // ========== КОНЕЦ: АУДИО ФУНКЦИИ ==========
