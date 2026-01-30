@@ -32,7 +32,25 @@
             padding: 20px;
             overflow: hidden;
         }
-
+        /* ИМЯ ОТПРАВИТЕЛЯ ВНУТРИ РАМКИ */
+.message-sender-inside {
+    font-weight: 600;
+    color: #2c5364;
+    font-size: 1.1em;
+    margin: 12px 0 15px 0;
+    padding-left: 5px;
+    font-style: italic;
+    border-bottom: 1px solid rgba(44, 83, 100, 0.1);
+    padding-bottom: 8px;
+}
+/* Для сообщений справа (отправленных) */
+.message.sent .message-sender-inside {
+    color: white;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    text-align: right;
+    padding-right: 5px;
+    padding-left: 0;
+}
         /* СТИЛИ ДЛЯ АУДИОЗАПИСИ */
         .audio-btn {
             background: linear-gradient(135deg, #FF9800 0%, #FF5722 100%);
@@ -535,14 +553,142 @@
     position: relative;
     z-index: 1;
 }
-
-.wave-bar {
-    width: 5px;
-    background: linear-gradient(to top, #2c5364, #4CAF50);
-    border-radius: 3px;
-    min-height: 5px;
-    transition: height 0.2s, opacity 0.2s;
+/* ВНЕШНЯЯ РАМКА СООБЩЕНИЯ С ЦИТАТОЙ (300px) */
+.message-with-quote {
+    width: 320px;
+    height: 320px; /* Увеличили на 20px для имени */
+    border: 2px solid #2c5364;
+    border-radius: 12px;
+    padding: 10px;
+    background: white;
+    box-shadow: 0 4px 12px rgba(44, 83, 100, 0.1);
+    position: relative;
 }
+
+/* РАМКА ЦИТАТЫ (135px, сероватая) */
+.quote-frame {
+    width: calc(100% - 10px); /* 5px с каждой стороны = 10px */
+    height: 135px;
+    margin: 5px; /* 5px отступы со всех сторон */
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: rgba(240, 240, 240, 0.7);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* ВНУТРЕННЯЯ ЧАСТЬ ЦИТАТЫ */
+.inner-quote-frame {
+    text-align: center;
+}
+
+.quote-author-inner {
+    font-weight: 600;
+    color: #1B5E20;
+    font-size: 1em;
+    margin-bottom: 8px;
+}
+
+.quote-audio-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.quote-audio-icon {
+    font-size: 1em;
+}
+
+.quote-text-inner {
+    color: #555;
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+/* ИМЯ ОТПРАВИТЕЛЯ (под рамкой цитаты) */
+.message-sender {
+    font-weight: 600;
+    color: #2c5364;
+    font-size: 1em;
+    margin: 15px 0 10px 0;
+    padding-left: 5px;
+}
+
+/* РАМКА АУДИО ПЛЕЙЕРА (160px) */
+.audio-player-frame {
+    height: 160px;
+    padding: 15px;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    background: rgba(248, 249, 250, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* СТРОКА С КНОПКОЙ И ВОЛНОЙ */
+.audio-controls-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+/* КНОПКА ВОСПРОИЗВЕДЕНИЯ */
+.play-btn-audio {
+    background: #f8f9fa;
+    border: 2px solid #2c5364;
+    color: #2c5364;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2em;
+    cursor: pointer;
+    transition: all 0.3s;
+    flex-shrink: 0;
+}
+
+.play-btn-audio:hover {
+    background: #2c5364;
+    color: white;
+    transform: scale(1.05);
+}
+
+/* КОНТЕЙНЕР ВОЛНЫ */
+.waveform-container {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 40px;
+    flex: 1;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 6px;
+    padding: 0 10px;
+    border: 1px solid #e9ecef;
+}
+.wave-bar {
+    width: 4px;
+    background: linear-gradient(to top, #2c5364, #4CAF50);
+    border-radius: 2px;
+    min-height: 5px;
+    transition: height 0.2s;
+}
+  /* СТРОКА С ВРЕМЕНЕМ */
+.audio-time-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 5px;
+    font-size: 0.9em;
+}      
 .audio-progress {
     position: absolute;
     top: 0;
@@ -584,10 +730,41 @@
 }
 
 .audio-duration {
-    color: #FF9800;
+    color: #2c5364;
     font-weight: bold;
-    font-size: 0.85em;
+    font-size: 1em;
 }
+
+.message-time-audio {
+    color: #666;
+    font-size: 0.9em;
+}
+        /* ПРОСТАЯ РАМКА БЕЗ ЦИТАТЫ */
+.simple-audio-frame {
+    width: 280px;
+    min-height: 180px; /* Увеличили для имени */
+    border: 2px solid #2c5364;
+    border-radius: 12px;
+    padding: 15px;
+    background: white;
+    box-shadow: 0 4px 12px rgba(44, 83, 100, 0.1);
+}
+        /* Разделитель между именем и текстом в текстовых сообщениях */
+.message-text-content {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(44, 83, 100, 0.1);
+}
+     .text-message-frame {
+    max-width: 400px;
+    min-width: 200px;
+    padding: 15px;
+    border-radius: 18px;
+    background: white;
+    border: 1px solid #e9ecef;
+    line-height: 1.4;
+    word-break: break-word;
+}   
 .audio-time-sent {
     color: #888;
     margin-left: auto;
@@ -2175,81 +2352,84 @@ displayMessage(message, docId) {
     // Начинаем формировать содержимое
     let contentHtml = '';
     
-    // 1. Добавляем цитату если есть
+    // Если есть цитата - создаем сложную структуру
     if (message.replyTo) {
         let quoteContent = '';
-        let quoteClass = '';
         
         if (message.replyTo.type === 'audio') {
-            // Аудио цитата
-            quoteClass = 'audio-quote';
             quoteContent = `
-                <div class="quote-header">
-                    <div class="quote-title">↪️ процитировал</div>
-                </div>
-                <span class="quote-author">${message.replyTo.author || 'Электрик'}</span>
-                <div class="quote-audio-content">
-                    <div class="audio-icon">🎤</div>
-                    <div class="audio-duration-quote">${message.replyTo.audioDuration || '0:00'}</div>
+                <div class="inner-quote-frame">
+                    <div class="quote-author-inner">${message.replyTo.author || 'Электрик'}</div>
+                    <div class="quote-audio-info">
+                        <span class="quote-audio-icon">🎤</span>
+                        <span class="quote-audio-duration">${message.replyTo.audioDuration || '0:00'}</span>
+                    </div>
                 </div>
             `;
         } else {
-            // Текстовая цитата
             const quoteText = message.replyTo.text || '';
-            const shortContent = quoteText.length > 100 ? 
-                quoteText.substring(0, 100) + '...' : 
-                quoteText;
+            const shortContent = quoteText.length > 80 ? quoteText.substring(0, 80) + '...' : quoteText;
             
             quoteContent = `
-                <div class="quote-header">
-                    <div class="quote-title">↪️ процитировал</div>
+                <div class="inner-quote-frame">
+                    <div class="quote-author-inner">${message.replyTo.author || 'Электрик'}</div>
+                    <div class="quote-text-inner">${escapeHtml(shortContent)}</div>
                 </div>
-                <span class="quote-author">${message.replyTo.author || 'Электрик'}</span>
-                <span class="quote-text">${escapeHtml(shortContent)}</span>
             `;
         }
         
-        contentHtml += `
-            <div class="quoted-message ${quoteClass}">
-                ${quoteContent}
-            </div>
-        `;
-    }
-    
-    // 2. Добавляем основной контент
-if (message.type === 'audio' && message.audioData) {
-    // Base64 аудио
-    const audioSrc = `data:audio/webm;base64,${message.audioData}`;
-    const audioId = `audio-${docId}`;
-    
-    contentHtml += `
-        ${message.text ? `<p>${escapeHtml(message.text)}</p>` : ''}
-        <div class="audio-message-main" data-audio-id="${audioId}">
-            <div class="audio-player-controls">
-                <button class="play-pause-btn" id="play-btn-${audioId}">
-                    <span class="play-icon">▶</span>
-                    <span class="pause-icon" style="display:none;">⏸</span>
-                </button>
-                <div class="audio-waveform-container" id="wave-container-${audioId}">
-                    <div class="audio-waveform" id="wave-${audioId}">
-                        ${this.generateWaveform()}
+        // ВНЕШНЯЯ РАМКА СООБЩЕНИЯ С ЦИТАТОЙ (300px высота)
+        contentHtml = `
+            <div class="message-with-quote">
+                <!-- РАМКА ЦИТАТЫ (135px высота, 5px отступы) -->
+                <div class="quote-frame">
+                    ${quoteContent}
+                </div>
+                
+                <!-- ИМЯ ОТПРАВИТЕЛЯ -->
+                <div class="message-sender">${message.userName || 'Электрик'}</div>
+                
+                <!-- АУДИО ПЛЕЙЕР (160px высота) -->
+                <div class="audio-player-frame">
+                    <div class="audio-controls-row">
+                        <span class="play-btn-audio">▶</span>
+                        <div class="waveform-container">
+                            ${this.generateWaveform(20)}
+                        </div>
                     </div>
-                    <div class="audio-progress" id="progress-${audioId}"></div>
+                    <div class="audio-time-info">
+                        <span class="audio-duration">${message.audioDuration || '0:00'}</span>
+                        <span class="message-time-audio">${messageTime}</span>
+                    </div>
+                    <audio id="audio-${docId}" preload="metadata">
+                        <source src="data:audio/webm;base64,${message.audioData}" type="audio/webm">
+                    </audio>
                 </div>
             </div>
-            <div class="audio-info-main">
-                <div class="audio-current-time" id="current-time-${audioId}">0:00</div>
-                <div class="audio-duration-main" id="duration-${audioId}">${message.audioDuration || '0:00'}</div>
-                <div class="audio-time-sent">${messageTime}</div>
+        `;
+    } 
+    // Если НЕТ цитаты - простая структура
+    else if (message.type === 'audio' && message.audioData) {
+        contentHtml = `
+            <div class="simple-audio-frame">
+                <div class="message-sender">${message.userName || 'Электрик'}</div>
+                <div class="audio-controls-row">
+                    <span class="play-btn-audio">▶</span>
+                    <div class="waveform-container">
+                        ${this.generateWaveform(20)}
+                    </div>
+                </div>
+                <div class="audio-time-info">
+                    <span class="audio-duration">${message.audioDuration || '0:00'}</span>
+                    <span class="message-time-audio">${messageTime}</span>
+                </div>
+                <audio id="audio-${docId}" preload="metadata">
+                    <source src="data:audio/webm;base64,${message.audioData}" type="audio/webm">
+                </audio>
             </div>
-            <audio id="${audioId}" preload="metadata">
-                <source src="${audioSrc}" type="audio/webm">
-            </audio>
-        </div>
-    `;
-} else {
-        // Текстовое сообщение
-        contentHtml += escapeHtml(message.text || '');
+        `;
+    } else {
+        contentHtml = escapeHtml(message.text || '');
     }
     
     // Создаем элемент сообщения
@@ -2257,19 +2437,127 @@ if (message.type === 'audio' && message.audioData) {
     messageEl.className = `message ${isOwnMessage ? 'sent' : 'received'}`;
     messageEl.setAttribute('data-message-id', docId);
     
-    messageEl.innerHTML = `
-        <div class="message-header">
-            <div class="message-avatar">
-                ${message.userPhoto ? 
-                    `<img src="${message.userPhoto}" alt="${message.userName}">` : 
-                    `<div style="width:100%;height:100%;background:#2c5364;color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;">${(message.userName || 'E').charAt(0).toUpperCase()}</div>`
-                }
+// АВАТАРКА СЛЕВА
+const avatarHtml = `
+    <div class="message-avatar-left">
+        ${message.userPhoto ? 
+            `<img src="${message.userPhoto}" alt="${message.userName}">` : 
+            `<div style="width:100%;height:100%;background:#2c5364;color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;">
+                ${(message.userName || 'E').charAt(0).toUpperCase()}
+            </div>`
+        }
+    </div>
+`;
+
+// Формируем содержимое сообщения (contentHtml должен быть определен выше!)
+let finalContent = '';
+
+if (message.replyTo) {
+    // Сообщение с цитатой
+    let quoteContent = '';
+    
+    if (message.replyTo.type === 'audio') {
+        quoteContent = `
+            <div class="inner-quote-frame">
+                <div class="quote-author-inner">${message.replyTo.author || 'Электрик'}</div>
+                <div class="quote-audio-info">
+                    <span class="quote-audio-icon">🎤</span>
+                    <span class="quote-audio-duration">${message.replyTo.audioDuration || '0:00'}</span>
+                </div>
             </div>
-            <span class="message-author">${message.userName || 'Электрик'}</span>
-            <span class="message-time">${editedBadge}</span>
+        `;
+    } else {
+        const quoteText = message.replyTo.text || '';
+        const shortContent = quoteText.length > 80 ? quoteText.substring(0, 80) + '...' : quoteText;
+        
+        quoteContent = `
+            <div class="inner-quote-frame">
+                <div class="quote-author-inner">${message.replyTo.author || 'Электрик'}</div>
+                <div class="quote-text-inner">${escapeHtml(shortContent)}</div>
+            </div>
+        `;
+    }
+    
+    finalContent = `
+        ${avatarHtml}
+        <div class="message-content-with-avatar">
+            <div class="message-with-quote">
+                <!-- РАМКА ЦИТАТЫ -->
+                <div class="quote-frame">
+                    ${quoteContent}
+                </div>
+                
+                <!-- ИМЯ ОТПРАВИТЕЛЯ ВНУТРИ РАМКИ -->
+                <div class="message-sender-inside">${message.userName || 'Электрик'}</div>
+                
+                <!-- АУДИО ПЛЕЙЕР -->
+                <div class="audio-player-frame">
+                    <div class="audio-controls-row">
+                        <span class="play-btn-audio" data-audio-id="audio-${docId}">▶</span>
+                        <div class="waveform-container">
+                            ${this.generateWaveform(20)}
+                        </div>
+                    </div>
+                    <div class="audio-time-info">
+                        <span class="audio-duration">${message.audioDuration || '0:00'}</span>
+                        <span class="message-time-audio">${messageTime}</span>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="message-content">${contentHtml}</div>
     `;
+    
+    // Добавляем аудио элемент
+    finalContent += `
+        <audio id="audio-${docId}" preload="metadata" style="display: none;">
+            <source src="data:audio/webm;base64,${message.audioData}" type="audio/webm">
+        </audio>
+    `;
+} 
+else if (message.type === 'audio' && message.audioData) {
+    // Простое аудио сообщение
+    finalContent = `
+        ${avatarHtml}
+        <div class="message-content-with-avatar">
+            <div class="simple-audio-frame">
+                <!-- ИМЯ ОТПРАВИТЕЛЯ ВНУТРИ РАМКИ -->
+                <div class="message-sender-inside">${message.userName || 'Электрик'}</div>
+                
+                <div class="audio-controls-row">
+                    <span class="play-btn-audio" data-audio-id="audio-${docId}">▶</span>
+                    <div class="waveform-container">
+                        ${this.generateWaveform(20)}
+                    </div>
+                </div>
+                <div class="audio-time-info">
+                    <span class="audio-duration">${message.audioDuration || '0:00'}</span>
+                    <span class="message-time-audio">${messageTime}</span>
+                </div>
+            </div>
+        </div>
+        <audio id="audio-${docId}" preload="metadata" style="display: none;">
+            <source src="data:audio/webm;base64,${message.audioData}" type="audio/webm">
+        </audio>
+    `;
+} 
+else {
+    // Текстовое сообщение
+    finalContent = `
+        ${avatarHtml}
+        <div class="message-content-with-avatar">
+            <div class="text-message-frame">
+                <!-- ИМЯ ОТПРАВИТЕЛЯ ВНУТРИ РАМКИ -->
+                <div class="message-sender-inside">${message.userName || 'Электрик'}</div>
+                <div class="message-text-content">
+                    ${escapeHtml(message.text || '')}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Устанавливаем содержимое
+messageEl.innerHTML = finalContent;
     
     this.messagesContainer.appendChild(messageEl);
     this.addMessageActions(messageEl, message, docId);
@@ -2391,10 +2679,14 @@ if (message.type === 'audio' && message.audioData) {
 
 setupAudioPlayer(audioId, duration) {
     const audioElement = document.getElementById(audioId);
-    const playBtn = document.getElementById(`play-btn-${audioId}`);
-    const waveContainer = document.getElementById(`wave-container-${audioId}`);
+    if (!audioElement) return;
+        const playBtn = document.querySelector(`[data-audio-id="${audioId}"] .play-btn-audio`) ||
+                    document.querySelector(`#play-btn-${audioId}`);
+    
+    if (!playBtn) return;
+    const waveContainer = document.querySelector(`[data-audio-id="${audioId}"] .waveform-container`);
     const currentTimeEl = document.getElementById(`current-time-${audioId}`);
-    const durationEl = document.getElementById(`duration-${audioId}`);
+    const durationEl = document.querySelector(`[data-audio-id="${audioId}"] .audio-duration`);
     const waveEl = document.getElementById(`wave-${audioId}`);
     const progressEl = document.getElementById(`progress-${audioId}`);
     
