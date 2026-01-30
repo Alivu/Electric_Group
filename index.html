@@ -2293,110 +2293,151 @@ showAudioPreview() {
     }
     
 async sendAudioMessage() {
-    if (!this.currentAudioBlob || !this.user) return;
-    
     console.log("=== ОТПРАВКА АУДИО ===");
     
-    // Проверка размера аудио
+    // Проверки
+    if (!this.currentAudioBlob) {
+        showStatus("❌ Нет аудио для отправки", "error");
+        return;
+    }
+    
+    if (!this.user) {
+        showStatus("❌ Пользователь не авторизован", "error");
+        return;
+    }
+    
     if (this.currentAudioBlob.size === 0) {
         showStatus("❌ Аудиофайл пустой", "error");
         return;
     }
     
+    // Получаем элементы
+    const sendAudioBtn = document.getElementById('sendAudioBtn');
+    const deleteAudioBtn = document.getElementById('deleteAudioBtn');
+    
+    // Блокируем кнопки
+    if (sendAudioBtn) {
+        sendAudioBtn.innerHTML = "⏳";
+        sendAudioBtn.disabled = true;
+    }
+    if (deleteAudioBtn) {
+        deleteAudioBtn.disabled = true;
+    }
+    
     try {
-        // Обновляем кнопку отправки
-        const sendAudioBtn = document.getElementById('sendAudioBtn');
-        if (sendAudioBtn) {
-            sendAudioBtn.innerHTML = "⏳";
-            sendAudioBtn.disabled = true;
-        }
+        // 1. Подготовка данных
+        const durationElement = document.getElementById('audioDuration');
+        const audioDuration = durationElement ? durationElement.textContent : "0:00";
+        const sizeKB = Math.round(this.currentAudioBlob.size / 1024);
         
+        // 2. Создаем имя файла
         const timestamp = Date.now();
         const fileName = `audio_${this.user.uid}_${timestamp}.webm`;
+        
+        // 3. Загружаем в Firebase Storage
+        console.log("Загрузка в Storage...");
+        
         const storageRef = firebase.storage().ref(`chat_audio/${this.user.uid}/${fileName}`);
         
         const metadata = {
             contentType: 'audio/webm',
             customMetadata: {
-                'userId': this.user.uid,
-                'userName': this.user.displayName || 'Электрик',
-                'timestamp': timestamp.toString()
+                userId: this.user.uid,
+                userName: this.user.displayName || 'Электрик',
+                timestamp: timestamp.toString()
             }
         };
         
+        // Простая загрузка
         const uploadTask = storageRef.put(this.currentAudioBlob, metadata);
         
-        uploadTask.on('state_changed',
-            (snapshot) => {
-                // Прогресс загрузки
-                const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-                if (sendAudioBtn) {
-                    sendAudioBtn.innerHTML = `⏳ ${progress}%`;
-                }
-            },
-            (error) => {
-                console.error("❌ Ошибка загрузки:", error);
-                showStatus("Ошибка загрузки аудио", "error");
-                if (sendAudioBtn) {
-                    sendAudioBtn.innerHTML = "✅ Отправить";
-                    sendAudioBtn.disabled = false;
-                }
-            },
-            async () => {
-                try {
-                    const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                    
-                    // Получаем длительность
-                    const durationElement = document.getElementById('audioDuration');
-                    const duration = durationElement ? durationElement.textContent : "0:00";
-                    
-                    // Создаем сообщение
-                    const messageData = {
-                        type: 'audio',
-                        audioURL: downloadURL,
-                        audioFileName: fileName,
-                        audioDuration: duration,
-                        userId: this.user.uid,
-                        userName: this.user.displayName || 'Электрик',
-                        userEmail: this.user.email,
-                        userPhoto: this.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.user.displayName || 'E')}&background=2c5364&color=fff`,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                        isElectrician: true
-                    };
-                    
-                    // Добавляем в Firestore
-                    await db.collection('rooms').doc(this.roomId)
-                        .collection('messages').add(messageData);
-                    
-                    showStatus("✅ Аудиосообщение отправлено!", "success");
-                    
-                    // Очищаем превью
-                    this.deleteAudioPreview();
-                    
-                    // Очищаем текстовое поле
-                    const textInput = document.getElementById('messageInput');
-                    if (textInput) textInput.value = '';
-                    
-                } catch (error) {
-                    console.error("❌ Ошибка сохранения:", error);
-                    showStatus("Ошибка сохранения сообщения", "error");
-                } finally {
-                    if (sendAudioBtn) {
-                        sendAudioBtn.innerHTML = "✅ Отправить";
-                        sendAudioBtn.disabled = false;
-                    }
-                }
+        // Ждем завершения
+        await uploadTask;
+        console.log("✅ Аудио загружено");
+        
+        // 4. Получаем URL
+        const downloadURL = await storageRef.getDownloadURL();
+        console.log("URL получен");
+        
+        // 5. Создаем сообщение
+        const messageData = {
+            type: 'audio',
+            audioURL: downloadURL,
+            audioFileName: fileName,
+            audioDuration: audioDuration,
+            audioSize: sizeKB,
+            userId: this.user.uid,
+            userName: this.user.displayName || 'Электрик',
+            userEmail: this.user.email,
+            userPhoto: this.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.user.displayName || 'E')}&background=2c5364&color=fff`,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            isElectrician: true
+        };
+        
+        // Добавляем текст если есть
+        const textInput = document.getElementById('messageInput');
+        if (textInput && textInput.value.trim()) {
+            messageData.text = textInput.value.trim();
+        }
+        
+        // Добавляем цитату если есть
+        const quotePreview = document.getElementById('quotePreview');
+        if (quotePreview && quotePreview.style.display === 'block') {
+            const quoteId = quotePreview.getAttribute('data-quote-id');
+            const quoteAuthor = quotePreview.getAttribute('data-quote-author');
+            const quoteText = quotePreview.getAttribute('data-quote-text');
+            
+            if (quoteId && quoteAuthor && quoteText) {
+                messageData.replyTo = {
+                    messageId: quoteId,
+                    author: quoteAuthor,
+                    text: quoteText
+                };
             }
-        );
+        }
+        
+        // 6. Сохраняем в Firestore
+        await firebase.firestore()
+            .collection('rooms')
+            .doc(this.roomId)
+            .collection('messages')
+            .add(messageData);
+        
+        console.log("✅ Сообщение сохранено");
+        
+        // 7. Успех
+        showStatus("✅ Аудиосообщение отправлено!", "success");
+        
+        // 8. Очищаем
+        this.deleteAudioPreview();
+        
+        if (textInput) textInput.value = '';
+        this.cancelQuote();
         
     } catch (error) {
-        console.error("❌ Общая ошибка отправки:", error);
-        showStatus("Ошибка отправки аудио", "error");
+        console.error("❌ Ошибка отправки:", error);
         
+        let errorMessage = "Ошибка отправки: ";
+        if (error.code === 'storage/unauthorized') {
+            errorMessage = "❌ Нет прав на загрузку";
+        } else if (error.code === 'storage/canceled') {
+            errorMessage = "❌ Загрузка отменена";
+        } else {
+            errorMessage += error.message;
+        }
+        
+        showStatus(errorMessage, "error");
+        
+        // Разблокируем кнопки
         const sendAudioBtn = document.getElementById('sendAudioBtn');
         if (sendAudioBtn) {
             sendAudioBtn.innerHTML = "✅ Отправить";
             sendAudioBtn.disabled = false;
+        }
+        
+        const deleteAudioBtn = document.getElementById('deleteAudioBtn');
+        if (deleteAudioBtn) {
+            deleteAudioBtn.disabled = false;
         }
     }
 }
