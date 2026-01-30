@@ -479,9 +479,17 @@
     cursor: pointer;
     transition: transform 0.2s;
 }
+/* КОНТЕЙНЕР ДЛЯ ВСЕЙ ВОЛНЫ (горизонтальный ряд) */
 .waveform-bars {
-    cursor: pointer;
-    transition: opacity 0.2s;
+    display: flex;
+    flex-direction: row;           /* ← КЛЮЧЕВОЕ: ГОРИЗОНТАЛЬНОЕ направление */
+    align-items: flex-end;         /* Бары "растут" снизу вверх */
+    justify-content: flex-start;   /* Выравнивание по левому краю */
+    gap: 2px;                      /* Расстояние между барами */
+    height: 30px;                  /* Высота контейнера */
+    width: 100%;                   /* Ширина на весь доступный размер */
+    flex-wrap: nowrap;             /* Запретить перенос на новую строку */
+    overflow: hidden;              /* Скрыть выходящие за границы бары */
 }
 .play-icon-small:hover {
     transform: scale(1.1);
