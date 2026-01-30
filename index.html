@@ -2357,7 +2357,6 @@ uploadTask.on('state_changed',
             const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
             console.log("✅ Аудио загружено, URL:", downloadURL.substring(0, 50) + "...");
             
-            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
             const duration = document.getElementById('audioDuration').textContent;
             const sizeKB = Math.round(this.currentAudioBlob.size / 1024);
             
