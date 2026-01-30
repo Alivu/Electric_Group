@@ -2315,32 +2315,14 @@ class ElectricianChat {
             
 uploadTask.on('state_changed',
     (snapshot) => {
-        // ИСПРАВЛЕННЫЙ ВАРИАНТ - показываем только когда есть данные
-        const totalBytes = snapshot.totalBytes;
-        const bytesTransferred = snapshot.bytesTransferred;
-        
+        // Простой индикатор без сложных вычислений
         if (sendAudioBtn) {
-            // Показываем прогресс только когда totalBytes > 0
-            if (totalBytes > 0) {
-                const progress = (bytesTransferred / totalBytes) * 100;
-                const roundedProgress = Math.round(progress);
-                
-                console.log(`Загрузка: ${bytesTransferred}/${totalBytes} (${roundedProgress}%)`);
-                
-                if (progress < 100) {
-                    sendAudioBtn.innerHTML = `⏳ ${roundedProgress}%`;
-                } else {
-                    sendAudioBtn.innerHTML = `⏳ Завершение...`;
-                }
-            } else {
-                // Показываем просто индикатор загрузки
-                sendAudioBtn.innerHTML = `⏳ Загрузка...`;
-            }
+            sendAudioBtn.innerHTML = `⏳ Отправка...`;
         }
     },
     (error) => {
         console.error("❌ Ошибка загрузки:", error);
-        showStatus("Ошибка загрузки аудио: " + error.message, "error");
+        showStatus("Ошибка загрузки аудио", "error");
         
         if (sendAudioBtn) {
             sendAudioBtn.innerHTML = "✅ Отправить";
@@ -2349,11 +2331,12 @@ uploadTask.on('state_changed',
     },
     async () => {
         try {
-            // Устанавливаем финальный статус
-            if (sendAudioBtn) {
-                sendAudioBtn.innerHTML = `⏳ Сохранение...`;
-            }
+            // Получаем URL
+            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
             
+            if (sendAudioBtn) {
+                sendAudioBtn.innerHTML = `⏳ Сохранение сообщения...`;
+            }
             const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
             console.log("✅ Аудио загружено, URL:", downloadURL.substring(0, 50) + "...");
             
