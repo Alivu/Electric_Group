@@ -1675,24 +1675,16 @@ function initializeFirebase() {
         try {
             const app = firebase.initializeApp(firebaseConfig);
             
-            // ========== НАЧАЛО APP CHECK ==========
-            // Инициализируем App Check с reCAPTCHA v3
-            //const appCheck = firebase.appCheck();
-            
-            // ВСТАВЬТЕ ВАШ КЛЮЧ 6LcVcVosAAAAAIHbEnVRp4TZ8vEk22NkZoELUmQ2
-            //appCheck.activate(
-              //  '6LcVcVosAAAAAIHbEnVRp4TZ8vEk22NkZoELUmQ2', // ← ВАШ КЛЮЧ
-               // true
-            //);
-            
-           // console.log("✅ App Check активирован");
-            // ========== КОНЕЦ APP CHECK ==========
+            // ========== ВЕРСИЯ 8.10.1 НЕ ПОДДЕРЖИВАЕТ APP CHECK ==========
+            // Если нужно использовать App Check, обновитесь до Firebase v9+
+            // Пока просто пропускаем эту часть
+            console.log("✅ Firebase v8.10.1 инициализирован (App Check не поддерживается)");
             
             auth = firebase.auth();
             db = firebase.firestore();
             const storage = firebase.storage();
-                        // ========== ВКЛЮЧАЕМ ОФФЛАЙН РЕЖИМ ==========
-            // Включаем кэширование данных для оффлайн работы
+            
+            // ========== ВКЛЮЧАЕМ ОФФЛАЙН РЕЖИМ ==========
             db.enablePersistence()
                 .then(() => {
                     console.log("✅ Firebase persistence включен");
@@ -1705,6 +1697,7 @@ function initializeFirebase() {
                     }
                 });
             // ========== КОНЕЦ ОФФЛАЙН РЕЖИМА ==========
+            
             // Настраиваем Google провайдер
             googleProvider = new firebase.auth.GoogleAuthProvider();
             googleProvider.addScope('profile');
@@ -1713,15 +1706,15 @@ function initializeFirebase() {
                 prompt: 'select_account'
             });
             
-            console.log("✅ Firebase инициализирован");
-            resolve({ auth, db, googleProvider, appCheck });
+            console.log("✅ Firebase готов к работе");
+            resolve({ auth, db, googleProvider });
+            
         } catch (error) {
             console.error("❌ Ошибка Firebase:", error);
             reject(error);
         }
     });
 }
-
 // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
 function escapeHtml(text) {
     const div = document.createElement('div');
