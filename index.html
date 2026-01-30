@@ -467,25 +467,50 @@
 }
 
 .play-pause-btn {
-    background: #2c5364;
-    color: white;
-    border: none;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2em;
-    transition: all 0.3s;
-    flex-shrink: 0;
+    /* ОСНОВНЫЕ СВОЙСТВА */
+    background: #f8f9fa;                /* Светло-серый фон - нейтральный, не отвлекает */
+    color: #2c5364;                     /* Темный сине-зеленый цвет иконки (соответствует основной теме чата) */
+    border: 2px solid #dee2e6;          /* Светло-серая рамка - тонкое разделение от фона */
+    
+    /* РАЗМЕР И ФОРМА */
+    width: 36px;                        /* Диаметр кнопки - оптимальный для нажатия пальцем */
+    height: 36px;                       /* Высота равна ширине для создания круга */
+    border-radius: 50%;                 /* Делает кнопку идеально круглой (50% от размеров) */
+    
+    /* ВЫРАВНИВАНИЕ СОДЕРЖИМОГО */
+    display: flex;                      /* Включаем Flexbox для центрирования */
+    align-items: center;                /* Центрируем по вертикали */
+    justify-content: center;            /* Центрируем по горизонтали */
+    
+    /* ТЕКСТ/ИКОНКА */
+    font-size: 1.1em;                   /* Размер иконки немного больше базового */
+    flex-shrink: 0;                     /* Запрещаем сжатие кнопки при нехватке места */
+    
+    /* ИНТЕРАКТИВНОСТЬ */
+    cursor: pointer;                    /* Меняем курсор на "руку" при наведении */
+    transition: all 0.3s;               /* Плавная анимация всех свойств за 0.3 секунды */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Легкая тень для создания объема */
 }
 
+/* ЭФФЕКТ ПРИ НАВЕДЕНИИ КУРСОРА */
 .play-pause-btn:hover {
-    background: #203a43;
-    transform: scale(1.05);
+    background: #ffffff;                /* Меняем фон на чисто белый */
+    transform: scale(1.05);             /* Увеличиваем кнопку на 5% */
+    border-color: #2c5364;              /* Меняем цвет рамки на основной цвет темы */
+    box-shadow: 0 4px 12px rgba(44, 83, 100, 0.15); /* Усиливаем тень */
 }
+
+/* ЭФФЕКТ ПРИ НАЖАТИИ (АКТИВНОЕ СОСТОЯНИЕ) */
+.play-pause-btn:active {
+    transform: scale(0.98);             /* Легкое сжатие кнопки (эффект нажатия) */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* Уменьшаем тень */
+}
+  /* СОСТОЯНИЕ КОГДА АУДИО ВОСПРОИЗВОДИТСЯ */
+.play-pause-btn.playing {
+    background: #2c5364;                /* Темный фон как в основной теме */
+    color: white;                       /* Белая иконка для контраста */
+    border-color: #2c5364;              /* Рамка того же цвета что и фон */
+}      
 .audio-waveform-container {
     position: relative;
     flex: 1;
