@@ -32,16 +32,24 @@
             padding: 20px;
             overflow: hidden;
         }
-/* УПРОЩЕННАЯ ЦИТАТА */
 .quoted-message-simple {
-    background: rgba(76, 175, 80, 0.08);
-    border-left: 3px solid #4CAF50;
+    /* ШИРИНА ЦИТАТЫ */
+    width: 280px;                 /* Фиксированная ширина */
+    max-width: 280px;             /* Не больше чем */
+    min-width: 280px;             /* Не меньше чем */
+    
+    /* ВЫСОТА ЦИТАТЫ */
+    min-height: 40px;             /* Минимальная высота */
+    max-height: 60px;             /* Максимальная высота */
+    overflow: hidden;             /* Обрезать если не помещается */
+    
+    /* ОСТАЛЬНЫЕ СВОЙСТВА */
     padding: 8px 12px;
     margin-bottom: 10px;
-    border-radius: 6px;
+    background: rgba(76, 175, 80, 0.08);
+    border-radius: 8px;
     font-size: 0.85em;
 }
-
 
 
 
@@ -467,6 +475,16 @@
 
 /* УПРОЩЕННОЕ АУДИО СООБЩЕНИЕ */
 .audio-message-simple {
+    /* ШИРИНА АУДИО ОКНА */
+    width: 320px;                 /* Фиксированная ширина аудио */
+    max-width: 320px;
+    min-width: 320px;
+    
+    /* ВЫСОТА АУДИО ОКНА */
+    min-height: 70px;             /* Минимальная высота (иконка + волна + время) */
+    max-height: 80px;             /* Максимальная высота */
+    
+    /* ОСТАЛЬНЫЕ СВОЙСТВА */
     margin-top: 8px;
 }
 
