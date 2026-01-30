@@ -3971,6 +3971,41 @@ window.testQuoteFunction = function() {
 };
 
 // В консоли выполни: testQuoteFunction()
+
+
+// Добавьте после создания chat объекта
+window.addEventListener('load', function() {
+    // Ждем 1 секунду чтобы все загрузилось
+    setTimeout(function() {
+        if (window.chat) {
+            // Добавляем функцию если её нет
+            if (!window.chat.sendAudioMessage) {
+                window.chat.sendAudioMessage = async function() {
+                    console.log('sendAudioMessage вызвана');
+                    alert('Функция отправки аудио работает!');
+                    
+                    try {
+                        // Ваш код отправки аудио
+                        if (!this.currentAudioBlob) {
+                            alert('Сначала запишите аудио!');
+                            return;
+                        }
+                        
+                        alert('Начинаю отправку аудио...');
+                        
+                        // ... ваш код ...
+                        
+                    } catch (error) {
+                        console.error(error);
+                        alert('Ошибка: ' + error.message);
+                    }
+                };
+                console.log('✅ sendAudioMessage добавлена в chat');
+            }
+        }
+    }, 1000);
+});
+    
 </script>
     <div class="modal-overlay" id="onlineModal" style="display: none;">
     <div class="modal-content">
