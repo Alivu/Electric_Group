@@ -471,26 +471,24 @@
 }
 
 .audio-waveform-simple {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 5px;
+    cursor: pointer;
+    user-select: none;
 }
 
 .play-icon-small {
-    color: #2c5364;
-    font-size: 1em;
-    min-width: 20px;
+    cursor: pointer;
+    transition: transform 0.2s;
 }
 .waveform-bars {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    height: 25px;
-    flex: 1;
+    cursor: pointer;
+    transition: opacity 0.2s;
 }
-
-
+.play-icon-small:hover {
+    transform: scale(1.1);
+}
+.waveform-bars:hover {
+    opacity: 0.9;
+}
         
 .audio-icon {
     font-size: 1.2em;
@@ -2283,7 +2281,7 @@ if (message.type === 'audio' && message.audioData) {
         <div class="audio-message-simple" data-audio-id="${audioId}">
             <div class="audio-waveform-simple">
                 <span class="play-icon-small">▶</span>
-                <div class="waveform-bars">
+                <div class="waveform-bars" style="cursor: pointer;">
                     ${this.generateWaveform(15)}
                 </div>
             </div>
@@ -2291,8 +2289,9 @@ if (message.type === 'audio' && message.audioData) {
                 <span class="audio-duration-simple">${message.audioDuration || '0:00'}</span>
                 <span class="audio-time-simple">${messageTime}</span>
             </div>
-            <audio id="${audioId}" preload="metadata">
+            <audio id="${audioId}" preload="metadata" style="display: none;">
                 <source src="${audioSrc}" type="audio/webm">
+                Ваш браузер не поддерживает аудио.
             </audio>
         </div>
     `;
@@ -2435,129 +2434,195 @@ addMessageActions(messageEl, messageData, docId) {
 
 setupAudioPlayer(audioId, duration) {
     const audioElement = document.getElementById(audioId);
-    // Используем data-атрибут для поиска элементов
     const audioContainer = document.querySelector(`[data-audio-id="${audioId}"]`);
     
-    if (!audioElement || !audioContainer) return;
+    if (!audioElement || !audioContainer) {
+        console.log(`Аудио элемент ${audioId} не найден`);
+        return;
+    }
     
-    // Находим элементы в упрощенной структуре
+    // Находим элементы
     const playIcon = audioContainer.querySelector('.play-icon-small');
     const waveformBars = audioContainer.querySelector('.waveform-bars');
-    const durationEl = audioContainer.querySelector('.audio-duration-simple');
     const waveContainer = audioContainer.querySelector('.audio-waveform-simple');
+    const durationEl = audioContainer.querySelector('.audio-duration-simple');
     
-    // Форматирование времени
+    // Проверяем что все элементы найдены
+    if (!playIcon || !waveformBars || !waveContainer) {
+        console.log('Не все элементы аудиоплеера найдены');
+        return;
+    }
+    
+    let isPlaying = false;
+    
+    // Функция форматирования времени
     const formatTime = (seconds) => {
-        if (isNaN(seconds) || seconds === Infinity) return "0:00";
+        if (!seconds || isNaN(seconds) || !isFinite(seconds)) return "0:00";
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
     
-    // Установка длительности
-    audioElement.onloadedmetadata = () => {
-        if (durationEl && audioElement.duration) {
+    // Установка длительности при загрузке
+    const updateDuration = () => {
+        if (durationEl && audioElement.duration && isFinite(audioElement.duration)) {
             durationEl.textContent = formatTime(audioElement.duration);
+        } else if (duration) {
+            durationEl.textContent = duration;
         }
     };
     
-    // Воспроизведение/пауза по клику на всю волну
-    if (waveContainer) {
-        waveContainer.addEventListener('click', (e) => {
-            e.stopPropagation();
-            
-            if (audioElement.paused) {
-                audioElement.play();
-                if (playIcon) playIcon.textContent = '⏸';
-                this.animateSimpleWaveform(waveformBars, true);
-            } else {
-                audioElement.pause();
-                if (playIcon) playIcon.textContent = '▶';
-                this.animateSimpleWaveform(waveformBars, false);
-            }
-        });
-        
-        // Клик по волне для перемотки (только по области баров)
-        const barsArea = audioContainer.querySelector('.waveform-bars');
-        if (barsArea) {
-            barsArea.addEventListener('click', (e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                
-                const rect = barsArea.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                const percentage = Math.max(0, Math.min(1, clickX / rect.width));
-                
-                if (audioElement.duration > 0) {
-                    audioElement.currentTime = percentage * audioElement.duration;
-                    if (audioElement.paused) {
-                        audioElement.play();
-                        if (playIcon) playIcon.textContent = '⏸';
-                        this.animateSimpleWaveform(waveformBars, true);
-                    }
-                }
-            });
-        }
+    // Загружаем метаданные
+    if (audioElement.readyState >= 1) { // HAVE_METADATA или выше
+        updateDuration();
+    } else {
+        audioElement.addEventListener('loadedmetadata', updateDuration, { once: true });
     }
     
-    // Обновление иконки при окончании
+    // Также пробуем установить через 1 секунду на всякий случай
+    setTimeout(updateDuration, 1000);
+    
+    // ВОСПРОИЗВЕДЕНИЕ/ПАУЗА
+    const togglePlayback = () => {
+        if (audioElement.paused) {
+            audioElement.play()
+                .then(() => {
+                    playIcon.textContent = '⏸';
+                    isPlaying = true;
+                    this.animateSimpleWaveform(waveformBars, true);
+                })
+                .catch(err => {
+                    console.error('Ошибка воспроизведения:', err);
+                    playIcon.textContent = '▶';
+                });
+        } else {
+            audioElement.pause();
+            playIcon.textContent = '▶';
+            isPlaying = false;
+            this.animateSimpleWaveform(waveformBars, false);
+        }
+    };
+    
+    // Клик на иконку или волну - воспроизведение/пауза
+    playIcon.addEventListener('click', (e) => {
+        e.stopPropagation();
+        togglePlayback();
+    });
+    
+    // Клик на область волны - воспроизведение/пауза
+    waveContainer.addEventListener('click', (e) => {
+        e.stopPropagation();
+        togglePlayback();
+    });
+    
+    // ПЕРЕМОТКА ПО КЛИКУ НА ВОЛНУ
+    waveformBars.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        
+        // Проверяем что аудио загружено
+        if (!audioElement.duration || !isFinite(audioElement.duration) || audioElement.duration <= 0) {
+            console.log('Длительность аудио не определена, перемотка невозможна');
+            return;
+        }
+        
+        const rect = waveformBars.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const percentage = Math.max(0, Math.min(1, clickX / rect.width));
+        
+        const newTime = percentage * audioElement.duration;
+        
+        if (isFinite(newTime) && newTime >= 0) {
+            audioElement.currentTime = newTime;
+            
+            // Если аудио было на паузе, запускаем
+            if (audioElement.paused) {
+                audioElement.play()
+                    .then(() => {
+                        playIcon.textContent = '⏸';
+                        isPlaying = true;
+                        this.animateSimpleWaveform(waveformBars, true);
+                    })
+                    .catch(err => {
+                        console.error('Ошибка воспроизведения после перемотки:', err);
+                    });
+            }
+        }
+    });
+    
+    // ОБНОВЛЕНИЕ ПРОГРЕССА ВОСПРОИЗВЕДЕНИЯ
+    audioElement.addEventListener('timeupdate', () => {
+        if (audioElement.duration > 0) {
+            const progress = (audioElement.currentTime / audioElement.duration) * 100;
+            // Здесь можно добавить визуализацию прогресса если нужно
+        }
+    });
+    
+    // ЗАВЕРШЕНИЕ ВОСПРОИЗВЕДЕНИЯ
     audioElement.addEventListener('ended', () => {
-        if (playIcon) playIcon.textContent = '▶';
+        playIcon.textContent = '▶';
+        isPlaying = false;
         this.animateSimpleWaveform(waveformBars, false);
     });
     
-    // Обработка ошибок
+    // ОБРАБОТКА ОШИБОК
     audioElement.addEventListener('error', (e) => {
-        console.error('Ошибка воспроизведения аудио:', e);
-        if (playIcon) playIcon.textContent = '▶';
+        console.error('Ошибка аудио:', audioElement.error);
+        playIcon.textContent = '▶';
+        isPlaying = false;
         this.animateSimpleWaveform(waveformBars, false);
     });
+    
+    // Запускаем проверку готовности
+    setTimeout(() => {
+        if (audioElement.readyState >= 2) { // HAVE_CURRENT_DATA
+            updateDuration();
+        }
+    }, 500);
 }
 
 animateSimpleWaveform(waveformContainer, isPlaying) {
     if (!waveformContainer) return;
     
     const bars = waveformContainer.querySelectorAll('.wave-bar');
-    if (bars.length === 0) return;
+    if (!bars || bars.length === 0) return;
+    
+    // Останавливаем предыдущую анимацию
+    if (waveformContainer.animationInterval) {
+        clearInterval(waveformContainer.animationInterval);
+        waveformContainer.animationInterval = null;
+    }
     
     if (isPlaying) {
-        // Останавливаем предыдущую анимацию если была
-        if (waveformContainer.animationInterval) {
-            clearInterval(waveformContainer.animationInterval);
-        }
-        
-        // Запускаем новую анимацию
+        // Анимация при воспроизведении
         waveformContainer.animationInterval = setInterval(() => {
-            bars.forEach((bar) => {
-                // Только 30% баров анимируем каждый кадр для более естественного вида
-                if (Math.random() > 0.7) {
-                    const currentHeight = parseInt(bar.style.height) || 10;
-                    const change = Math.random() > 0.5 ? 3 : -3;
-                    const newHeight = Math.max(5, Math.min(25, currentHeight + change));
-                    bar.style.height = `${newHeight}px`;
-                    bar.style.opacity = 0.6 + Math.random() * 0.4;
+            bars.forEach((bar, index) => {
+                // Анимируем каждый бар с разной вероятностью для естественного вида
+                if (Math.random() > 0.6) {
+                    try {
+                        const currentHeight = parseInt(bar.style.height) || 10;
+                        const baseHeight = 10;
+                        const variation = Math.sin(Date.now() / 200 + index) * 8;
+                        const newHeight = Math.max(5, Math.min(25, baseHeight + variation));
+                        bar.style.height = `${newHeight}px`;
+                        bar.style.opacity = 0.7 + Math.random() * 0.3;
+                    } catch (e) {
+                        // Игнорируем ошибки анимации
+                    }
                 }
             });
         }, 150);
     } else {
-        // Останавливаем анимацию
-        if (waveformContainer.animationInterval) {
-            clearInterval(waveformContainer.animationInterval);
-            waveformContainer.animationInterval = null;
-        }
-        
-        // Возвращаем бары к исходному состоянию
-        bars.forEach((bar, i) => {
-            const sineWave = Math.sin(i * 0.5) * 0.5 + 0.5;
-            const height = Math.floor(5 + (sineWave * 0.7 * 20));
+        // Возвращаем к спокойному состоянию
+        bars.forEach((bar, index) => {
+            const baseHeight = 10;
+            const sineWave = Math.sin(index * 0.5) * 0.5 + 0.5;
+            const height = Math.floor(5 + (sineWave * 15));
             bar.style.height = `${height}px`;
             bar.style.opacity = 0.7;
         });
     }
 }
-
-
-
         
         async saveEditedMessage(docId, newText) {
             if (!newText.trim()) return;
