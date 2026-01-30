@@ -2280,7 +2280,13 @@ class ElectricianChat {
     
     async sendAudioMessage() {
         if (!this.currentAudioBlob || !this.user) return;
-        
+     // ПРОВЕРКА РАЗМЕРА АУДИО
+    if (this.currentAudioBlob.size === 0) {
+        showStatus("❌ Аудиофайл пустой", "error");
+        return;
+    }
+    
+    console.log(`Размер аудио: ${this.currentAudioBlob.size} байт`);
         try {
             // Обновляем кнопку отправки
             const sendAudioBtn = document.getElementById('sendAudioBtn');
@@ -2304,44 +2310,57 @@ class ElectricianChat {
             
             const uploadTask = storageRef.put(this.currentAudioBlob, metadata);
             
-            uploadTask.on('state_changed',
-                (snapshot) => {
-                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    console.log(`Загрузка аудио: ${Math.round(progress)}%`);
-                    
-                    if (sendAudioBtn && progress < 100) {
-                        sendAudioBtn.innerHTML = `⏳ ${Math.round(progress)}%`;
-                    }
-                },
-                (error) => {
-                    console.error("❌ Ошибка загрузки:", error);
-                    showStatus("Ошибка загрузки аудио", "error");
-                    
-                    if (sendAudioBtn) {
-                        sendAudioBtn.innerHTML = "✅ Отправить";
-                        sendAudioBtn.disabled = false;
-                    }
-                },
-                async () => {
-                    try {
-                        const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                        const duration = document.getElementById('audioDuration').textContent;
-                        const sizeKB = Math.round(this.currentAudioBlob.size / 1024);
-                        
-                        const messageData = {
-                            type: 'audio',
-                            audioURL: downloadURL,
-                            audioFileName: fileName,
-                            audioDuration: duration,
-                            audioSize: sizeKB,
-                            userId: this.user.uid,
-                            userName: this.user.displayName || 'Электрик',
-                            userEmail: this.user.email,
-                            userPhoto: this.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.user.displayName || 'E')}&background=2c5364&color=fff`,
-                            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                            isElectrician: true,
-                            storagePath: `chat_audio/${this.user.uid}/${fileName}`
-                        };
+uploadTask.on('state_changed',
+    (snapshot) => {
+        // ИСПРАВЛЕННЫЙ РАСЧЕТ ПРОГРЕССА
+        const totalBytes = snapshot.totalBytes;
+        const bytesTransferred = snapshot.bytesTransferred;
+        
+        let progress = 0;
+        if (totalBytes > 0 && !isNaN(totalBytes) && !isNaN(bytesTransferred)) {
+            progress = (bytesTransferred / totalBytes) * 100;
+        }
+        
+        console.log(`Загрузка аудио: ${bytesTransferred}/${totalBytes} = ${Math.round(progress)}%`);
+        
+        if (sendAudioBtn && progress < 100) {
+            sendAudioBtn.innerHTML = `⏳ ${Math.round(progress)}%`;
+        }
+    },
+    (error) => {
+        console.error("❌ Ошибка загрузки:", error);
+        showStatus("Ошибка загрузки аудио", "error");
+        
+        if (sendAudioBtn) {
+            sendAudioBtn.innerHTML = "✅ Отправить";
+            sendAudioBtn.disabled = false;
+        }
+    },
+    async () => {
+        try {
+            // Показываем статус обработки
+            if (sendAudioBtn) {
+                sendAudioBtn.innerHTML = `⏳ Обработка...`;
+            }
+            
+            const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+            const duration = document.getElementById('audioDuration').textContent;
+            const sizeKB = Math.round(this.currentAudioBlob.size / 1024);
+            
+            const messageData = {
+                type: 'audio',
+                audioURL: downloadURL,
+                audioFileName: fileName,
+                audioDuration: duration,
+                audioSize: sizeKB,
+                userId: this.user.uid,
+                userName: this.user.displayName || 'Электрик',
+                userEmail: this.user.email,
+                userPhoto: this.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.user.displayName || 'E')}&background=2c5364&color=fff`,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                isElectrician: true,
+                storagePath: `chat_audio/${this.user.uid}/${fileName}`
+            };
                         
                         // Добавляем текст если есть
                         const textInput = document.getElementById('messageInput');
