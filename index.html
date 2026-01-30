@@ -3818,7 +3818,34 @@ let chat;
 window.addEventListener('load', async function() {
     console.log("🚀 Страница загружена, инициализируем Firebase...");
     
+    // Сначала проверяем загрузился ли Firebase SDK
+    const checkFirebaseLoaded = () => {
+        return new Promise((resolve) => {
+            const checkInterval = setInterval(() => {
+                if (typeof firebase !== 'undefined') {
+                    clearInterval(checkInterval);
+                    console.log("✅ Firebase SDK загружен");
+                    resolve(true);
+                }
+            }, 100);
+            
+            // Таймаут 10 секунд
+            setTimeout(() => {
+                clearInterval(checkInterval);
+                console.log("❌ Firebase SDK не загрузился за 10 секунд");
+                resolve(false);
+            }, 10000);
+        });
+    };
+    
     try {
+        // Ждем загрузку Firebase SDK
+        const isFirebaseLoaded = await checkFirebaseLoaded();
+        
+        if (!isFirebaseLoaded) {
+            throw new Error("Firebase SDK не загрузился. Проверьте интернет соединение.");
+        }
+        
         // Инициализируем Firebase
         await initializeFirebase();
         
@@ -3839,8 +3866,10 @@ window.addEventListener('load', async function() {
         retryBtn.onclick = () => location.reload();
         
         const statusEl = document.getElementById('statusMessage');
-        statusEl.appendChild(document.createElement('br'));
-        statusEl.appendChild(retryBtn);
+        if (statusEl) {
+            statusEl.appendChild(document.createElement('br'));
+            statusEl.appendChild(retryBtn);
+        }
     }
 });
 
