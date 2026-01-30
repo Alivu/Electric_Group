@@ -1495,11 +1495,10 @@
     </style>
     
     <!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-check.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 </head>
 <body>
     <!-- Экран входа -->
@@ -1678,13 +1677,13 @@ function initializeFirebase() {
             
             // ========== НАЧАЛО APP CHECK ==========
             // Инициализируем App Check с reCAPTCHA v3
-            const appCheck = firebase.appCheck();
+            //const appCheck = firebase.appCheck();
             
             // ВСТАВЬТЕ ВАШ КЛЮЧ 6LcVcVosAAAAAIHbEnVRp4TZ8vEk22NkZoELUmQ2
-            appCheck.activate(
-                '6LcVcVosAAAAAIHbEnVRp4TZ8vEk22NkZoELUmQ2', // ← ВАШ КЛЮЧ
-                true
-            );
+            //appCheck.activate(
+              //  '6LcVcVosAAAAAIHbEnVRp4TZ8vEk22NkZoELUmQ2', // ← ВАШ КЛЮЧ
+               // true
+            //);
             
            // console.log("✅ App Check активирован");
             // ========== КОНЕЦ APP CHECK ==========
