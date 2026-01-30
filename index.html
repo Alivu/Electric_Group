@@ -2280,6 +2280,9 @@ class ElectricianChat {
     
     async sendAudioMessage() {
         if (!this.currentAudioBlob || !this.user) return;
+            console.log("=== ОТПРАВКА АУДИО ===");
+            console.log("Размер файла:", this.currentAudioBlob.size, "байт");
+            console.log("Тип файла:", this.currentAudioBlob.type);
      // ПРОВЕРКА РАЗМЕРА АУДИО
     if (this.currentAudioBlob.size === 0) {
         showStatus("❌ Аудиофайл пустой", "error");
