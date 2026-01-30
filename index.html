@@ -1769,13 +1769,59 @@ function showStatus(message, type) {
         }, 5000);
     }
 }
+// ========== КОНФИГУРАЦИЯ FIREBASE ==========
+const firebaseConfig = {
+    apiKey: "AIzaSyCRJh0fFbJAc6dFz1O21SbjyAaPbMV58xc",
+    authDomain: "electrician-chat.firebaseapp.com",
+    projectId: "electrician-chat",
+    storageBucket: "electrician-chat.firebasestorage.app",
+    messagingSenderId: "1005885507362",
+    appId: "1:1005885507362:web:c030a98505761b0add877b"
+};
+
+// ========== ИНИЦИАЛИЗАЦИЯ FIREBASE ==========
+let auth, db, storage;
+async function initializeFirebase() {
+    try {
+        const app = firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.firestore();
+        storage = firebase.storage();
+        
+        console.log("✅ Firebase инициализирован");
+        return { auth, db, storage };
+    } catch (error) {
+        console.error("❌ Ошибка Firebase:", error);
+        throw error;
+    }
+}
+
+// ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function showStatus(message, type) {
+    const statusEl = document.getElementById('statusMessage');
+    if (!statusEl) return;
+    
+    statusEl.textContent = message;
+    statusEl.className = 'status ' + type;
+    statusEl.style.display = 'block';
+    
+    setTimeout(() => {
+        if (statusEl) {
+            statusEl.style.display = 'none';
+        }
+    }, 3000);
+}
+
+// ========== КЛАСС ЭЛЕКТРИК ЧАТ ==========
 class ElectricianChat {
     constructor() {
         console.log('🔴 Конструктор ElectricianChat ВЫЗВАН!');
-        console.log('Firebase доступен?', {
-            auth: typeof auth,
-            db: typeof db
-        });
         
         this.user = null;
         this.roomId = 'main-electricians-room';
@@ -1783,71 +1829,48 @@ class ElectricianChat {
         this.unsubscribeOnline = null;
         this.unsubscribeTyping = null;
         this.firstMessageSent = false;
-        this.shouldAutoScroll = true;
-        this.userScrolledUp = false;
         this.systemMessageRemoved = false;
-        this.isRefreshing = false;
         
-        // ========== RATE LIMITING ПЕРЕМЕННЫЕ ==========
+        // ========== RATE LIMITING ==========
         this.lastMessageTime = 0;
         this.messageCooldown = 3000;
         this.isSending = false;
 
-        // ========== ПЕРЕМЕННЫЕ ДЛЯ АУДИО ==========
+        // ========== АУДИО ПЕРЕМЕННЫЕ ==========
         this.mediaRecorder = null;
         this.audioChunks = [];
         this.isRecording = false;
         this.recordingStartTime = null;
         this.recordingTimer = null;
-        this.maxRecordingTime = 60000; // 60 секунд максимально
+        this.maxRecordingTime = 60000;
         this.currentAudioBlob = null;
         this.audioContext = null;
         this.analyser = null;
         this.visualizerInterval = null;
         
-        // ========== ОФФЛАЙН РЕЖИМ ПЕРЕМЕННЫЕ ==========
-        this.isOnline = navigator.onLine;
-        this.offlineMessages = [];
-        
-        // Восстанавливаем оффлайн сообщения из localStorage
-        try {
-            const saved = localStorage.getItem('electric_chat_offline_messages');
-            if (saved) {
-                this.offlineMessages = JSON.parse(saved);
-                console.log("💾 Восстановлены оффлайн сообщения:", this.offlineMessages.length);
-            }
-        } catch (e) {
-            console.error("Ошибка восстановления оффлайн сообщений:", e);
-        }
-        
         // ========== ПАГИНАЦИЯ ==========
-        this.messagesLimit = 30; // Сообщений на страницу
-        this.lastVisibleMessage = null; // Последнее загруженное сообщение
-        this.hasMoreMessages = true; // Есть ли еще сообщения
-        this.isLoadingMessages = false; // Загружаем ли сейчас
-        // ========== КОНЕЦ ПАГИНАЦИИ ==========
+        this.messagesLimit = 30;
+        this.lastVisibleMessage = null;
+        this.hasMoreMessages = true;
+        this.isLoadingMessages = false;
         
-        // Проверяем инициализацию Firebase
-        if (!auth || !db) {
-            console.warn("⚠️ Firebase еще не инициализирован, ждем...");
-            this.waitForFirebase();
-            return;
-        }
+        // ========== ПРОКРУТКА ==========
+        this.shouldAutoScroll = true;
+        this.userScrolledUp = false;
         
         this.init();
     }
     
-    waitForFirebase() {
-        const checkInterval = setInterval(() => {
-            if (auth && db) {
-                clearInterval(checkInterval);
-                this.init();
-            }
-        }, 100);
+    // ========== НАЧАЛО: ИНИЦИАЛИЗАЦИЯ ==========
+    init() {
+        this.getDOMElements();
+        this.setupEventListeners();
+        this.setupAuthListener();
+        
+        console.log("✅ Чат инициализирован");
     }
     
-    init() {
-        // Получаем DOM элементы
+    getDOMElements() {
         this.loginScreen = document.getElementById('loginScreen');
         this.chatScreen = document.getElementById('chatScreen');
         this.googleLoginBtn = document.getElementById('googleLoginBtn');
@@ -1862,59 +1885,24 @@ class ElectricianChat {
         this.sendMessageBtn = document.getElementById('sendMessageBtn');
         this.typingIndicator = document.getElementById('typingIndicator');
         this.statusMessage = document.getElementById('statusMessage');
-        
-        // Настройка обработчиков событий
-        this.setupEventListeners();
-        
-        // Слушатель состояния авторизации
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                this.onUserSignedIn(user);
-            } else {
-                this.onUserSignedOut();
-            }
-        });
-        
-        console.log("✅ Чат инициализирован");
     }
     
-    // ========== ОБНОВЛЕНИЕ КНОПКИ ОТПРАВКИ ==========
-    updateSendButton(isSending) {
-        const sendBtn = document.getElementById('sendMessageBtn');
-        if (!sendBtn) return;
-        
-        if (isSending) {
-            sendBtn.innerHTML = "⏳";
-            sendBtn.style.opacity = "0.7";
-            sendBtn.style.cursor = "not-allowed";
-            sendBtn.disabled = true;
-        } else {
-            sendBtn.innerHTML = "➤";
-            sendBtn.style.opacity = "1";
-            sendBtn.style.cursor = "pointer";
-            sendBtn.disabled = false;
-        }
-    }
-    
-    // ========== SETUP EVENT LISTENERS ==========
     setupEventListeners() {
-        // Кнопка входа через Google
+        // Кнопки входа/выхода
         this.googleLoginBtn.addEventListener('click', () => this.signInWithGoogle());
-        
-        // Кнопка выхода
         this.logoutBtn.addEventListener('click', () => this.signOut());
         
         // Кнопка "Назад"
-        this.backBtn = document.getElementById('backBtn');
-        if (this.backBtn) {
-            this.backBtn.addEventListener('click', () => {
+        const backBtn = document.getElementById('backBtn');
+        if (backBtn) {
+            backBtn.addEventListener('click', () => {
                 if (confirm('Вернуться на главную страницу?')) {
                     window.location.href = 'https://alivu.github.io/';
                 }
             });
         }
         
-        // Отправка текстового сообщения
+        // Отправка сообщений
         this.sendMessageBtn.addEventListener('click', () => this.sendMessage());
         this.messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -1923,25 +1911,21 @@ class ElectricianChat {
             }
         });
         
-        // Индикатор набора текста
+        // Индикатор набора
         this.messageInput.addEventListener('input', () => this.setTypingStatus(true));
         this.messageInput.addEventListener('blur', () => this.setTypingStatus(false));
         
-        // Отслеживание прокрутки
-        this.messagesContainer.addEventListener('scroll', () => {
-            this.handleScroll();
-        });
+        // Прокрутка
+        this.messagesContainer.addEventListener('scroll', () => this.handleScroll());
         
-        // Адаптация к клавиатуре на мобильных
+        // Адаптация к клавиатуре
         window.addEventListener('resize', () => {
             if (this.user) {
-                setTimeout(() => {
-                    this.scrollToBottom();
-                }, 300);
+                setTimeout(() => this.scrollToBottom(), 300);
             }
         });
         
-        // ========== ОБРАБОТЧИКИ АУДИО ==========
+        // ========== НАЧАЛО: АУДИО ОБРАБОТЧИКИ ==========
         const audioRecordBtn = document.getElementById('audioRecordBtn');
         const cancelRecordingBtn = document.getElementById('cancelRecordingBtn');
         const stopRecordingBtn = document.getElementById('stopRecordingBtn');
@@ -1967,8 +1951,9 @@ class ElectricianChat {
         if (sendAudioBtn) {
             sendAudioBtn.addEventListener('click', () => this.sendAudioMessage());
         }
+        // ========== КОНЕЦ: АУДИО ОБРАБОТЧИКИ ==========
         
-        // Кнопка отмены цитаты
+        // Цитаты
         const cancelQuoteBtn = document.getElementById('cancelQuoteBtn');
         if (cancelQuoteBtn) {
             cancelQuoteBtn.addEventListener('click', (e) => {
@@ -1978,7 +1963,7 @@ class ElectricianChat {
             });
         }
         
-        // Модальное окно онлайн пользователей
+        // Модальное окно онлайн
         const onlineBadge = document.getElementById('onlineBadge');
         if (onlineBadge) {
             onlineBadge.addEventListener('click', () => {
@@ -1986,30 +1971,7 @@ class ElectricianChat {
             });
         }
         
-        // Закрытие модального окна
-        const closeBtn1 = document.getElementById('closeOnlineModal');
-        const closeBtn2 = document.getElementById('closeOnlineModalBtn');
-        const modalOverlay = document.getElementById('onlineModal');
-        
-        if (closeBtn1) {
-            closeBtn1.addEventListener('click', () => {
-                modalOverlay.style.display = 'none';
-            });
-        }
-        if (closeBtn2) {
-            closeBtn2.addEventListener('click', () => {
-                modalOverlay.style.display = 'none';
-            });
-        }
-        if (modalOverlay) {
-            modalOverlay.addEventListener('click', (e) => {
-                if (e.target === modalOverlay) {
-                    modalOverlay.style.display = 'none';
-                }
-            });
-        }
-        
-        // Отмена цитаты по ESC
+        // ESC для отмены цитаты
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 const quotePreview = document.getElementById('quotePreview');
@@ -2021,638 +1983,26 @@ class ElectricianChat {
         });
     }
     
-    // ========== PULL-TO-REFRESH ==========
-    setupPullToRefresh() {
-        const header = document.querySelector('.chat-header');
-        if (!header) return;
-        
-        let startY = 0, pullDistance = 0, isDragging = false;
-        let refreshIndicator = document.querySelector('.refresh-indicator');
-        
-        if (!refreshIndicator) {
-            refreshIndicator = document.createElement('div');
-            refreshIndicator.className = 'refresh-indicator';
-            header.appendChild(refreshIndicator);
-        }
-        
-        const touchStart = (e) => {
-            startY = e.touches ? e.touches[0].clientY : e.clientY;
-            isDragging = true;
-            header.style.transition = 'none';
-        };
-        
-        const touchMove = (e) => {
-            if (!isDragging) return;
-            
-            const currentY = e.touches ? e.touches[0].clientY : e.clientY;
-            pullDistance = currentY - startY;
-            
-            if (pullDistance > 0) {
-                e.preventDefault();
-                const maxPull = 150;
-                const limitedPull = Math.min(pullDistance, maxPull);
-                document.querySelector('.chat-container').style.transform = `translateY(${limitedPull}px)`;
-                
-                if (pullDistance > 60) {
-                    refreshIndicator.style.display = 'block';
-                    refreshIndicator.style.opacity = Math.min((pullDistance - 60) / 40, 1);
-                } else {
-                    refreshIndicator.style.display = 'none';
-                }
-            }
-        };
-        
-        const touchEnd = () => {
-            if (!isDragging) return;
-            
-            const chatContainer = document.querySelector('.chat-container');
-            chatContainer.style.transition = 'transform 0.3s ease';
-            chatContainer.style.transform = 'translateY(0)';
-            
-            if (pullDistance > 100) {
-                refreshIndicator.innerHTML = '🔄 Обновление страницы...';
-                refreshIndicator.style.background = 'linear-gradient(135deg, #2c5364 0%, #203a43 100%)';
-                setTimeout(() => location.reload(), 500);
-            }
-            
-            setTimeout(() => {
-                refreshIndicator.style.display = 'none';
-                refreshIndicator.style.opacity = '0';
-                refreshIndicator.style.background = 'linear-gradient(135deg, #FF9800 0%, #FF5722 100%)';
-                refreshIndicator.innerHTML = '';
-            }, 300);
-            
-            startY = 0; pullDistance = 0; isDragging = false;
-            setTimeout(() => chatContainer.style.transition = 'transform 0.2s ease', 300);
-        };
-        
-        // Touch события
-        header.addEventListener('touchstart', touchStart, { passive: true });
-        header.addEventListener('touchmove', touchMove, { passive: false });
-        header.addEventListener('touchend', touchEnd, { passive: true });
-        
-        // Мышь события
-        header.addEventListener('mousedown', (e) => {
-            touchStart(e);
-            header.style.cursor = 'grabbing';
-        });
-        
-        header.addEventListener('mousemove', (e) => {
-            if (isDragging && e.buttons === 1) touchMove(e);
-        });
-        
-        header.addEventListener('mouseup', () => {
-            touchEnd();
-            header.style.cursor = 'grab';
-        });
-        
-        header.addEventListener('mouseleave', () => {
-            if (isDragging) {
-                touchEnd();
-                header.style.cursor = 'grab';
-            }
-        });
-        
-        header.addEventListener('selectstart', (e) => {
-            if (isDragging) e.preventDefault();
-        });
-    }
-    
-    // ========== АУДИО ФУНКЦИИ ==========
-    async toggleAudioRecording() {
-        if (this.isRecording) {
-            this.stopAudioRecording();
-            return;
-        }
-        
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } 
-            });
-            this.startAudioRecording(stream);
-        } catch (error) {
-            console.error("❌ Ошибка доступа к микрофону:", error);
-            this.showAudioError(error);
-        }
-    }
-    
-stopAudioRecording() {
-    if (!this.isRecording || !this.mediaRecorder) return;
-    
-    console.log("=== ОСТАНОВКА ЗАПИСИ ===");
-    
-    // Сохраняем ссылки
-    const mediaRecorder = this.mediaRecorder;
-    const audioChunks = this.audioChunks;
-    
-    // Устанавливаем обработчик onstop
-    mediaRecorder.onstop = () => {
-        console.log("MediaRecorder остановлен");
-        console.log("Собрано chunks:", audioChunks.length);
-        
-        if (audioChunks.length === 0) {
-            console.error("❌ Нет аудио данных!");
-            this.handleRecordingError("Не удалось записать аудио");
-            return;
-        }
-        
-        // Создаем blob
-        this.currentAudioBlob = new Blob(audioChunks, { 
-            type: mediaRecorder.mimeType || 'audio/webm' 
-        });
-        
-        console.log("✅ Blob создан:", this.currentAudioBlob.size, "байт");
-        
-        if (this.currentAudioBlob.size < 100) {
-            console.warn("⚠️ Blob слишком маленький:", this.currentAudioBlob.size, "байт");
-            alert("⚠️ Запись слишком короткая. Говорите громче и дольше.");
-        }
-        
-        // Очищаем
-        this.cleanupRecording();
-        
-        // Показываем превью
-        this.showAudioPreview();
-    };
-    
-    // Останавливаем все
-    this.isRecording = false;
-    clearInterval(this.recordingTimer);
-    clearInterval(this.visualizerInterval);
-    
-    // Останавливаем MediaRecorder
-    if (mediaRecorder.state === 'recording') {
-        mediaRecorder.stop();
-    } else {
-        // Если уже остановлен, вызываем onstop вручную
-        setTimeout(() => {
-            if (mediaRecorder.onstop) {
-                mediaRecorder.onstop();
-            }
-        }, 100);
-    }
-}
-    
-    startAudioVisualizer(stream) {
-        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        this.analyser = this.audioContext.createAnalyser();
-        const source = this.audioContext.createMediaStreamSource(stream);
-        
-        source.connect(this.analyser);
-        this.analyser.fftSize = 256;
-        
-        const bufferLength = this.analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-        const visualizer = document.getElementById('audioVisualizer');
-        
-        if (visualizer) {
-            visualizer.innerHTML = '';
-            for (let i = 0; i < 32; i++) {
-                const bar = document.createElement('div');
-                bar.className = 'visualizer-bar';
-                bar.style.height = '5px';
-                visualizer.appendChild(bar);
-            }
-            
-            this.visualizerInterval = setInterval(() => {
-                if (!this.isRecording) return;
-                
-                this.analyser.getByteFrequencyData(dataArray);
-                const bars = visualizer.querySelectorAll('.visualizer-bar');
-                
-                bars.forEach((bar, i) => {
-                    const value = dataArray[i * 2] || 0;
-                    const height = 5 + (value / 255) * 95;
-                    bar.style.height = `${height}px`;
-                    bar.style.opacity = 0.5 + (value / 255) * 0.5;
-                });
-            }, 100);
-        }
-    }
-    
-stopAudioRecording() {
-    if (!this.isRecording || !this.mediaRecorder) return;
-    
-    console.log("=== ОСТАНОВКА ЗАПИСИ ===");
-    
-    // Сохраняем ссылки
-    const mediaRecorder = this.mediaRecorder;
-    const audioChunks = this.audioChunks;
-    
-    // Устанавливаем обработчик ДО остановки
-    mediaRecorder.onstop = () => {
-        console.log("MediaRecorder остановлен");
-        console.log("Собрано chunks:", audioChunks.length);
-        
-        if (audioChunks.length === 0) {
-            console.error("❌ Нет данных!");
-            this.handleRecordingError("Нет аудио данных");
-            return;
-        }
-        
-        // Создаем blob
-        this.currentAudioBlob = new Blob(audioChunks, { 
-            type: mediaRecorder.mimeType || 'audio/webm' 
-        });
-        
-        console.log("Blob создан:", this.currentAudioBlob.size, "байт");
-        
-        // Останавливаем все
-        this.cleanupRecording();
-        
-        // Проверяем размер
-        if (this.currentAudioBlob.size < 100) {
-            console.warn("⚠️ Слишком маленький файл");
-            alert("Запись слишком короткая. Говорите дольше и громче.");
-            return;
-        }
-        
-        // Показываем превью
-        this.showAudioPreview();
-    };
-    
-    // Останавливаем
-    this.isRecording = false;
-    clearInterval(this.recordingTimer);
-    clearInterval(this.visualizerInterval);
-    
-    // Останавливаем запись
-    if (mediaRecorder.state === 'recording') {
-        mediaRecorder.stop();
-    }
-}
-
-// Добавьте эту вспомогательную функцию
-cleanupRecording() {
-    // Останавливаем поток
-    if (this.mediaRecorder && this.mediaRecorder.stream) {
-        this.mediaRecorder.stream.getTracks().forEach(track => {
-            track.stop();
-            track.enabled = false;
-        });
-    }
-    
-    // UI обновления
-    const audioBtn = document.getElementById('audioRecordBtn');
-    if (audioBtn) audioBtn.classList.remove('recording');
-    
-    const overlay = document.getElementById('audioRecordingOverlay');
-    if (overlay) overlay.style.display = 'none';
-    
-    // Очищаем визуализатор
-    const visualizer = document.getElementById('audioVisualizer');
-    if (visualizer) visualizer.innerHTML = '';
-    
-    // Сбрасываем таймер
-    const timer = document.getElementById('recordingTimer');
-    if (timer) timer.textContent = '00:00';
-}
-
-handleRecordingError(message) {
-    console.error("Ошибка записи:", message);
-    
-    // Очищаем
-    this.cleanupRecording();
-    
-    // Показываем ошибку
-    alert("❌ " + message + "\nПопробуйте еще раз.");
-    
-    // Сбрасываем состояние
-    this.currentAudioBlob = null;
-    this.audioChunks = [];
-}
-    cancelAudioRecording() {
-        if (!this.isRecording) return;
-        
-        this.isRecording = false;
-        clearInterval(this.recordingTimer);
-        clearInterval(this.visualizerInterval);
-        
-        if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
-            this.mediaRecorder.stop();
-        }
-        
-        if (this.mediaRecorder && this.mediaRecorder.stream) {
-            this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
-        }
-        
-        this.audioChunks = [];
-        this.currentAudioBlob = null;
-        
-        const audioBtn = document.getElementById('audioRecordBtn');
-        if (audioBtn) audioBtn.classList.remove('recording');
-        document.getElementById('audioRecordingOverlay').style.display = 'none';
-    }
-    
-showAudioPreview() {
-    if (!this.currentAudioBlob) return;
-    
-    const audioURL = URL.createObjectURL(this.currentAudioBlob);
-    const audioPlayer = document.getElementById('audioPreviewPlayer');
-    
-    if (audioPlayer) {
-        audioPlayer.src = audioURL;
-        
-        // Устанавливаем значения по умолчанию
-        document.getElementById('audioLength').textContent = `Загрузка...`;
-        document.getElementById('audioDuration').textContent = "0:00";
-        
-        audioPlayer.onloadedmetadata = () => {
-            const duration = audioPlayer.duration;
-            
-            // ПРОВЕРКА НА Infinity и NaN
-            if (isNaN(duration) || duration === Infinity) {
-                console.warn("Некорректная длительность аудио:", duration);
-                document.getElementById('audioLength').textContent = `Длительность не определена`;
-                document.getElementById('audioDuration').textContent = "0:00";
-            } 
-            
-            else {
-                const roundedDuration = Math.floor(duration);
-                document.getElementById('audioLength').textContent = `${roundedDuration} сек`;
-                document.getElementById('audioDuration').textContent = this.formatTime(roundedDuration);
-            }
-        };
-        
-        // Обработка ошибок
-        audioPlayer.onerror = () => {
-            console.error("Ошибка загрузки аудио");
-            document.getElementById('audioLength').textContent = `Ошибка загрузки`;
-            document.getElementById('audioDuration').textContent = "0:00";
-        };
-    }
-    
-    const sizeKB = Math.round(this.currentAudioBlob.size / 1024);
-    document.getElementById('audioSize').textContent = `${sizeKB} KB`;
-    document.getElementById('audioPreviewOverlay').style.display = 'flex';
-}
-    deleteAudioPreview() {
-        if (this.currentAudioBlob) {
-            const audioPlayer = document.getElementById('audioPreviewPlayer');
-            if (audioPlayer) {
-                URL.revokeObjectURL(audioPlayer.src);
-                audioPlayer.src = '';
-            }
-        }
-        
-        this.currentAudioBlob = null;
-        document.getElementById('audioPreviewOverlay').style.display = 'none';
-        this.messageInput.focus();
-    }
-    
-async sendAudioMessage() {
-    console.log("=== ОТПРАВКА АУДИО ===");
-    
-    // Проверки
-    if (!this.currentAudioBlob) {
-        showStatus("❌ Нет аудио для отправки", "error");
-        return;
-    }
-    
-    if (!this.user) {
-        showStatus("❌ Пользователь не авторизован", "error");
-        return;
-    }
-    
-    if (this.currentAudioBlob.size === 0) {
-        showStatus("❌ Аудиофайл пустой", "error");
-        return;
-    }
-    
-    // Получаем элементы
-    const sendAudioBtn = document.getElementById('sendAudioBtn');
-    const deleteAudioBtn = document.getElementById('deleteAudioBtn');
-    
-    // Блокируем кнопки
-    if (sendAudioBtn) {
-        sendAudioBtn.innerHTML = "⏳";
-        sendAudioBtn.disabled = true;
-    }
-    if (deleteAudioBtn) {
-        deleteAudioBtn.disabled = true;
-    }
-    
-    try {
-        // 1. Подготовка данных
-        const durationElement = document.getElementById('audioDuration');
-        const audioDuration = durationElement ? durationElement.textContent : "0:00";
-        const sizeKB = Math.round(this.currentAudioBlob.size / 1024);
-        
-        // 2. Создаем имя файла
-        const timestamp = Date.now();
-        const fileName = `audio_${this.user.uid}_${timestamp}.webm`;
-        
-        // 3. Загружаем в Firebase Storage
-        console.log("Загрузка в Storage...");
-        
-        const storageRef = firebase.storage().ref(`chat_audio/${this.user.uid}/${fileName}`);
-        
-        const metadata = {
-            contentType: 'audio/webm',
-            customMetadata: {
-                userId: this.user.uid,
-                userName: this.user.displayName || 'Электрик',
-                timestamp: timestamp.toString()
-            }
-        };
-        
-        // Простая загрузка
-        const uploadTask = storageRef.put(this.currentAudioBlob, metadata);
-        
-        // Ждем завершения
-        await uploadTask;
-        console.log("✅ Аудио загружено");
-        
-        // 4. Получаем URL
-        const downloadURL = await storageRef.getDownloadURL();
-        console.log("URL получен");
-        
-        // 5. Создаем сообщение
-        const messageData = {
-            type: 'audio',
-            audioURL: downloadURL,
-            audioFileName: fileName,
-            audioDuration: audioDuration,
-            audioSize: sizeKB,
-            userId: this.user.uid,
-            userName: this.user.displayName || 'Электрик',
-            userEmail: this.user.email,
-            userPhoto: this.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.user.displayName || 'E')}&background=2c5364&color=fff`,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            isElectrician: true
-        };
-        
-        // Добавляем текст если есть
-        const textInput = document.getElementById('messageInput');
-        if (textInput && textInput.value.trim()) {
-            messageData.text = textInput.value.trim();
-        }
-        
-        // Добавляем цитату если есть
-        const quotePreview = document.getElementById('quotePreview');
-        if (quotePreview && quotePreview.style.display === 'block') {
-            const quoteId = quotePreview.getAttribute('data-quote-id');
-            const quoteAuthor = quotePreview.getAttribute('data-quote-author');
-            const quoteText = quotePreview.getAttribute('data-quote-text');
-            
-            if (quoteId && quoteAuthor && quoteText) {
-                messageData.replyTo = {
-                    messageId: quoteId,
-                    author: quoteAuthor,
-                    text: quoteText
-                };
-            }
-        }
-        
-        // 6. Сохраняем в Firestore
-        await firebase.firestore()
-            .collection('rooms')
-            .doc(this.roomId)
-            .collection('messages')
-            .add(messageData);
-        
-        console.log("✅ Сообщение сохранено");
-        
-        // 7. Успех
-        showStatus("✅ Аудиосообщение отправлено!", "success");
-        
-        // 8. Очищаем
-        this.deleteAudioPreview();
-        
-        if (textInput) textInput.value = '';
-        this.cancelQuote();
-        
-    } catch (error) {
-        console.error("❌ Ошибка отправки:", error);
-        
-        let errorMessage = "Ошибка отправки: ";
-        if (error.code === 'storage/unauthorized') {
-            errorMessage = "❌ Нет прав на загрузку";
-        } else if (error.code === 'storage/canceled') {
-            errorMessage = "❌ Загрузка отменена";
-        } else {
-            errorMessage += error.message;
-        }
-        
-        showStatus(errorMessage, "error");
-        
-        // Разблокируем кнопки
-        const sendAudioBtn = document.getElementById('sendAudioBtn');
-        if (sendAudioBtn) {
-            sendAudioBtn.innerHTML = "✅ Отправить";
-            sendAudioBtn.disabled = false;
-        }
-        
-        const deleteAudioBtn = document.getElementById('deleteAudioBtn');
-        if (deleteAudioBtn) {
-            deleteAudioBtn.disabled = false;
-        }
-    }
-}
-// ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ АУДИО ==========
-
-formatTime(seconds) {
-    // Проверяем корректность входных данных
-    if (isNaN(seconds) || seconds === Infinity || seconds < 0) {
-        return "0:00";
-    }
-    
-    // Ограничиваем максимальное значение (например, 99:59)
-    if (seconds > 5999) {
-        return "99:59+";
-    }
-    
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
-
-showAudioError(error) {
-    console.error("Ошибка аудио:", error);
-    
-    let message = "Ошибка записи аудио: ";
-    
-    // Обработка различных типов ошибок
-    switch (error.name) {
-        case 'NotAllowedError':
-            message = "❌ Доступ к микрофону запрещен. Разрешите доступ в настройках браузера.";
-            break;
-        case 'NotFoundError':
-            message = "❌ Микрофон не найден. Подключите микрофон и обновите страницу.";
-            break;
-        case 'NotReadableError':
-            message = "❌ Микрофон занят другим приложением. Закройте другие приложения, использующие микрофон.";
-            break;
-        case 'SecurityError':
-            message = "❌ Ошибка безопасности. Запись аудио заблокирована настройками браузера.";
-            break;
-        case 'TypeError':
-            message = "❌ Браузер не поддерживает запись аудио. Попробуйте обновить браузер.";
-            break;
-        case 'AbortError':
-            message = "❌ Запись прервана пользователем.";
-            break;
-        case 'NetworkError':
-            message = "❌ Сетевая ошибка при записи аудио.";
-            break;
-        default:
-            if (error.message) {
-                message += error.message;
+    setupAuthListener() {
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                this.onUserSignedIn(user);
             } else {
-                message = "❌ Неизвестная ошибка при записи аудио.";
+                this.onUserSignedOut();
             }
+        });
     }
+    // ========== КОНЕЦ: ИНИЦИАЛИЗАЦИЯ ==========
     
-    // Показываем сообщение об ошибке
-    showStatus(message, "error");
-    
-    // Восстанавливаем кнопки
-    const recordBtn = document.getElementById('audioRecordBtn');
-    if (recordBtn) {
-        recordBtn.classList.remove('recording');
-    }
-    
-    const sendAudioBtn = document.getElementById('sendAudioBtn');
-    if (sendAudioBtn) {
-        sendAudioBtn.innerHTML = "✅ Отправить";
-        sendAudioBtn.disabled = false;
-    }
-}
-    // ========== ОБРАБОТКА ПРОКРУТКИ ==========
-    handleScroll() {
-        const container = this.messagesContainer;
-        const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-        
-        if (scrollBottom <= 50) {
-            this.shouldAutoScroll = true;
-            this.userScrolledUp = false;
-        } else if (container.scrollTop > 0) {
-            this.shouldAutoScroll = false;
-            this.userScrolledUp = true;
-        }
-        
-        if (scrollBottom === 0) {
-            this.shouldAutoScroll = true;
-            this.userScrolledUp = false;
-        }
-    }
-    
-    scrollToBottom() {
-        if (this.shouldAutoScroll) {
-            this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
-        }
-    }
-    
-    // ========== АВТОРИЗАЦИЯ ==========
+    // ========== НАЧАЛО: АВТОРИЗАЦИЯ ==========
     async signInWithGoogle() {
         try {
-            if (!auth) {
-                showStatus("Firebase еще не загружен. Обновите страницу.", "error");
-                return;
-            }
+            const googleProvider = new firebase.auth.GoogleAuthProvider();
+            googleProvider.addScope('profile');
+            googleProvider.addScope('email');
+            googleProvider.setCustomParameters({ prompt: 'select_account' });
             
             showStatus("Подключаемся к Google...", "info");
-            
             const result = await auth.signInWithPopup(googleProvider);
             this.user = result.user;
             
@@ -2661,16 +2011,12 @@ showAudioError(error) {
             
         } catch (error) {
             console.error("❌ Ошибка входа:", error);
-            
             let errorMessage = "Ошибка входа: ";
+            
             if (error.code === 'auth/popup-blocked') {
-                errorMessage += "Браузер заблокировал всплывающее окно. Разрешите всплывающие окна.";
+                errorMessage += "Браузер заблокировал всплывающее окно.";
             } else if (error.code === 'auth/popup-closed-by-user') {
                 errorMessage = "Окно входа было закрыто";
-            } else if (error.code === 'auth/cancelled-popup-request') {
-                errorMessage = "Запрос на вход был отменен";
-            } else if (error.code === 'auth/unauthorized-domain') {
-                errorMessage = "Домен не авторизован. Проверьте настройки Firebase Authentication.";
             } else {
                 errorMessage += error.message;
             }
@@ -2718,15 +2064,12 @@ showAudioError(error) {
         }
     }
     
-    // ========== ИНТЕРФЕЙС ==========
     onUserSignedIn(user) {
         this.user = user;
         
-        // Обновляем информацию о пользователе
         this.userName.textContent = user.displayName || 'Электрик';
         this.userEmail.textContent = user.email || '';
         
-        // Устанавливаем аватар
         if (user.photoURL) {
             this.userAvatar.innerHTML = `<img src="${user.photoURL}" alt="${user.displayName}">`;
         } else {
@@ -2734,18 +2077,14 @@ showAudioError(error) {
             this.userAvatar.innerHTML = `<div style="width:100%;height:100%;background:#2c5364;color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.2rem;">${name.charAt(0).toUpperCase()}</div>`;
         }
         
-        // Переключаем экраны
         this.loginScreen.style.display = 'none';
         this.chatScreen.style.display = 'flex';
         
-        // Загружаем данные чата
         this.loadOnlineUsers();
         this.subscribeToMessages();
         this.subscribeToTyping();
         this.addUserToOnline();
-        this.setupPullToRefresh();
         
-        // Фокус на поле ввода
         setTimeout(() => {
             this.messageInput.focus();
         }, 100);
@@ -2754,22 +2093,18 @@ showAudioError(error) {
     onUserSignedOut() {
         this.user = null;
         
-        // Отписываемся от слушателей
         if (this.unsubscribeMessages) this.unsubscribeMessages();
         if (this.unsubscribeOnline) this.unsubscribeOnline();
         if (this.unsubscribeTyping) this.unsubscribeTyping();
         
-        // Переключаем экраны
         this.chatScreen.style.display = 'none';
         this.loginScreen.style.display = 'block';
         
-        // Сбрасываем флаги
         this.firstMessageSent = false;
         this.systemMessageRemoved = false;
         this.shouldAutoScroll = true;
         this.userScrolledUp = false;
         
-        // Очищаем сообщения
         this.messagesContainer.innerHTML = `
             <div class="message system">
                 <div class="message-content" style="text-align: center; background: #e9ecef; color: #666;">
@@ -2778,8 +2113,9 @@ showAudioError(error) {
             </div>
         `;
     }
+    // ========== КОНЕЦ: АВТОРИЗАЦИЯ ==========
     
-    // ========== ОНЛАЙН СТАТУС ==========
+    // ========== НАЧАЛО: ОНЛАЙН СТАТУС ==========
     async addUserToOnline() {
         if (!this.user) return;
         
@@ -2832,34 +2168,24 @@ showAudioError(error) {
             console.error("❌ Ошибка загрузки онлайн пользователей:", error);
         }
     }
+    // ========== КОНЕЦ: ОНЛАЙН СТАТУС ==========
     
-    // ========== СООБЩЕНИЯ ==========
-    subscribeToMessages() {
-        console.log('🔵 subscribeToMessages ВЫЗВАН');
-        this.subscribeToNewMessages();
-    }
-    
-    subscribeToNewMessages() {
-        if (this.unsubscribeNewMessages) this.unsubscribeNewMessages();
+    // ========== НАЧАЛО: ОТПРАВКА СООБЩЕНИЙ ==========
+    updateSendButton(isSending) {
+        const sendBtn = document.getElementById('sendMessageBtn');
+        if (!sendBtn) return;
         
-        this.unsubscribeNewMessages = db.collection('rooms').doc(this.roomId)
-            .collection('messages')
-            .orderBy('timestamp', 'desc')
-            .limit(10)
-            .onSnapshot((snapshot) => {
-                snapshot.docChanges().forEach((change) => {
-                    if (change.type === 'added') {
-                        const message = change.doc.data();
-                        const docId = change.doc.id;
-                        
-                        if (!document.querySelector(`[data-message-id="${docId}"]`)) {
-                            this.displayMessage(message, docId);
-                        }
-                    }
-                });
-            }, (error) => {
-                console.error("❌ Ошибка подписки на новые сообщения:", error);
-            });
+        if (isSending) {
+            sendBtn.innerHTML = "⏳";
+            sendBtn.style.opacity = "0.7";
+            sendBtn.style.cursor = "not-allowed";
+            sendBtn.disabled = true;
+        } else {
+            sendBtn.innerHTML = "➤";
+            sendBtn.style.opacity = "1";
+            sendBtn.style.cursor = "pointer";
+            sendBtn.disabled = false;
+        }
     }
     
     async sendMessage() {
@@ -2950,10 +2276,6 @@ showAudioError(error) {
             } else if (error.code === 'unauthenticated') {
                 errorMessage = "❌ Сессия устарела. Пожалуйста, войдите снова.";
                 setTimeout(() => this.signOut(), 2000);
-            } else if (error.code === 'failed-precondition') {
-                errorMessage = "❌ Нарушены правила валидации сообщения.";
-            } else if (error.code === 'invalid-argument') {
-                errorMessage = "❌ Неверный формат сообщения.";
             } else {
                 errorMessage += error.message;
             }
@@ -2961,15 +2283,35 @@ showAudioError(error) {
             showStatus(errorMessage, "error");
         }
     }
+    // ========== КОНЕЦ: ОТПРАВКА СООБЩЕНИЙ ==========
+    
+    // ========== НАЧАЛО: ПРОСЛУШИВАНИЕ СООБЩЕНИЙ ==========
+    subscribeToMessages() {
+        console.log('🔵 subscribeToMessages ВЫЗВАН');
+        
+        if (this.unsubscribeMessages) this.unsubscribeMessages();
+        
+        this.unsubscribeMessages = db.collection('rooms').doc(this.roomId)
+            .collection('messages')
+            .orderBy('timestamp', 'desc')
+            .limit(20)
+            .onSnapshot((snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === 'added') {
+                        const message = change.doc.data();
+                        const docId = change.doc.id;
+                        
+                        if (!document.querySelector(`[data-message-id="${docId}"]`)) {
+                            this.displayMessage(message, docId);
+                        }
+                    }
+                });
+            }, (error) => {
+                console.error("❌ Ошибка подписки на сообщения:", error);
+            });
+    }
     
     displayMessage(message, docId) {
-        console.log('🟢 displayMessage вызван для:', docId);
-        console.log('📊 Данные сообщения:', {
-            text: message.text?.substring(0, 30) + (message.text?.length > 30 ? '...' : ''),
-            hasReplyTo: !!message.replyTo,
-            replyTo: message.replyTo
-        });
-        
         const isOwnMessage = message.userId === this.user?.uid;
         const messageTime = message.timestamp ? 
             new Date(message.timestamp.toDate()).toLocaleTimeString([], { 
@@ -2981,7 +2323,7 @@ showAudioError(error) {
         const editedBadge = message.edited ? 
             `<span class="edited-badge">(ред.)</span>` : '';
         
-        // === ЦИТАТА ВНУТРИ СООБЩЕНИЯ ===
+        // Цитата внутри сообщения
         let quoteHtml = '';
         if (message.replyTo) {
             const quoteText = message.replyTo.text || '';
@@ -2997,7 +2339,7 @@ showAudioError(error) {
             `;
         }
         
-        // === СОДЕРЖАНИЕ СООБЩЕНИЯ ===
+        // Содержимое сообщения
         let contentHtml = '';
         
         if (message.type === 'audio') {
@@ -3017,28 +2359,13 @@ showAudioError(error) {
                         </div>
                     </div>
                 `;
-            } else if (message.audioData) {
-                const audioSrc = `data:audio/webm;base64,${message.audioData}`;
-                contentHtml = `
-                    ${message.text ? `<p>${escapeHtml(message.text)}</p>` : ''}
-                    <div class="audio-message">
-                        <audio controls>
-                            <source src="${audioSrc}" type="audio/webm">
-                            Ваш браузер не поддерживает аудио.
-                        </audio>
-                        <div class="audio-message-info">
-                            <span>Аудиосообщение</span>
-                            <span>${message.audioDuration || '0:00'}</span>
-                        </div>
-                    </div>
-                `;
             }
         } else {
             // Текстовое сообщение
             contentHtml = escapeHtml(message.text || '');
         }
         
-        // === СОЗДАЕМ ЭЛЕМЕНТ СООБЩЕНИЯ ===
+        // Создаем элемент сообщения
         const messageEl = document.createElement('div');
         messageEl.className = `message ${isOwnMessage ? 'sent' : 'received'}`;
         messageEl.setAttribute('data-message-id', docId);
@@ -3058,15 +2385,19 @@ showAudioError(error) {
             <div class="message-content">${contentHtml}</div>
         `;
         
-        console.log('📝 Создано сообщение типа:', message.type || 'text');
-        
         this.messagesContainer.appendChild(messageEl);
         this.addMessageActions(messageEl, message, docId);
         
+        // Автопрокрутка к новому сообщению
+        if (this.shouldAutoScroll) {
+            setTimeout(() => this.scrollToBottom(), 100);
+        }
+        
         return messageEl;
     }
+    // ========== КОНЕЦ: ПРОСЛУШИВАНИЕ СООБЩЕНИЙ ==========
     
-    // ========== РЕДАКТИРОВАНИЕ И УДАЛЕНИЕ ==========
+    // ========== НАЧАЛО: РЕДАКТИРОВАНИЕ И УДАЛЕНИЕ ==========
     addMessageActions(messageEl, messageData, docId) {
         const isOwnMessage = messageData.userId === this.user?.uid;
         
@@ -3081,7 +2412,6 @@ showAudioError(error) {
             buttonsHtml = `
                 <button class="edit-btn" data-id="${docId}" title="Редактировать">✏️</button>
                 ${buttonsHtml}
-                <button class="history-btn" data-id="${docId}" title="История изменений">📜</button>
                 <button class="delete-btn" data-id="${docId}" title="Удалить">🗑️</button>
             `;
         }
@@ -3100,17 +2430,11 @@ showAudioError(error) {
         
         if (isOwnMessage) {
             const editBtn = actionsDiv.querySelector('.edit-btn');
-            const historyBtn = actionsDiv.querySelector('.history-btn');
             const deleteBtn = actionsDiv.querySelector('.delete-btn');
             
             editBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.startEditMessage(docId, messageData);
-            });
-            
-            historyBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.showEditHistory(docId);
             });
             
             deleteBtn.addEventListener('click', (e) => {
@@ -3216,8 +2540,9 @@ showAudioError(error) {
             showStatus(errorMessage, "error");
         }
     }
+    // ========== КОНЕЦ: РЕДАКТИРОВАНИЕ И УДАЛЕНИЕ ==========
     
-    // ========== ЦИТИРОВАНИЕ ==========
+    // ========== НАЧАЛО: ЦИТИРОВАНИЕ ==========
     startReplyToMessage(docId, messageData) {
         const quotePreview = document.getElementById('quotePreview');
         if (!quotePreview) return;
@@ -3246,28 +2571,9 @@ showAudioError(error) {
             document.getElementById('quoteText').textContent = 'Текст цитаты...';
         }
     }
+    // ========== КОНЕЦ: ЦИТИРОВАНИЕ ==========
     
-    // ========== ИСТОРИЯ ИЗМЕНЕНИЙ ==========
-    async showEditHistory(docId) {
-        try {
-            const messageDoc = await db.collection('rooms').doc(this.roomId)
-                .collection('messages').doc(docId).get();
-            
-            const messageData = messageDoc.data();
-            
-            if (!messageData.editHistory || messageData.editHistory.length === 0) {
-                alert("История изменений отсутствует");
-                return;
-            }
-            
-            alert(`История изменений: ${messageData.editHistory.length} версий`);
-            
-        } catch (error) {
-            console.error("❌ Ошибка загрузки истории:", error);
-        }
-    }
-    
-    // ========== ИНДИКАТОР НАБОРА ТЕКСТА ==========
+    // ========== НАЧАЛО: ТИПИНГ ИНДИКАТОР ==========
     async setTypingStatus(isTyping) {
         if (!this.user) return;
         
@@ -3316,677 +2622,537 @@ showAudioError(error) {
             this.typingIndicator.style.display = 'none';
         }
     }
+    // ========== КОНЕЦ: ТИПИНГ ИНДИКАТОР ==========
     
-    // ========== ПАГИНАЦИЯ СООБЩЕНИЙ ==========
-    async loadMoreMessages() {
-        if (this.isLoadingMessages || !this.hasMoreMessages) return;
+    // ========== НАЧАЛО: ПРОКРУТКА ==========
+    handleScroll() {
+        const container = this.messagesContainer;
+        const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
         
-        this.isLoadingMessages = true;
+        if (scrollBottom <= 50) {
+            this.shouldAutoScroll = true;
+            this.userScrolledUp = false;
+        } else if (container.scrollTop > 0) {
+            this.shouldAutoScroll = false;
+            this.userScrolledUp = true;
+        }
         
-        try {
-            let query = db.collection('rooms').doc(this.roomId)
-                .collection('messages')
-                .orderBy('timestamp', 'desc')
-                .limit(this.messagesLimit);
-            
-            if (this.lastVisibleMessage) {
-                query = query.startAfter(this.lastVisibleMessage);
-            }
-            
-            const snapshot = await query.get();
-            
-            if (snapshot.empty) {
-                this.hasMoreMessages = false;
-                return;
-            }
-            
-            this.lastVisibleMessage = snapshot.docs[snapshot.docs.length - 1];
-            const messages = [];
-            snapshot.forEach(doc => messages.unshift({ id: doc.id, data: doc.data() }));
-            
-            this.displayMessages(messages);
-            
-            if (snapshot.size < this.messagesLimit) {
-                this.hasMoreMessages = false;
-            }
-            
-        } catch (error) {
-            console.error("❌ Ошибка загрузки сообщений:", error);
-            showStatus("Ошибка загрузки сообщений", "error");
-        } finally {
-            this.isLoadingMessages = false;
+        if (scrollBottom === 0) {
+            this.shouldAutoScroll = true;
+            this.userScrolledUp = false;
         }
     }
     
-    displayMessages(messages) {
-        if (!this.lastVisibleMessage) {
-            this.messagesContainer.innerHTML = '';
-            
-            if (!this.systemMessageRemoved) {
-                this.messagesContainer.innerHTML = `
-                    <div class="message system">
-                        <div class="message-content" style="text-align: center; background: #e9ecef; color: #666;">
-                            Добро пожаловать в профессиональный чат электриков! Начните общение.
-                        </div>
-                    </div>
-                `;
-            }
-        }
-        
-        messages.forEach(msg => this.displayMessage(msg.data, msg.id));
-        
-        if (!this.lastVisibleMessage || this.shouldAutoScroll) {
-            setTimeout(() => this.scrollToBottom(), 100);
+    scrollToBottom() {
+        if (this.shouldAutoScroll) {
+            this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
         }
     }
+    // ========== КОНЕЦ: ПРОКРУТКА ==========
     
-    setupInfiniteScroll() {
-        this.messagesContainer.addEventListener('scroll', () => {
-            const container = this.messagesContainer;
-            const scrollTop = container.scrollTop;
-            
-            if (scrollTop < 100 && !this.isLoadingMessages && this.hasMoreMessages) {
-                this.loadMoreMessages();
-            }
-            
-            this.handleScroll();
-        });
-    }
-
-
-// ========== СЛУШАТЕЛЬ НОВЫХ СООБЩЕНИЙ ==========
-subscribeToNewMessages() {
-    // Отписываемся от предыдущего слушателя
-    if (this.unsubscribeNewMessages) {
-        this.unsubscribeNewMessages();
-    }
-    
-    // Слушаем только новые сообщения
-    this.unsubscribeNewMessages = db.collection('rooms').doc(this.roomId)
-        .collection('messages')
-        .orderBy('timestamp', 'desc')
-        .limit(10) // Только последние 10 сообщений
-        .onSnapshot((snapshot) => {
-            snapshot.docChanges().forEach((change) => {
-                if (change.type === 'added') {
-                    const message = change.doc.data();
-                    const docId = change.doc.id;
-                    
-                    // Проверяем, не отображается ли уже
-                    if (!document.querySelector(`[data-message-id="${docId}"]`)) {
-                        this.displayMessage(message, docId);
-                    }
-                }
-            });
-        }, (error) => {
-            console.error("❌ Ошибка подписки на новые сообщения:", error);
-        });
-}
-async sendMessage() {
-    // ========== НАЧАЛО RATE LIMITING ==========
-    const now = Date.now();
-    const timeSinceLastMessage = now - this.lastMessageTime;
-    
-    // Проверка: слишком быстро после предыдущего сообщения?
-    if (timeSinceLastMessage < this.messageCooldown) {
-        const remainingTime = Math.ceil((this.messageCooldown - timeSinceLastMessage) / 1000);
-        showStatus(`⏳ Подождите ${remainingTime} секунд перед отправкой следующего сообщения`, "error");
-        return;
-    }
-    
-    // Проверка: уже отправляется сообщение?
-    if (this.isSending) {
-        showStatus("⏳ Отправка предыдущего сообщения...", "info");
-        return;
-    }
-    // ========== КОНЕЦ RATE LIMITING ==========
-    
-    if (!this.user) {
-        showStatus("Сначала войдите в систему", "error");
-        return;
-    }
-    
-    const messageInput = document.getElementById('messageInput');
-    if (!messageInput) {
-        console.error('Элемент messageInput не найден!');
-        return;
-    }
-    
-    const text = messageInput.value.trim();
-    if (!text) {
-        // Если есть цитата, но нет текста - очищаем цитату
-        if (document.getElementById('quotePreview').style.display === 'block') {
-            this.cancelQuote();
-            showStatus("Введите текст сообщения", "info");
-        }
-        return;
-    }
-    
-    try {
-        // ========== НАЧАЛО RATE LIMITING ОТПРАВКИ ==========
-        // Устанавливаем флаг отправки
-        this.isSending = true;
-        this.lastMessageTime = Date.now();
-        
-        // Обновляем текст кнопки отправки
-        this.updateSendButton(true);
-        // ========== КОНЕЦ RATE LIMITING ОТПРАВКИ ==========
-        
-        // Удаляем системное сообщение после первого отправленного сообщения
-        if (!this.firstMessageSent) {
-            this.firstMessageSent = true;
-            this.systemMessageRemoved = true;
-        }
-        
-        const messageData = {
-            text: text,
-            userId: this.user.uid,
-            userName: this.user.displayName || 'Электрик',
-            userEmail: this.user.email,
-            userPhoto: this.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.user.displayName || 'E')}&background=2c5364&color=fff`,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            isElectrician: true
-        };
-        
-        // === ДОБАВЛЯЕМ ЦИТАТУ ЕСЛИ ЕСТЬ ===
-        console.log('========== ОТПРАВКА СООБЩЕНИЯ ==========');
-        const quotePreview = document.getElementById('quotePreview');
-        console.log('🔍 Проверяем превью цитаты:');
-        console.log('- Элемент найден?', !!quotePreview);
-        console.log('- Видимость:', quotePreview?.style?.display);
-        
-        if (quotePreview && quotePreview.style.display === 'block') {
-            const quoteId = quotePreview.getAttribute('data-quote-id');
-            const quoteAuthor = quotePreview.getAttribute('data-quote-author');
-            const quoteText = quotePreview.getAttribute('data-quote-text');
-            
-            console.log('📖 Читаем данные цитаты:');
-            console.log('- ID:', quoteId);
-            console.log('- Автор:', quoteAuthor);
-            console.log('- Текст длина:', quoteText?.length);
-            console.log('- Превью текста:', quoteText?.substring(0, 30));
-            
-            if (quoteId && quoteAuthor && quoteText) {
-                messageData.replyTo = {
-                    messageId: quoteId,
-                    author: quoteAuthor,
-                    text: quoteText
-                };
-                
-                console.log('✅ Цитата добавлена в messageData!');
-                console.log('   replyTo объект:', messageData.replyTo);
-            } else {
-                console.error('❌ Не удалось добавить цитату - недостаточно данных');
-            }
-        } else {
-            console.log('ℹ️ Превью цитаты не видно, цитата не добавляется');
-        }
-        
-        console.log('📨 Отправляем в Firestore:', {
-            text: text.substring(0, 50) + (text.length > 50 ? '...' : ''),
-            hasReplyTo: !!messageData.replyTo
-        });
-        
-        await db.collection('rooms').doc(this.roomId)
-            .collection('messages').add(messageData);
-            
-        console.log('🚀 Сообщение отправлено!');
-        console.log('==========================================');
-        
-        // ========== СБРОС RATE LIMITING ==========
-        // Сбрасываем флаг отправки
-        this.isSending = false;
-        this.updateSendButton(false);
-        // ========== КОНЕЦ СБРОСА ==========
-        
-        // Очищаем поле ввода и цитату
-        messageInput.value = '';
-        this.cancelQuote();
-        this.setTypingStatus(false);
-        
-        // Включаем авто-прокрутку при отправке
-        this.shouldAutoScroll = true;
-        
-        // Показываем успешную отправку
-        showStatus("✅ Сообщение отправлено" + (messageData.replyTo ? " с цитатой" : ""), "success");
-        
-    } catch (error) {
-        // ========== СБРОС ФЛАГОВ ПРИ ОШИБКЕ ==========
-        this.isSending = false;
-        this.updateSendButton(false);
-        // ========== КОНЕЦ СБРОСА ==========
-        
-        console.error("❌ Ошибка отправки сообщения:", error.code, error.message);
-        
-        let errorMessage = "Ошибка отправки: ";
-        
-        // Обработка ошибок безопасности Firestore
-        if (error.code === 'permission-denied') {
-            errorMessage = "❌ Нет прав на отправку сообщения. Проверьте правила безопасности.";
-        } else if (error.code === 'unauthenticated') {
-            errorMessage = "❌ Сессия устарела. Пожалуйста, войдите снова.";
-            // Предлагаем перелогиниться
-            setTimeout(() => this.signOut(), 2000);
-        } else if (error.code === 'failed-precondition') {
-            errorMessage = "❌ Нарушены правила валидации сообщения.";
-        } else if (error.code === 'invalid-argument') {
-            errorMessage = "❌ Неверный формат сообщения.";
-        } else {
-            errorMessage += error.message;
-        }
-        
-        showStatus(errorMessage, "error");
-    }
-}
-    
-displayMessage(message, docId) {
-    console.log('🟢 displayMessage вызван для:', docId);
-    console.log('📊 Данные сообщения:', {
-        text: message.text?.substring(0, 30) + (message.text?.length > 30 ? '...' : ''),
-        hasReplyTo: !!message.replyTo,
-        replyTo: message.replyTo
-    });
-    
-    const isOwnMessage = message.userId === this.user?.uid;
-    const messageTime = message.timestamp ? 
-        new Date(message.timestamp.toDate()).toLocaleTimeString([], { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        }) : 
-        new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    const editedBadge = message.edited ? 
-        `<span class="edited-badge">(ред.)</span>` : '';
-    
-    // === ЦИТАТА ВНУТРИ СООБЩЕНИЯ ===
-    let quoteHtml = '';
-    if (message.replyTo) {
-        console.log('🔵 Обрабатываем цитату:', {
-            author: message.replyTo.author,
-            textLength: message.replyTo.text?.length,
-            textPreview: message.replyTo.text?.substring(0, 50)
-        });
-        
-        const quoteText = message.replyTo.text || '';
-        const shortText = quoteText.length > 100 ? 
-            quoteText.substring(0, 100) + '...' : 
-            quoteText;
-            
-        quoteHtml = `
-            <div class="quoted-message">
-                <span class="quote-author">${message.replyTo.author || 'Электрик'}:</span>
-                <span class="quote-text">${escapeHtml(shortText)}</span>
-            </div>
-        `;
-        
-        console.log('✅ HTML цитаты создан:', quoteHtml);
-    } else {
-        console.log('ℹ️ Цитаты нет в сообщении');
-    }
-    
-    const messageEl = document.createElement('div');
-    messageEl.className = `message ${isOwnMessage ? 'sent' : 'received'}`;
-    messageEl.setAttribute('data-message-id', docId);
-    
-    messageEl.innerHTML = `
-        <div class="message-header">
-            <div class="message-avatar">
-                ${message.userPhoto ? 
-                    `<img src="${message.userPhoto}" alt="${message.userName}">` : 
-                    `<div style="width:100%;height:100%;background:#2c5364;color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;">${(message.userName || 'E').charAt(0).toUpperCase()}</div>`
-                }
-            </div>
-            <span class="message-author">${message.userName || 'Электрик'}</span>
-            <span class="message-time">${messageTime} ${editedBadge}</span>
-        </div>
-        ${quoteHtml}
-        <div class="message-content">${escapeHtml(message.text || '')}</div>
-    `;
-    
-    console.log('📝 Весь HTML сообщения:', messageEl.innerHTML);
-    
-    this.messagesContainer.appendChild(messageEl);
-    this.addMessageActions(messageEl, message, docId);
-    
-    return messageEl;
-}
-
-// ========== РЕДАКТИРОВАНИЕ И УДАЛЕНИЕ ==========
-addMessageActions(messageEl, messageData, docId) {
-       console.log('=== addMessageActions ВЫЗВАН ===');
-    console.log('Для сообщения:', docId);
-    console.log('Автор сообщения:', messageData.userId);
-    console.log('Текущий пользователь:', this.user?.uid);
-    const isOwnMessage = messageData.userId === this.user?.uid;
-    console.log('Это свое сообщение?:', isOwnMessage);
-// Кнопки для ВСЕХ сообщений
-let buttonsHtml = `
-    <button class="reply-btn" data-id="${docId}" 
-            style="background: none; border: none; color: #2c5364; cursor: pointer; padding: 4px 8px; font-size: 0.85em; text-decoration: underline;">
-        Ответить
-    </button>
-`;
-    
-    // Дополнительные кнопки только для СВОИХ сообщений
-    if (isOwnMessage) {
-        buttonsHtml = `
-            <button class="edit-btn" data-id="${docId}" title="Редактировать">✏️</button>
-            ${buttonsHtml}
-            <button class="history-btn" data-id="${docId}" title="История изменений">📜</button>
-            <button class="delete-btn" data-id="${docId}" title="Удалить">🗑️</button>
-        `;
-    }
-    
-    const actionsDiv = document.createElement('div');
-    actionsDiv.className = 'message-actions';
-    actionsDiv.innerHTML = buttonsHtml;
-    
-    messageEl.appendChild(actionsDiv);
-    
-    // ОБРАБОТЧИК ДЛЯ ВСЕХ сообщений - Ответить
-    const replyBtn = actionsDiv.querySelector('.reply-btn');
-    replyBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        console.log('Кнопка Ответить нажата! docId:', docId); 
-        this.startReplyToMessage(docId, messageData);
-    });
-    
-    // Обработчики только для СВОИХ сообщений
-    if (isOwnMessage) {
-        const editBtn = actionsDiv.querySelector('.edit-btn');
-        const historyBtn = actionsDiv.querySelector('.history-btn');
-        const deleteBtn = actionsDiv.querySelector('.delete-btn');
-        
-        editBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.startEditMessage(docId, messageData);
-        });
-        
-        historyBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.showEditHistory(docId);
-        });
-        
-        deleteBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.deleteMessage(docId);
-        });
-    }
-}
-startEditMessage(docId, messageData) {
-    const messageEl = document.querySelector(`[data-message-id="${docId}"]`);
-    if (!messageEl) return;
-    
-    // ДОБАВЬ ЭТУ СТРОКУ - подсветка сообщения
-    messageEl.classList.add('editing');
-    
-    const contentEl = messageEl.querySelector('.message-content');
-    const originalText = messageData.text;
-    
-    // Создаем поле редактирования
-const editHtml = `
-    <textarea class="edit-input" maxlength="1000">${escapeHtml(originalText)}</textarea>
-    <div class="edit-buttons">
-        <button class="cancel-btn">Отмена</button>
-        <button class="save-btn">Сохранить</button>
-    </div>
-`;
-    
-    contentEl.innerHTML = editHtml;
-    
-    // Фокус на поле
-    const textarea = contentEl.querySelector('.edit-input');
-    textarea.focus();
-    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
-    
-    // Обработчики кнопок
-    contentEl.querySelector('.cancel-btn').addEventListener('click', () => {
-        this.cancelEdit(docId, originalText);
-    });
-    
-    contentEl.querySelector('.save-btn').addEventListener('click', () => {
-        const newText = textarea.value.trim();
-        if (newText && newText !== originalText) {
-            this.saveEditedMessage(docId, newText);
-        } else {
-            this.cancelEdit(docId, originalText);
-        }
-    });
-    
-    // Enter для сохранения, Esc для отмены
-    textarea.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            contentEl.querySelector('.save-btn').click();
-        }
-        if (e.key === 'Escape') {
-            contentEl.querySelector('.cancel-btn').click();
-        }
-    });
-}
-
-async saveEditedMessage(docId, newText) {
-    if (!newText.trim()) return;
-    
-    try {
-        await db.collection('rooms').doc(this.roomId)
-            .collection('messages').doc(docId).update({
-                text: newText,
-                edited: true,
-                editedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        
-        showStatus("✅ Сообщение обновлено", "success");
-    } catch (error) {
-        console.error("❌ Ошибка редактирования:", error);
-        showStatus("Ошибка редактирования: " + error.message, "error");
-    }
-}
-
-cancelEdit(docId, originalText) {
-    const messageEl = document.querySelector(`[data-message-id="${docId}"]`);
-    if (!messageEl) return;
-    
-    // ДОБАВЬ ЭТУ СТРОКУ - убираем подсветку
-    messageEl.classList.remove('editing');
-    
-    const contentEl = messageEl.querySelector('.message-content');
-    contentEl.innerHTML = escapeHtml(originalText);
-    
-    // Восстанавливаем действия
-    this.addMessageActions(messageEl, { userId: this.user.uid }, docId);
-}
-
-async deleteMessage(docId) {
-    if (!confirm("Удалить это сообщение?")) return;
-    
-    try {
-        await db.collection('rooms').doc(this.roomId)
-            .collection('messages').doc(docId).delete();
-        
-        showStatus("✅ Сообщение удалено", "success");
-    } catch (error) {
-        console.error("❌ Ошибка удаления:", error.code, error.message);
-        
-        let errorMessage = "Ошибка удаления: ";
-        
-        if (error.code === 'permission-denied') {
-            errorMessage = "❌ Нет прав на удаление этого сообщения.";
-        } else if (error.code === 'not-found') {
-            errorMessage = "❌ Сообщение уже было удалено.";
-        } else {
-            errorMessage += error.message;
-        }
-        
-        showStatus(errorMessage, "error");
-    }
-}
-    // ========== ЦИТИРОВАНИЕ ==========
-startReplyToMessage(docId, messageData) {
-    console.log('========== START REPLY ==========');
-    console.log('🔗 Цитируем сообщение ID:', docId);
-    console.log('📊 Данные сообщения:', messageData);
-    console.log('- userName:', messageData.userName);
-    console.log('- text:', messageData.text?.substring(0, 30) + (messageData.text?.length > 30 ? '...' : ''));
-    
-    const quotePreview = document.getElementById('quotePreview');
-    if (!quotePreview) {
-        console.error('❌ ОШИБКА: quotePreview не найден!');
-        return;
-    }
-    
-    // Показываем превью
-    quotePreview.style.display = 'block';
-    
-    // Сохраняем данные
-    quotePreview.setAttribute('data-quote-id', docId);
-    quotePreview.setAttribute('data-quote-author', messageData.userName || 'Электрик');
-    quotePreview.setAttribute('data-quote-text', messageData.text || '');
-    
-    console.log('💾 Данные сохранены в атрибутах:');
-    console.log('- data-quote-id:', docId);
-    console.log('- data-quote-author:', messageData.userName || 'Электрик');
-    console.log('- data-quote-text длина:', messageData.text?.length || 0);
-    
-    // Обновляем отображение
-    document.getElementById('quoteAuthor').textContent = messageData.userName || 'Электрик';
-    
-    // Для превью обрезаем длинный текст
-    const previewText = messageData.text && messageData.text.length > 60 ? 
-        messageData.text.substring(0, 60) + '...' : 
-        (messageData.text || '');
-        
-    document.getElementById('quoteText').textContent = previewText;
-    
-    // Фокус на поле ввода
-    this.messageInput.focus();
-    
-    console.log('✅ Цитата установлена! Превью видимо:', quotePreview.style.display === 'block');
-    console.log('====================================');
-}
-
-cancelQuote() {
-    const quotePreview = document.getElementById('quotePreview');
-    if (quotePreview) {
-        quotePreview.style.display = 'none';
-        
-        // Очищаем все data-атрибуты
-        quotePreview.removeAttribute('data-quote-id');
-        quotePreview.removeAttribute('data-quote-author');
-        quotePreview.removeAttribute('data-quote-text');
-        
-        // Сбрасываем текст в превью
-        document.getElementById('quoteAuthor').textContent = 'Автор';
-        document.getElementById('quoteText').textContent = 'Текст цитаты...';
-        
-        console.log('❌ Цитата отменена');
-    }
-}
-
-// ========== ИСТОРИЯ ИЗМЕНЕНИЙ ==========
-async showEditHistory(docId) {
-    try {
-        const messageDoc = await db.collection('rooms').doc(this.roomId)
-            .collection('messages').doc(docId).get();
-        
-        const messageData = messageDoc.data();
-        
-        if (!messageData.editHistory || messageData.editHistory.length === 0) {
-            alert("История изменений отсутствует");
+    // ========== НАЧАЛО: АУДИО ФУНКЦИИ ==========
+    async toggleAudioRecording() {
+        if (this.isRecording) {
+            this.stopAudioRecording();
             return;
         }
         
-        alert(`История изменений: ${messageData.editHistory.length} версий`);
-        
-    } catch (error) {
-        console.error("❌ Ошибка загрузки истории:", error);
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: { 
+                    echoCancellation: true, 
+                    noiseSuppression: true, 
+                    autoGainControl: true 
+                } 
+            });
+            this.startAudioRecording(stream);
+        } catch (error) {
+            console.error("❌ Ошибка доступа к микрофону:", error);
+            this.showAudioError(error);
+        }
     }
-}
-    // ========== ИНДИКАТОР НАБОРА ТЕКСТА ==========
-    async setTypingStatus(isTyping) {
-        if (!this.user) return;
+    
+    startAudioRecording(stream) {
+        console.log("=== НАЧАЛО ЗАПИСИ АУДИО ===");
         
         try {
-            if (isTyping) {
-                await db.collection('rooms').doc(this.roomId)
-                    .collection('typing').doc(this.user.uid).set({
-                        userId: this.user.uid,
-                        userName: this.user.displayName || 'Электрик',
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            this.isRecording = true;
+            this.audioChunks = [];
+            this.recordingStartTime = Date.now();
+            
+            // Создаем MediaRecorder
+            const options = { mimeType: 'audio/webm' };
+            this.mediaRecorder = new MediaRecorder(stream, options);
+            
+            // Обработчик данных
+            this.mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    this.audioChunks.push(event.data);
+                    console.log("Получен аудио чанк:", event.data.size, "байт");
+                }
+            };
+            
+            // Обработчик остановки
+            this.mediaRecorder.onstop = () => {
+                console.log("Запись остановлена, всего чанков:", this.audioChunks.length);
+                
+                if (this.audioChunks.length > 0) {
+                    this.currentAudioBlob = new Blob(this.audioChunks, { 
+                        type: 'audio/webm' 
                     });
-            } else {
-                await db.collection('rooms').doc(this.roomId)
-                    .collection('typing').doc(this.user.uid).delete();
+                    
+                    console.log("Создан Blob:", this.currentAudioBlob.size, "байт");
+                    
+                    // Очистка
+                    this.cleanupRecording();
+                    
+                    // Показываем превью
+                    this.showAudioPreview();
+                } else {
+                    console.error("❌ Нет аудио данных!");
+                    this.handleRecordingError("Не удалось записать аудио");
+                }
+            };
+            
+            // Запускаем запись
+            this.mediaRecorder.start(100); // Получаем данные каждые 100мс
+            
+            // UI обновления
+            const audioBtn = document.getElementById('audioRecordBtn');
+            if (audioBtn) audioBtn.classList.add('recording');
+            
+            document.getElementById('audioRecordingOverlay').style.display = 'flex';
+            
+            // Таймер
+            this.startRecordingTimer();
+            
+            // Визуализатор
+            this.startAudioVisualizer(stream);
+            
+            console.log("✅ Запись начата");
+            
+        } catch (error) {
+            console.error("❌ Ошибка начала записи:", error);
+            this.isRecording = false;
+            this.showAudioError(error);
+            
+            // Останавливаем поток
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        }
+    }
+    
+    startRecordingTimer() {
+        const timerElement = document.getElementById('recordingTimer');
+        const stopButton = document.getElementById('stopRecordingBtn');
+        
+        this.recordingTimer = setInterval(() => {
+            const elapsed = Date.now() - this.recordingStartTime;
+            const seconds = Math.floor(elapsed / 1000);
+            const remaining = 60 - seconds;
+            
+            // Обновляем таймер
+            if (timerElement) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                timerElement.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+            
+            // Обновляем кнопку остановки
+            if (stopButton) {
+                stopButton.textContent = `⏹️ Завершить (${remaining})`;
+            }
+            
+            // Автоматическая остановка через 60 секунд
+            if (elapsed >= this.maxRecordingTime) {
+                this.stopAudioRecording();
+            }
+            
+        }, 1000);
+    }
+    
+    startAudioVisualizer(stream) {
+        try {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            this.analyser = this.audioContext.createAnalyser();
+            const source = this.audioContext.createMediaStreamSource(stream);
+            
+            source.connect(this.analyser);
+            this.analyser.fftSize = 256;
+            
+            const bufferLength = this.analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            const visualizer = document.getElementById('audioVisualizer');
+            
+            if (visualizer) {
+                visualizer.innerHTML = '';
+                for (let i = 0; i < 32; i++) {
+                    const bar = document.createElement('div');
+                    bar.className = 'visualizer-bar';
+                    bar.style.height = '5px';
+                    visualizer.appendChild(bar);
+                }
+                
+                this.visualizerInterval = setInterval(() => {
+                    if (!this.isRecording) return;
+                    
+                    this.analyser.getByteFrequencyData(dataArray);
+                    const bars = visualizer.querySelectorAll('.visualizer-bar');
+                    
+                    bars.forEach((bar, i) => {
+                        const value = dataArray[i * 2] || 0;
+                        const height = 5 + (value / 255) * 95;
+                        bar.style.height = `${height}px`;
+                        bar.style.opacity = 0.5 + (value / 255) * 0.5;
+                    });
+                }, 100);
             }
         } catch (error) {
-            console.error("❌ Ошибка обновления статуса набора:", error);
+            console.warn("Не удалось создать визуализатор:", error);
         }
     }
     
-    subscribeToTyping() {
-        this.unsubscribeTyping = db.collection('rooms').doc(this.roomId)
-            .collection('typing')
-            .onSnapshot((snapshot) => {
-                const typingUsers = [];
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    if (data.userId !== this.user?.uid) {
-                        typingUsers.push(data.userName || 'Электрик');
-                    }
-                });
-                
-                this.showTypingIndicator(typingUsers);
-            }, (error) => {
-                console.error("❌ Ошибка подписки на набор текста:", error);
+    stopAudioRecording() {
+        if (!this.isRecording || !this.mediaRecorder) return;
+        
+        console.log("=== ОСТАНОВКА ЗАПИСИ ===");
+        
+        this.isRecording = false;
+        clearInterval(this.recordingTimer);
+        clearInterval(this.visualizerInterval);
+        
+        // Останавливаем MediaRecorder
+        if (this.mediaRecorder.state === 'recording') {
+            this.mediaRecorder.stop();
+        }
+        
+        // Останавливаем поток
+        if (this.mediaRecorder.stream) {
+            this.mediaRecorder.stream.getTracks().forEach(track => {
+                track.stop();
+                track.enabled = false;
             });
+        }
+        
+        // UI обновления
+        const audioBtn = document.getElementById('audioRecordBtn');
+        if (audioBtn) audioBtn.classList.remove('recording');
+        
+        document.getElementById('audioRecordingOverlay').style.display = 'none';
+        
+        console.log("✅ Запись остановлена");
     }
     
-    showTypingIndicator(typingUsers) {
-        if (typingUsers.length > 0) {
-            const names = typingUsers.slice(0, 2).join(', ');
-            const others = typingUsers.length > 2 ? ` и ${typingUsers.length - 2} других` : '';
-            this.typingIndicator.textContent = `${names}${others} печатает...`;
-            this.typingIndicator.style.display = 'block';
-        } else {
-            this.typingIndicator.style.display = 'none';
+    cancelAudioRecording() {
+        if (!this.isRecording) return;
+        
+        console.log("=== ОТМЕНА ЗАПИСИ ===");
+        
+        this.isRecording = false;
+        clearInterval(this.recordingTimer);
+        clearInterval(this.visualizerInterval);
+        
+        if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+            this.mediaRecorder.stop();
+        }
+        
+        if (this.mediaRecorder && this.mediaRecorder.stream) {
+            this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        }
+        
+        this.audioChunks = [];
+        this.currentAudioBlob = null;
+        
+        const audioBtn = document.getElementById('audioRecordBtn');
+        if (audioBtn) audioBtn.classList.remove('recording');
+        document.getElementById('audioRecordingOverlay').style.display = 'none';
+        
+        console.log("✅ Запись отменена");
+    }
+    
+    cleanupRecording() {
+        // Очищаем таймеры
+        clearInterval(this.recordingTimer);
+        clearInterval(this.visualizerInterval);
+        
+        // Закрываем аудио контекст
+        if (this.audioContext) {
+            this.audioContext.close();
+            this.audioContext = null;
+        }
+        
+        this.analyser = null;
+        this.mediaRecorder = null;
+    }
+    
+    showAudioPreview() {
+        if (!this.currentAudioBlob) return;
+        
+        const audioURL = URL.createObjectURL(this.currentAudioBlob);
+        const audioPlayer = document.getElementById('audioPreviewPlayer');
+        
+        if (audioPlayer) {
+            audioPlayer.src = audioURL;
+            
+            // Устанавливаем длительность
+            audioPlayer.onloadedmetadata = () => {
+                const duration = audioPlayer.duration;
+                
+                if (isNaN(duration) || duration === Infinity) {
+                    console.warn("Некорректная длительность аудио");
+                    document.getElementById('audioLength').textContent = `Длительность не определена`;
+                    document.getElementById('audioDuration').textContent = "0:00";
+                } else {
+                    const roundedDuration = Math.floor(duration);
+                    document.getElementById('audioLength').textContent = `${roundedDuration} сек`;
+                    document.getElementById('audioDuration').textContent = this.formatTime(roundedDuration);
+                }
+            };
+            
+            // Обработка ошибок
+            audioPlayer.onerror = () => {
+                console.error("Ошибка загрузки аудио");
+                document.getElementById('audioLength').textContent = `Ошибка загрузки`;
+                document.getElementById('audioDuration').textContent = "0:00";
+            };
+        }
+        
+        const sizeKB = Math.round(this.currentAudioBlob.size / 1024);
+        document.getElementById('audioSize').textContent = `${sizeKB} KB`;
+        document.getElementById('audioPreviewOverlay').style.display = 'flex';
+    }
+    
+    deleteAudioPreview() {
+        console.log("=== УДАЛЕНИЕ ПРЕВЬЮ АУДИО ===");
+        
+        if (this.currentAudioBlob) {
+            const audioPlayer = document.getElementById('audioPreviewPlayer');
+            if (audioPlayer && audioPlayer.src) {
+                URL.revokeObjectURL(audioPlayer.src);
+                audioPlayer.src = '';
+            }
+        }
+        
+        this.currentAudioBlob = null;
+        document.getElementById('audioPreviewOverlay').style.display = 'none';
+        this.messageInput.focus();
+        
+        console.log("✅ Превью удалено");
+    }
+    
+    async sendAudioMessage() {
+        console.log("=== ОТПРАВКА АУДИОСООБЩЕНИЯ ===");
+        
+        // Проверки
+        if (!this.currentAudioBlob) {
+            showStatus("❌ Нет аудио для отправки", "error");
+            return;
+        }
+        
+        if (!this.user) {
+            showStatus("❌ Пользователь не авторизован", "error");
+            return;
+        }
+        
+        if (this.currentAudioBlob.size === 0) {
+            showStatus("❌ Аудиофайл пустой", "error");
+            return;
+        }
+        
+        // Блокируем кнопки
+        const sendAudioBtn = document.getElementById('sendAudioBtn');
+        const deleteAudioBtn = document.getElementById('deleteAudioBtn');
+        
+        if (sendAudioBtn) {
+            sendAudioBtn.innerHTML = "⏳";
+            sendAudioBtn.disabled = true;
+        }
+        if (deleteAudioBtn) {
+            deleteAudioBtn.disabled = true;
+        }
+        
+        try {
+            // Получаем длительность
+            const durationElement = document.getElementById('audioDuration');
+            const audioDuration = durationElement ? durationElement.textContent : "0:00";
+            const sizeKB = Math.round(this.currentAudioBlob.size / 1024);
+            
+            // Создаем имя файла
+            const timestamp = Date.now();
+            const fileName = `audio_${this.user.uid}_${timestamp}.webm`;
+            
+            // Загружаем в Firebase Storage
+            console.log("Загрузка в Storage...");
+            
+            const storageRef = storage.ref(`chat_audio/${this.user.uid}/${fileName}`);
+            
+            const metadata = {
+                contentType: 'audio/webm',
+                customMetadata: {
+                    userId: this.user.uid,
+                    userName: this.user.displayName || 'Электрик',
+                    timestamp: timestamp.toString()
+                }
+            };
+            
+            // Загружаем файл
+            const uploadTask = storageRef.put(this.currentAudioBlob, metadata);
+            
+            // Ждем завершения
+            await uploadTask;
+            console.log("✅ Аудио загружено в Storage");
+            
+            // Получаем URL
+            const downloadURL = await storageRef.getDownloadURL();
+            console.log("✅ URL получен:", downloadURL);
+            
+            // Создаем сообщение
+            const messageData = {
+                type: 'audio',
+                audioURL: downloadURL,
+                audioFileName: fileName,
+                audioDuration: audioDuration,
+                audioSize: sizeKB,
+                userId: this.user.uid,
+                userName: this.user.displayName || 'Электрик',
+                userEmail: this.user.email,
+                userPhoto: this.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.user.displayName || 'E')}&background=2c5364&color=fff`,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                isElectrician: true
+            };
+            
+            // Добавляем текст если есть
+            const textInput = document.getElementById('messageInput');
+            if (textInput && textInput.value.trim()) {
+                messageData.text = textInput.value.trim();
+            }
+            
+            // Добавляем цитату если есть
+            const quotePreview = document.getElementById('quotePreview');
+            if (quotePreview && quotePreview.style.display === 'block') {
+                const quoteId = quotePreview.getAttribute('data-quote-id');
+                const quoteAuthor = quotePreview.getAttribute('data-quote-author');
+                const quoteText = quotePreview.getAttribute('data-quote-text');
+                
+                if (quoteId && quoteAuthor && quoteText) {
+                    messageData.replyTo = {
+                        messageId: quoteId,
+                        author: quoteAuthor,
+                        text: quoteText
+                    };
+                }
+            }
+            
+            // Сохраняем в Firestore
+            await db.collection('rooms').doc(this.roomId)
+                .collection('messages')
+                .add(messageData);
+            
+            console.log("✅ Сообщение сохранено в Firestore");
+            
+            // Успех
+            showStatus("✅ Аудиосообщение отправлено!", "success");
+            
+            // Очищаем
+            this.deleteAudioPreview();
+            
+            if (textInput) textInput.value = '';
+            this.cancelQuote();
+            
+            // Восстанавливаем кнопки
+            if (sendAudioBtn) {
+                sendAudioBtn.innerHTML = "✅ Отправить";
+                sendAudioBtn.disabled = false;
+            }
+            if (deleteAudioBtn) {
+                deleteAudioBtn.disabled = false;
+            }
+            
+        } catch (error) {
+            console.error("❌ Ошибка отправки аудио:", error);
+            
+            // Восстанавливаем кнопки
+            if (sendAudioBtn) {
+                sendAudioBtn.innerHTML = "✅ Отправить";
+                sendAudioBtn.disabled = false;
+            }
+            if (deleteAudioBtn) {
+                deleteAudioBtn.disabled = false;
+            }
+            
+            let errorMessage = "Ошибка отправки: ";
+            if (error.code === 'storage/unauthorized') {
+                errorMessage = "❌ Нет прав на загрузку";
+            } else if (error.code === 'storage/canceled') {
+                errorMessage = "❌ Загрузка отменена";
+            } else {
+                errorMessage += error.message;
+            }
+            
+            showStatus(errorMessage, "error");
         }
     }
-}  
+    
+    formatTime(seconds) {
+        if (isNaN(seconds) || seconds === Infinity || seconds < 0) {
+            return "0:00";
+        }
+        
+        if (seconds > 5999) {
+            return "99:59+";
+        }
+        
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+    
+    showAudioError(error) {
+        console.error("Ошибка аудио:", error);
+        
+        let message = "Ошибка записи аудио: ";
+        
+        switch (error.name) {
+            case 'NotAllowedError':
+                message = "❌ Доступ к микрофону запрещен. Разрешите доступ в настройках браузера.";
+                break;
+            case 'NotFoundError':
+                message = "❌ Микрофон не найден. Подключите микрофон и обновите страницу.";
+                break;
+            case 'NotReadableError':
+                message = "❌ Микрофон занят другим приложением. Закройте другие приложения.";
+                break;
+            default:
+                message += error.message || "Неизвестная ошибка";
+        }
+        
+        showStatus(message, "error");
+        
+        // Восстанавливаем кнопку
+        const recordBtn = document.getElementById('audioRecordBtn');
+        if (recordBtn) {
+            recordBtn.classList.remove('recording');
+        }
+    }
+    
+    handleRecordingError(message) {
+        console.error("Ошибка записи:", message);
+        this.cleanupRecording();
+        alert("❌ " + message + "\nПопробуйте еще раз.");
+        this.currentAudioBlob = null;
+        this.audioChunks = [];
+    }
+    // ========== КОНЕЦ: АУДИО ФУНКЦИИ ==========
+}
+
 // ========== ЗАПУСК ПРИЛОЖЕНИЯ ==========
 let chat;
 
-// Ждем полной загрузки страницы и Firebase
 window.addEventListener('load', async function() {
-    console.log("🚀 Страница загружена, инициализируем Firebase...");
-    
-    // Сначала проверяем загрузился ли Firebase SDK
-    const checkFirebaseLoaded = () => {
-        return new Promise((resolve) => {
-            const checkInterval = setInterval(() => {
-                if (typeof firebase !== 'undefined') {
-                    clearInterval(checkInterval);
-                    console.log("✅ Firebase SDK загружен");
-                    resolve(true);
-                }
-            }, 100);
-            
-            // Таймаут 10 секунд
-            setTimeout(() => {
-                clearInterval(checkInterval);
-                console.log("❌ Firebase SDK не загрузился за 10 секунд");
-                resolve(false);
-            }, 10000);
-        });
-    };
+    console.log("🚀 Страница загружена, инициализируем...");
     
     try {
-        // Ждем загрузку Firebase SDK
-        const isFirebaseLoaded = await checkFirebaseLoaded();
-        
-        if (!isFirebaseLoaded) {
-            throw new Error("Firebase SDK не загрузился. Проверьте интернет соединение.");
-        }
-        
         // Инициализируем Firebase
         await initializeFirebase();
         
@@ -3999,18 +3165,6 @@ window.addEventListener('load', async function() {
     } catch (error) {
         console.error("❌ Не удалось запустить чат:", error);
         showStatus("Ошибка загрузки чата: " + error.message, "error");
-        
-        // Показываем кнопку для повторной попытки
-        const retryBtn = document.createElement('button');
-        retryBtn.textContent = "Попробовать снова";
-        retryBtn.style.cssText = "background: #FF9800; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-top: 10px; cursor: pointer;";
-        retryBtn.onclick = () => location.reload();
-        
-        const statusEl = document.getElementById('statusMessage');
-        if (statusEl) {
-            statusEl.appendChild(document.createElement('br'));
-            statusEl.appendChild(retryBtn);
-        }
     }
 });
 
@@ -4019,11 +3173,10 @@ window.debugChat = () => chat;
 window.debugAuth = () => auth;
 window.debugFirestore = () => db;
 
-    // Добавь в конец файла
+// Тестовая функция для проверки цитирования
 window.testQuoteFunction = function() {
     console.log('=== ТЕСТ ЦИТИРОВАНИЯ ===');
     
-    // 1. Создаем тестовую цитату
     const quotePreview = document.getElementById('quotePreview');
     if (quotePreview) {
         quotePreview.style.display = 'block';
@@ -4035,13 +3188,12 @@ window.testQuoteFunction = function() {
         document.getElementById('quoteText').textContent = 'Это тестовый текст...';
     }
     
-    // 2. Заполняем поле ввода
     const input = document.getElementById('messageInput');
     if (input) {
         input.value = 'Это мой ответ на цитату';
     }
     
-    console.log('Тест готов. Нажмите кнопку отправки или вызовите chat.sendMessage()');
+    console.log('Тест готов. Нажмите кнопку отправки');
 };
 
 // В консоли выполни: testQuoteFunction()
