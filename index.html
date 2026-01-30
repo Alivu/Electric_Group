@@ -3224,7 +3224,7 @@ class ElectricianChat {
             this.handleScroll();
         });
     }
-}
+
 
 // ========== СЛУШАТЕЛЬ НОВЫХ СООБЩЕНИЙ ==========
 subscribeToNewMessages() {
@@ -3411,7 +3411,7 @@ async sendMessage() {
     }
 }
     
-displayMessage(message, docId) { 1
+displayMessage(message, docId) {
     console.log('🟢 displayMessage вызван для:', docId);
     console.log('📊 Данные сообщения:', {
         text: message.text?.substring(0, 30) + (message.text?.length > 30 ? '...' : ''),
@@ -3784,7 +3784,7 @@ async showEditHistory(docId) {
         }
     }
 }
-    
+}    
 // ========== ЗАПУСК ПРИЛОЖЕНИЯ ==========
 let chat;
 
