@@ -611,13 +611,15 @@
 .quote-audio-info {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
+    justify-content: flex-start; /* Изменил с center на flex-start для сдвига влево */
+    gap: 6px;                    /* Уменьшил расстояние между иконкой и временем */
     color: #666;
-    font-size: 0.9em;
+    font-size: 0.8em;            /* Чуть уменьшил шрифт */
     text-align: left;
-    margin-left: 3px;      /* Внешний отступ слева */
-    margin-top: -5px;       /* Отрицательный отступ поднимет блок */
+    margin-left: -8px;           /* УВЕЛИЧИЛ отрицательный отступ для сдвига влево */
+    margin-top: -12px;           /* УВЕЛИЧИЛ отрицательный отступ для большего подъема */
+    transform: translateY(-3px); /* Дополнительный подъем */
+    padding-left: 5px;           /* Внутренний отступ слева для баланса */
 }
 
 .quote-audio-icon {
