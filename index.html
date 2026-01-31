@@ -648,14 +648,15 @@
 .audio-player-frame {
     height: 70px;    /* Было 160px ÷ 3 = 53px */
     padding: 6px;    /* Было 15px ÷ 3 = 5px */
-    border: 0.5px solid #dee2e6; /* Уменьшил границу */
+    border: none;                /* Убрать рамку */
     border-radius: 5px; /* Уменьшил скругление */
-    background: rgba(248, 249, 250, 0.8);
+    background: none;           /* Прозрачный фон */
+    box-shadow: none;           /* Убрать тень */
     display: flex;
     flex-direction: column;
     justify-content: center; 
-    margin-top: 5px;             /* Добавил отступ сверху (опускаем) */
-    transform: translateY(-5px);   /* Опускаем весь плеер */
+    margin-top: 2px;             /* Добавил отступ сверху (опускаем) */
+    transform: translateY(-2px);   /* Опускаем весь плеер */
 }
 
 /* СТРОКА С КНОПКОЙ И ВОЛНОЙ */
