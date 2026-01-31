@@ -55,12 +55,12 @@
 .message-sender-inside {
     font-weight: 600;
     color: #2c5364;
-    font-size: 1.1em;
-    margin: 12px 0 15px 0;
+    font-size: 0.7em; /* Уменьшил шрифт */
+    margin: 4px 0;   /* Уменьшил отступы */
     padding-left: 5px;
     font-style: italic;
     border-bottom: 1px solid rgba(44, 83, 100, 0.1);
-    padding-bottom: 8px;
+    padding-bottom: 3px; /* Уменьшил отступ */
 }
 /* Для сообщений справа (отправленных) */
 .message.sent .message-sender-inside {
@@ -574,28 +574,25 @@
 }
 /* ВНЕШНЯЯ РАМКА СООБЩЕНИЯ С ЦИТАТОЙ (300px) */
 .message-with-quote {
-    width: 320px;
-    height: 320px; /* Увеличили на 20px для имени */
-    border: 2px solid #2c5364;
-    border-radius: 12px;
-    padding: 10px;
+    width: 107px;    /* Было 320px ÷ 3 = 107px */
+    height: 100px;   /* Было 300px ÷ 3 = 100px */
+    border: 1px solid #2c5364; /* Уменьшил границу */
+    border-radius: 6px; /* Уменьшил скругление */
+    padding: 4px;    /* Уменьшил отступы */
     background: white;
-    box-shadow: 0 4px 12px rgba(44, 83, 100, 0.1);
-    position: relative;
+    box-shadow: 0 2px 6px rgba(44, 83, 100, 0.1);
+    font-size: 0.6em; /* Уменьшил шрифт */
 }
 
 /* РАМКА ЦИТАТЫ (135px, сероватая) */
 .quote-frame {
-    width: calc(100% - 10px); /* 5px с каждой стороны = 10px */
-    height: 135px;
-    margin: 5px; /* 5px отступы со всех сторон */
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
+    width: calc(100% - 6px); /* Было 10px ÷ 3 ≈ 3px × 2 = 6px */
+    height: 45px;    /* Было 135px ÷ 3 = 45px */
+    margin: 2px;     /* Было 5px ÷ 3 ≈ 2px */
+    border: 0.5px solid #e0e0e0; /* Уменьшил границу */
+    border-radius: 4px; /* Уменьшил скругление */
     background: rgba(240, 240, 240, 0.7);
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    padding: 5px;    /* Уменьшил отступы */
 }
 
 /* ВНУТРЕННЯЯ ЧАСТЬ ЦИТАТЫ */
@@ -640,14 +637,14 @@
 
 /* РАМКА АУДИО ПЛЕЙЕРА (160px) */
 .audio-player-frame {
-    height: 160px;
-    padding: 15px;
-    border: 1px solid #dee2e6;
-    border-radius: 10px;
+    height: 53px;    /* Было 160px ÷ 3 = 53px */
+    padding: 6px;    /* Было 15px ÷ 3 = 5px */
+    border: 0.5px solid #dee2e6; /* Уменьшил границу */
+    border-radius: 5px; /* Уменьшил скругление */
     background: rgba(248, 249, 250, 0.8);
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: center;  
 }
 
 /* СТРОКА С КНОПКОЙ И ВОЛНОЙ */
@@ -663,8 +660,8 @@
     background: #f8f9fa;
     border: 2px solid #2c5364;
     color: #2c5364;
-    width: 40px;
-    height: 40px;
+    width: 13px;     /* Было 40px ÷ 3 = 13px */
+    height: 13px;    /* Было 40px ÷ 3 = 13px */
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -675,6 +672,7 @@
     flex-shrink: 0;
     padding: 0;
     border: none;
+    font-size: 0.5em; /* Уменьшил иконку */
 }
 
 .play-btn-audio:hover {
@@ -691,27 +689,28 @@
     display: flex;
     align-items: flex-end;
     gap: 2px;
-    height: 40px;
+    height: 12px;    /* Было 36px ÷ 3 = 12px */
     flex: 1;
     background: rgba(255, 255, 255, 0.9);
-    border-radius: 6px;
-    padding: 0 10px;
+    border-radius: 6px; /* Уменьшил скругление */
+    padding: 0 4px;  /* Уменьшил отступы */
     border: 1px solid #e9ecef;
 }
 .wave-bar {
-    width: 4px;
+    width: 1px;      /* Было 3px ÷ 3 = 1px */
     background: linear-gradient(to top, #2c5364, #4CAF50);
-    border-radius: 2px;
-    min-height: 5px;
+    border-radius: 0.5px; /* Уменьшил скругление */
+    min-height: 2px; /* Было 6px ÷ 3 = 2px */
     transition: height 0.2s;
+    
 }
   /* СТРОКА С ВРЕМЕНЕМ */
 .audio-time-info {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 5px;
-    font-size: 0.9em;
+    padding: 0 2px;  /* Уменьшил отступы */
+    font-size: 0.5em; /* Уменьшил шрифт */
 }      
 .audio-progress {
     position: absolute;
@@ -765,13 +764,14 @@
 }
         /* ПРОСТАЯ РАМКА БЕЗ ЦИТАТЫ */
 .simple-audio-frame {
-    width: 280px;
-    min-height: 180px; /* Увеличили для имени */
-    border: 2px solid #2c5364;
-    border-radius: 12px;
-    padding: 15px;
+    width: 93px;     /* Было 280px ÷ 3 = 93px */
+    min-height: 60px; /* Было 180px ÷ 3 = 60px */
+    border: 1px solid #2c5364;
+    border-radius: 6px;
+    padding: 6px;
     background: white;
     box-shadow: 0 4px 12px rgba(44, 83, 100, 0.1);
+    font-size: 0.6em; /* Уменьшил шрифт */
 }
         /* Разделитель между именем и текстом в текстовых сообщениях */
 .message-text-content {
@@ -780,14 +780,15 @@
     border-top: 1px solid rgba(44, 83, 100, 0.1);
 }
      .text-message-frame {
-    max-width: 400px;
-    min-width: 200px;
-    padding: 15px;
-    border-radius: 18px;
+    max-width: 133px; /* Было 400px ÷ 3 = 133px */
+    min-width: 67px;  /* Было 200px ÷ 3 = 67px */
+    padding: 6px;    /* Уменьшил отступы */
+    border-radius: 9px; /* Уменьшил скругление */
     background: white;
     border: 1px solid #e9ecef;
     line-height: 1.4;
     word-break: break-word;
+    font-size: 0.7em; /* Уменьшил шрифт */
 }   
 .audio-time-sent {
     color: #888;
@@ -3488,11 +3489,14 @@ saveCurrentQuoteState() {
 
         
 // ========== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ==========
-generateWaveform(waveCount = 25) {
+generateWaveform(waveCount = 10) { // Уменьшил количество баров
     let waveHtml = '';
+    
     for (let i = 0; i < waveCount; i++) {
-        const randomHeight = Math.floor(Math.random() * 25) + 10;
-        waveHtml += `<div class="wave-bar" style="height:${randomHeight}px"></div>`;
+        const sineValue = Math.sin(i * 0.8) * 0.5 + 0.5; // Изменил частоту
+        const height = Math.floor(1 + (sineValue * 6)); // Уменьшил высоту (1-7px)
+        
+        waveHtml += `<div class="wave-bar" style="height:${height}px"></div>`;
     }
     return waveHtml;
 }
