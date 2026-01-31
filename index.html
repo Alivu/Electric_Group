@@ -32,6 +32,25 @@
             padding: 20px;
             overflow: hidden;
         }
+
+
+/* АВАТАРКА СЛЕВА (уменьшена в 5 раз) */
+.message-avatar-left {
+    width: 9px;     /* Было 45px ÷ 5 = 9px */
+    height: 9px;    /* Было 45px ÷ 5 = 9px */
+    border-radius: 50%;
+    overflow: hidden;
+    border: 1px solid #2c5364; /* Уменьшил границу */
+    flex-shrink: 0;
+    margin-top: 3px; /* Уменьшил отступ */
+}
+
+/* Для инициалов в аватаре (если нет фото) */
+.message-avatar-left div {
+    font-size: 0.5em; /* Уменьшил шрифт */
+    font-weight: bold;
+}
+        
         /* ИМЯ ОТПРАВИТЕЛЯ ВНУТРИ РАМКИ */
 .message-sender-inside {
     font-weight: 600;
