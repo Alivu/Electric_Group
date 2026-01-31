@@ -52,15 +52,17 @@
 }
         
         /* ИМЯ ОТПРАВИТЕЛЯ ВНУТРИ РАМКИ */
-.message-sender-inside {
     font-weight: 600;
     color: #2c5364;
-    font-size: 1.2em; /* Уменьшил шрифт */
-    margin: 4px 0;   /* Уменьшил отступы */
+    font-size: 0.9em;           /* Чуть уменьшил */
+    margin: 5px 0 8px 0;        /* Уменьшил отступы, особенно верхний */
     padding-left: 5px;
     font-style: italic;
     border-bottom: 1px solid rgba(44, 83, 100, 0.1);
-    padding-bottom: 3px; /* Уменьшил отступ */
+    padding-bottom: 5px;        /* Уменьшил отступ снизу */
+    transform: translateY(-8px); /* ПОДНИМАЕМ ВВЕРХ */
+    position: relative;
+    z-index: 2;
 }
 /* Для сообщений справа (отправленных) */
 .message.sent .message-sender-inside {
@@ -598,7 +600,7 @@
 .inner-quote-frame {
     text-align: left;
     margin-left: 3px;      /* Внешний отступ слева */
-    margin-top: -5px;       /* Отрицательный отступ поднимет блок */
+    margin-top: -7px;       /* Отрицательный отступ поднимет блок */
 }
 
 .quote-author-inner {
