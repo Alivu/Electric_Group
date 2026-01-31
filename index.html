@@ -654,6 +654,8 @@
     cursor: pointer;
     transition: all 0.3s;
     flex-shrink: 0;
+    padding: 0;
+    border: none;
 }
 
 .play-btn-audio:hover {
@@ -661,7 +663,10 @@
     color: white;
     transform: scale(1.05);
 }
-
+.message.sent .play-btn-audio:hover {
+    background: white;
+    color: #203a43;
+}
 /* КОНТЕЙНЕР ВОЛНЫ */
 .waveform-container {
     display: flex;
@@ -2379,55 +2384,85 @@ displayMessage(message, docId) {
         }
         
         // ВНЕШНЯЯ РАМКА СООБЩЕНИЯ С ЦИТАТОЙ (300px высота)
-        contentHtml = `
-            <div class="message-with-quote">
-                <!-- РАМКА ЦИТАТЫ (135px высота, 5px отступы) -->
-                <div class="quote-frame">
-                    ${quoteContent}
-                </div>
-                
-                <!-- ИМЯ ОТПРАВИТЕЛЯ -->
-                <div class="message-sender">${message.userName || 'Электрик'}</div>
-                
-                <!-- АУДИО ПЛЕЙЕР (160px высота) -->
-                <div class="audio-player-frame">
-                    <div class="audio-controls-row">
-                        <span class="play-btn-audio">▶</span>
-                        <div class="waveform-container">
+finalContent = `
+    ${avatarHtml}
+    <div class="message-content-with-avatar">
+        <div class="message-with-quote">
+            <!-- РАМКА ЦИТАТЫ -->
+            <div class="quote-frame">
+                ${quoteContent}
+            </div>
+            
+            <!-- ИМЯ ОТПРАВИТЕЛЯ ВНУТРИ РАМКИ -->
+            <div class="message-sender-inside">${message.userName || 'Электрик'}</div>
+            
+            <!-- АУДИО ПЛЕЙЕР -->
+            <div class="audio-player-frame">
+                <div class="audio-controls-row">
+                    <!-- ИЗМЕНИТЬ ЭТУ СТРОКУ: добавить id и button -->
+                    <button class="play-btn-audio" id="play-btn-audio-${docId}">
+                        <span class="play-icon">▶</span>
+                        <span class="pause-icon" style="display:none;">⏸</span>
+                    </button>
+                    <!-- ИЗМЕНИТЬ ЭТУ СТРОКУ: добавить id -->
+                    <div class="waveform-container" id="wave-container-audio-${docId}">
+                        <!-- ИЗМЕНИТЬ ЭТУ СТРОКУ: добавить id -->
+                        <div class="audio-waveform" id="wave-audio-${docId}">
                             ${this.generateWaveform(20)}
                         </div>
-                    </div>
-                    <div class="audio-time-info">
-                        <span class="audio-duration">${message.audioDuration || '0:00'}</span>
-                        <span class="message-time-audio">${messageTime}</span>
-                    </div>
-                    <audio id="audio-${docId}" preload="metadata">
-                        <source src="data:audio/webm;base64,${message.audioData}" type="audio/webm">
-                    </audio>
-                </div>
-            </div>
-        `;
-    } 
-    // Если НЕТ цитаты - простая структура
-    else if (message.type === 'audio' && message.audioData) {
-        contentHtml = `
-            <div class="simple-audio-frame">
-                <div class="message-sender">${message.userName || 'Электрик'}</div>
-                <div class="audio-controls-row">
-                    <span class="play-btn-audio">▶</span>
-                    <div class="waveform-container">
-                        ${this.generateWaveform(20)}
+                        <!-- ДОБАВИТЬ ЭТУ СТРОКУ: прогресс бар -->
+                        <div class="audio-progress" id="progress-audio-${docId}"></div>
                     </div>
                 </div>
                 <div class="audio-time-info">
-                    <span class="audio-duration">${message.audioDuration || '0:00'}</span>
+                    <!-- ИЗМЕНИТЬ ЭТУ СТРОКУ: добавить id -->
+                    <span class="audio-current-time" id="current-time-audio-${docId}">0:00</span>
+                    <!-- ИЗМЕНИТЬ ЭТУ СТРОКУ: добавить id -->
+                    <span class="audio-duration" id="duration-audio-${docId}">${message.audioDuration || '0:00'}</span>
                     <span class="message-time-audio">${messageTime}</span>
                 </div>
-                <audio id="audio-${docId}" preload="metadata">
-                    <source src="data:audio/webm;base64,${message.audioData}" type="audio/webm">
-                </audio>
             </div>
-        `;
+        </div>
+    </div>
+`;
+    // Если НЕТ цитаты - простая структура
+    else if (message.type === 'audio' && message.audioData) {
+finalContent = `
+    ${avatarHtml}
+    <div class="message-content-with-avatar">
+        <div class="simple-audio-frame">
+            <!-- ИМЯ ОТПРАВИТЕЛЯ ВНУТРИ РАМКИ -->
+            <div class="message-sender-inside">${message.userName || 'Электрик'}</div>
+            
+            <div class="audio-controls-row">
+                <!-- ИЗМЕНИТЬ ЭТУ СТРОКУ: добавить id и button -->
+                <button class="play-btn-audio" id="play-btn-audio-${docId}">
+                    <span class="play-icon">▶</span>
+                    <span class="pause-icon" style="display:none;">⏸</span>
+                </button>
+                <!-- ИЗМЕНИТЬ ЭТУ СТРОКУ: добавить id -->
+                <div class="waveform-container" id="wave-container-audio-${docId}">
+                    <!-- ИЗМЕНИТЬ ЭТУ СТРОКУ: добавить id -->
+                    <div class="audio-waveform" id="wave-audio-${docId}">
+                        ${this.generateWaveform(20)}
+                    </div>
+                    <!-- ДОБАВИТЬ ЭТУ СТРОКУ: прогресс бар -->
+                    <div class="audio-progress" id="progress-audio-${docId}"></div>
+                </div>
+            </div>
+            <div class="audio-time-info">
+                <!-- ИЗМЕНИТЬ ЭТУ СТРОКУ: добавить id -->
+                <span class="audio-current-time" id="current-time-audio-${docId}">0:00</span>
+                <!-- ИЗМЕНИТЬ ЭТУ СТРОКУ: добавить id -->
+                <span class="audio-duration" id="duration-audio-${docId}">${message.audioDuration || '0:00'}</span>
+                <span class="message-time-audio">${messageTime}</span>
+            </div>
+        </div>
+    </div>
+    <audio id="audio-${docId}" preload="metadata" style="display: none;">
+        <source src="data:audio/webm;base64,${message.audioData}" type="audio/webm">
+    </audio>
+`;
     } else {
         contentHtml = escapeHtml(message.text || '');
     }
@@ -2600,13 +2635,12 @@ messageEl.innerHTML = finalContent;
 
 
                 // Обработчик для аудио сообщений
-    if (messageData.type === 'audio') {
-        const audioId = `audio-${docId}`;
-        setTimeout(() => {
-            this.setupAudioPlayer(audioId, messageData.audioDuration);
-        }, 100);
-    }
-            
+if (messageData.type === 'audio') {
+    const audioId = `audio-${docId}`;
+    setTimeout(() => {
+        this.setupAudioPlayer(audioId, messageData.audioDuration);
+    }, 100);
+}
 
             
             const replyBtn = actionsDiv.querySelector('.reply-btn');
@@ -2679,14 +2713,10 @@ messageEl.innerHTML = finalContent;
 
 setupAudioPlayer(audioId, duration) {
     const audioElement = document.getElementById(audioId);
-    if (!audioElement) return;
-        const playBtn = document.querySelector(`[data-audio-id="${audioId}"] .play-btn-audio`) ||
-                    document.querySelector(`#play-btn-${audioId}`);
-    
-    if (!playBtn) return;
-    const waveContainer = document.querySelector(`[data-audio-id="${audioId}"] .waveform-container`);
+    const playBtn = document.getElementById(`play-btn-${audioId}`);
+    const waveContainer = document.getElementById(`wave-container-${audioId}`);
     const currentTimeEl = document.getElementById(`current-time-${audioId}`);
-    const durationEl = document.querySelector(`[data-audio-id="${audioId}"] .audio-duration`);
+    const durationEl = document.getElementById(`duration-${audioId}`);
     const waveEl = document.getElementById(`wave-${audioId}`);
     const progressEl = document.getElementById(`progress-${audioId}`);
     
@@ -2789,6 +2819,15 @@ animateWaveform(waveEl, isPlaying) {
             });
         }, 200);
     } else {
+        // Остановка анимации
+        if (waveEl.animationInterval) {
+            clearInterval(waveEl.animationInterval);
+        }
+        bars.forEach(bar => {
+            bar.style.opacity = 0.6;
+        });
+    }
+} else {
         // Остановка анимации
         if (waveEl.animationInterval) {
             clearInterval(waveEl.animationInterval);
