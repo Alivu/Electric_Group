@@ -5,6 +5,7 @@ const urlsToCache = [
   './index.html'
 ];
 
+
 // Установка
 self.addEventListener('install', event => {
   console.log('⚡ Установка Service Worker');
